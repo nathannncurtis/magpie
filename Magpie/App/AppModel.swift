@@ -49,6 +49,7 @@ final class AppModel {
     /// The live page sessions, by tab.
     private(set) var sessions: [Tab.ID: ReadingSession] = [:]
     private var sessionTasks: [Tab.ID: Task<Void, Never>] = [:]
+    @ObservationIgnored private var snapshotTasks: [Tab.ID: Task<Void, Never>] = [:]
 
     init(
         store: TabStore = TabStore(),
@@ -150,7 +151,7 @@ final class AppModel {
             await blocker.attach(session.contentController)
             await session.run()
         }
-        session.onPageSettled = { [weak self] in self?.syncTab(for: tab.id) }
+        session.onPageSettled = { [weak self] in self?.pageSettled(for: tab.id) }
         pruneSessions()
         return session
     }
@@ -194,6 +195,25 @@ final class AppModel {
             now: .now)
     }
 
+    /// A page settled: the tab takes what the page now shows. The capture is debounced — a
+    /// settle that lands while one is still in flight replaces it.
+    private func pageSettled(for id: Tab.ID) {
+        syncTab(for: id)
+        captureSnapshot(for: id, trigger: "settle")
+    }
+
+    /// The page's picture onto its tab, whenever it answers.
+    private func captureSnapshot(for id: Tab.ID, viewport: CGSize? = nil, trigger: String) {
+        guard let session = sessions[id] else { return }
+        snapshotTasks[id]?.cancel()
+        snapshotTasks[id] = Task { @MainActor in
+            let data = await session.snapshot(viewport: viewport, trigger: trigger)
+            guard !Task.isCancelled, let data else { return }
+            store.setSnapshot(data, for: id)
+            SnapshotLog.event("\(trigger) stored \(data.count)B tab=\(id.uuidString.prefix(4))")
+        }
+    }
+
     // MARK: Actions
 
     /// A submitted search or address from the launch sheet: a new tab, opened on the spot.
@@ -223,12 +243,18 @@ final class AppModel {
         surface = .reading(searchOpen: false)
     }
 
-    /// The tab count: the page folds into its card. Called before the surface moves, so the
-    /// card can show what the page showed.
-    func captureCurrentSnapshot(viewport: CGSize) async {
-        guard let tab = store.currentTab, let session = sessions[tab.id] else { return }
-        guard let data = await session.snapshot(viewport: viewport) else { return }
-        store.setSnapshot(data, for: tab.id)
+    /// The tab count: the page folds into its card. The surface moves at once; a tab that
+    /// still has no picture gets a best-effort one alongside, ungated.
+    func openTabs(viewport: CGSize) {
+        if let tab = store.currentTab, let session = sessions[tab.id], tab.snapshot == nil {
+            Task { @MainActor in
+                guard let data = await session.snapshot(viewport: viewport, trigger: "leave")
+                else { return }
+                store.setSnapshot(data, for: tab.id)
+                SnapshotLog.event("leave stored \(data.count)B tab=\(tab.id.uuidString.prefix(4))")
+            }
+        }
+        surface = .tabs
     }
 
     /// The tabs screen.
