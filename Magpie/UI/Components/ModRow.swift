@@ -73,6 +73,9 @@ struct ModRow: View {
             trailingView
         }
         .padding(.vertical, Layout.verticalPadding)
+        // The card's own colour, so the row is opaque: the swipe action under it shows
+        // only where a swipe has moved the row aside, never through empty space.
+        .background(Palette.card)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("mods.row")
     }
