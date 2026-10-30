@@ -15,6 +15,8 @@ enum Surface: Equatable {
     case archive
     /// The bookmarks, over whatever screen opened it.
     case bookmarks
+    /// The mods screen.
+    case mods
 }
 
 /// The app's own state: the tabs, the engine, the recents, and which surface is up.
@@ -41,6 +43,12 @@ final class AppModel {
     let suggestions: any SuggestionProviding
     /// Recent searches.
     let recents: any RecentSearchStoring
+    /// The mod directory (04 · 06).
+    let modDirectory: ModDirectory
+    /// The installed mods.
+    let modStore: ModStore
+    /// Adds the enabled userscript mods to every page.
+    let modInjector: ModInjector
 
     /// Nil until `start` has loaded the saved tabs: the app shows the mist while that
     /// happens, and the restored surface lands with nothing animating.
@@ -51,6 +59,10 @@ final class AppModel {
 
     /// Settings, once the menu exists; the UI tests open it directly meanwhile.
     var showsSettings = false
+
+    /// The surface to open on instead, once `start` has run: how a UI test enters the app
+    /// somewhere other than a cold start.
+    var launchSurfaceOverride: Surface?
 
     /// The live page sessions, by tab.
     private(set) var sessions: [Tab.ID: ReadingSession] = [:]
@@ -63,17 +75,28 @@ final class AppModel {
         blocker: ContentBlocker? = nil,
         bookmarks: BookmarkStore = BookmarkStore(),
         suggestions: any SuggestionProviding = SuggestionService(),
-        recents: any RecentSearchStoring = RecentSearches()
+        recents: any RecentSearchStoring = RecentSearches(),
+        modStore: ModStore? = nil,
+        modDirectory: ModDirectory? = nil
     ) {
         self.store = store
         self.preferences = preferences ?? Preferences(defaults: Self.freshDefaults())
-        self.blocker =
+        let blocker =
             blocker
             ?? ContentBlocker(
                 store: NoRuleSets(), defaults: Self.freshDefaults())
+        self.blocker = blocker
         self.bookmarks = bookmarks
         self.suggestions = suggestions
         self.recents = recents
+        let mods = modStore ?? ModStore(listSink: blocker)
+        self.modStore = mods
+        self.modDirectory = modDirectory ?? ModDirectory()
+        let injector = ModInjector(values: mods)
+        self.modInjector = injector
+        mods.onUserscriptsChanged = { [weak injector] userscripts in
+            injector?.apply(userscripts)
+        }
     }
 
     /// The app as it runs on a device: the JSON indexes in Application Support.
@@ -82,7 +105,8 @@ final class AppModel {
             store: TabStore(persistence: FileSystemTabPersistence()),
             preferences: Preferences(),
             blocker: ContentBlocker(store: FilterListStore()),
-            bookmarks: BookmarkStore(persistence: FileSystemBookmarkPersistence()))
+            bookmarks: BookmarkStore(persistence: FileSystemBookmarkPersistence()),
+            modDirectory: ModDirectory())
     }
 
     /// A defaults suite nothing else shares, so a default-built model changes nothing.
@@ -92,14 +116,20 @@ final class AppModel {
 
     // MARK: Lifecycle
 
-    /// Loads the saved tabs and bookmarks, archives what went stale, and lands on the
-    /// surface to open on.
+    /// Loads the saved tabs and bookmarks, archives what went stale, arms the mods and
+    /// the blocking on the pages' shared configuration, and lands on the surface to open on.
     func start(now: Date = .now) async {
         await store.loadIndex()
         await bookmarks.loadIndex()
         refreshArchive(now: now)
+        await blocker.attach(modInjector.contentController)
+        modInjector.apply(modStore.enabledUserscripts)
         await refreshBlocking()
+        await modDirectory.refresh()
         coldStart()
+        if let launchSurfaceOverride {
+            surface = launchSurfaceOverride
+        }
     }
 
     /// A cold start: restore the last tab, with nothing animating, or open on the launch
@@ -153,13 +183,15 @@ final class AppModel {
         store.currentTab.flatMap { sessions[$0.id] }
     }
 
-    /// The tab's page session, made on demand and kept in step with the tab.
+    /// The tab's page session, made on demand and kept in step with the tab. Every page
+    /// carries the mods' configuration, so the installed scripts run on each.
     func ensureSession(for tab: Tab) -> ReadingSession {
         if let session = sessions[tab.id] { return session }
-        let session = ReadingSession(url: tab.url ?? Self.blankPage, contentController: WKUserContentController())
+        let session = ReadingSession(
+            url: tab.url ?? Self.blankPage,
+            pageConfiguration: modInjector.pageConfiguration())
         sessions[tab.id] = session
         sessionTasks[tab.id] = Task {
-            await blocker.attach(session.contentController)
             await session.run()
         }
         session.onPageSettled = { [weak self] in self?.syncTab(for: tab.id) }
@@ -186,9 +218,6 @@ final class AppModel {
 
     private func dropSessions(notIn keep: Set<Tab.ID>) {
         for (id, task) in sessionTasks where !keep.contains(id) {
-            if let session = sessions[id] {
-                blocker.detach(session.contentController)
-            }
             task.cancel()
             sessionTasks[id] = nil
             sessions[id] = nil
@@ -254,6 +283,24 @@ final class AppModel {
         surface = .tabs
     }
 
+    // MARK: Mods
+
+    /// Where Done on the mods screen returns to.
+    private var surfaceBeforeMods: Surface?
+
+    /// The mods screen (04 · 06). No menu yet; the app model's callers open it.
+    func showMods() {
+        guard surface != .mods else { return }
+        surfaceBeforeMods = surface
+        surface = .mods
+    }
+
+    /// Done: back to whatever was up before the mods screen.
+    func closeMods() {
+        surface = surfaceBeforeMods ?? .launchSearch
+        surfaceBeforeMods = nil
+    }
+
     /// A tapped card: its tab becomes current and opens.
     func openTab(_ id: Tab.ID, now: Date = .now) {
         guard let tab = store.tabs.first(where: { $0.id == id }) else { return }
@@ -275,9 +322,6 @@ final class AppModel {
 
     /// A flung card. Closing the last tab leaves the launch search.
     func closeTab(_ id: Tab.ID) {
-        if let session = sessions[id] {
-            blocker.detach(session.contentController)
-        }
         sessionTasks[id]?.cancel()
         sessionTasks[id] = nil
         sessions[id] = nil
@@ -337,4 +381,5 @@ private struct NoRuleSets: RuleSetProviding {
     func ruleLists(for set: FilterRuleSet) async -> [CompiledRuleList] { [] }
     var overallLastUpdated: Date? { nil }
     func listUpdates() async -> [FilterListUpdate] { [] }
+    func setUserLists(_ lists: [FilterList]) async {}
 }

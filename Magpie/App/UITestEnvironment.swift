@@ -28,11 +28,12 @@ enum UITestEnvironment {
         ProcessInfo.processInfo.arguments.contains("-uiTestingSurface=settings")
     }
 
-    /// A screen the UI tests open directly while no flow reaches it: the archive or the
-    /// bookmarks, through `-uiTestingSurface=<name>`.
+    /// A screen the UI tests open directly while no flow reaches it: the archive, the
+    /// bookmarks or the mods, through `-uiTestingSurface=<name>`.
     enum Surface: String {
         case archive
         case bookmarks
+        case mods
     }
 
     /// The screen the UI tests asked for, if any.
@@ -47,6 +48,11 @@ enum UITestEnvironment {
     /// Whether the seeded lists stay empty, for the empty states.
     static var listsEmpty: Bool {
         ProcessInfo.processInfo.arguments.contains("-uiTestingListState=empty")
+    }
+
+    /// Whether this run starts with mods installed, for the installed screens.
+    static var seedsMods: Bool {
+        ProcessInfo.processInfo.arguments.contains("-uiTestingModsInstalled")
     }
 
     /// The appearance the tests ask for by launch argument (`-AppleInterfaceStyle Dark`),
@@ -76,6 +82,8 @@ enum UITestEnvironment {
         case .bookmarks:
             AppModel.seedLists(on: model, empty: listsEmpty)
             model.showBookmarks()
+        case .mods:
+            model.showMods()
         case nil: break
         }
     }
@@ -84,9 +92,11 @@ enum UITestEnvironment {
 extension AppModel {
 
     /// The app as the UI tests drive it: a scratch store, a search engine pointed at the
-    /// app's own local page server, fixed suggestion rows, and blocking over one tiny
-    /// compiled rule list. The engine and the onboarding flag persist across a flow's
-    /// launches, so `-uiTestingResetStore` clears them too.
+    /// app's own local page server, fixed suggestion rows, and mods that never reach past
+    /// the loopback interface — the directory comes from the bundled fixture, already
+    /// fresh. The engine and the onboarding flag persist across a flow's launches, so
+    /// `-uiTestingResetStore` clears them too. Blocking reads a fixed tiny rule list,
+    /// except for the mods runs, whose installs compile into a real store.
     static func forUITesting(resetting: Bool) -> AppModel {
         let scratch = URL(
             fileURLWithPath: NSTemporaryDirectory(), isDirectory: true
@@ -107,15 +117,86 @@ extension AppModel {
         if UITestEnvironment.skipsOnboarding {
             preferences.hasCompletedOnboarding = true
         }
+        let modStore = ModStore(io: InMemoryModStoreIO(), listSink: nil)
+        if UITestEnvironment.seedsMods {
+            seedMods(into: modStore)
+        }
+        let blockerStore: any RuleSetProviding =
+            UITestEnvironment.seedsMods
+            ? FilterListStore(
+                lists: [],
+                directory: scratch.appending(component: "lists", directoryHint: .isDirectory))
+            : UITestRuleSets()
+        let blockingDefaults =
+            UserDefaults(suiteName: "uitest-blocking-\(UUID().uuidString)") ?? .standard
         return AppModel(
             store: TabStore(persistence: FileSystemTabPersistence(directory: scratch)),
             preferences: preferences,
-            blocker: ContentBlocker(store: UITestRuleSets(), defaults: defaults),
+            blocker: ContentBlocker(store: blockerStore, defaults: blockingDefaults),
             bookmarks: BookmarkStore(
                 persistence: FileSystemBookmarkPersistence(directory: scratch)),
             suggestions: StubSuggestionProvider(
                 rowsByPrefix: ["magpie test", "magpie test page", "magpie test search"]),
-            recents: RecentSearches())
+            recents: RecentSearches(),
+            modStore: modStore,
+            modDirectory: fixtureDirectory())
+    }
+
+    /// The directory over the bundled fixture index, cached warm so nothing fetches.
+    private static func fixtureDirectory() -> ModDirectory {
+        ModDirectory(cache: InMemoryModDirectoryCache.warm(UITestModFixtures.directoryIndex()))
+    }
+
+    /// The installed screens' three mods, newest install last (board 13): a link-installed
+    /// script, a directory filter list, and a directory script on top.
+    private static func seedMods(into store: ModStore) {
+        guard
+            let wikiURL = UITestModFixtures.serverURL("/mod.user.js"),
+            let listURL = UITestModFixtures.serverURL("/mod.list.txt"),
+            let wiki = Userscript.parse(UITestModFixtures.userscript)
+        else { return }
+        store.install(
+            ModDraft(
+                id: ModLinkInstaller.linkID(for: wikiURL),
+                name: "Wider Wikipedia",
+                kind: .userscript,
+                author: wiki.metadata.author,
+                version: wiki.metadata.version,
+                summary: "Lets articles use the full width.",
+                icon: .linkInstall(),
+                source: .link(wikiURL),
+                script: wiki.metadata,
+                scriptBody: wiki.body,
+                listURL: nil))
+
+        store.install(
+            ModDraft(
+                id: "midnight-pages",
+                name: "Midnight Pages",
+                kind: .filterList,
+                author: "magpie",
+                version: "1.0",
+                summary: "Dark styles for sites that never shipped one.",
+                icon: ModIconSpec(
+                    glyph: "moon.fill", gradient: ["#2B3358", "#0F1226"]),
+                source: .directory("midnight-pages"),
+                script: nil,
+                scriptBody: nil,
+                listURL: listURL))
+
+        store.install(
+            ModDraft(
+                id: "google-answer-box",
+                name: "Google Answer Box",
+                kind: .userscript,
+                author: "nathannncurtis",
+                version: "1.3",
+                summary: "Pins the direct answer above the noise.",
+                icon: ModIconSpec(glyph: "text.bubble", gradient: ["#4C8DF6", "#1A56D6"]),
+                source: .directory("google-answer-box"),
+                script: wiki.metadata,
+                scriptBody: wiki.body,
+                listURL: nil))
     }
 
     /// The seeded archive and bookmarks, fixed content with no network, once the saved
@@ -125,6 +206,7 @@ extension AppModel {
         switch surface {
         case .archive: seedArchive(in: model.store, now: .now)
         case .bookmarks: seedBookmarks(in: model.bookmarks, now: .now)
+        case .mods: break
         }
     }
 
@@ -241,4 +323,6 @@ actor UITestRuleSets: RuleSetProviding {
     func listUpdates() async -> [FilterListUpdate] {
         FilterList.builtin.map { FilterListUpdate(list: $0, updated: updated) }
     }
+
+    func setUserLists(_ lists: [FilterList]) async {}
 }

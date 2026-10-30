@@ -77,6 +77,14 @@ struct RootView: View {
                     )
                     .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("bookmarks.screen")
+                case .mods:
+                    ModsScreen(
+                        directory: model.modDirectory,
+                        store: model.modStore,
+                        onDone: { model.closeMods() }
+                    )
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("mods.screen")
                 case nil:
                     // Nothing has started yet: the mist, while the saved tabs load.
                     MistBackground()

@@ -110,6 +110,9 @@ actor FilterListStore {
     }
 
     private let lists: [FilterList]
+    /// The lists mod installs added, fed in by the mod store. Their definitions are not
+    /// persisted here: the mod store owns which exist, and feeds them in at every launch.
+    private var userLists: [FilterList] = []
     private let directory: URL
     private let session: URLSession
     private let clock: @Sendable () -> Date
@@ -160,6 +163,19 @@ actor FilterListStore {
 
     // MARK: Refresh
 
+    /// Every list this store knows: the built-ins and whatever the mods added.
+    var allLists: [FilterList] {
+        lists + userLists
+    }
+
+    /// Replaces the mod-installed lists, then brings them in like any other: downloaded
+    /// when stale, compiled into the `.mods` set. An empty list leaves the set empty.
+    func setUserLists(_ lists: [FilterList]) async {
+        guard lists != userLists else { return }
+        userLists = lists
+        await refreshIfNeeded()
+    }
+
     /// The resource-type vocabulary this WebKit compiles, probed once per session. Which set
     /// is valid depends on the running OS, so it can't be baked into the converted files.
     private func vocabulary() async -> RuleListVocabulary {
@@ -181,7 +197,7 @@ actor FilterListStore {
     /// Downloads lists that have never been downloaded or are older than the refresh interval.
     func refreshIfNeeded(now overridden: Date? = nil) async {
         let now = overridden ?? clock()
-        let stale = lists.filter { list in
+        let stale = allLists.filter { list in
             guard let updated = state.lists[list.id]?.lastUpdated else { return true }
             return now.timeIntervalSince(updated) >= Self.refreshInterval
         }
@@ -298,8 +314,13 @@ actor FilterListStore {
         var currentIdentifiers = Set<String>()
         let vocabulary = await self.vocabulary()
         for set in FilterRuleSet.allCases {
-            let members = lists.filter { $0.ruleSet == set }
-            guard !members.isEmpty else { continue }
+            let members = allLists.filter { $0.ruleSet == set }
+            guard !members.isEmpty else {
+                // With no members the set is gone; drop its record so its compiled
+                // lists are cleaned up with the other stale identifiers.
+                state.sets[set.rawValue] = nil
+                continue
+            }
             let fingerprint = Self.fingerprint(of: members, in: directory)
 
             if let record = state.sets[set.rawValue], !record.identifiers.isEmpty,

@@ -1,6 +1,18 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@ — not supported yet" : {
+      "comment" : "Install sheet: the unsupported grants themselves",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ — not supported yet"
+          }
+        }
+      }
+    },
     "%lld days" : {
       "comment" : "Archive interval step in days",
       "extractionState" : "manual",
@@ -121,6 +133,18 @@
         }
       }
     },
+    "Also grants" : {
+      "comment" : "Install sheet: grants the shim cannot honour",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Also grants"
+          }
+        }
+      }
+    },
     "Any, by search URL" : {
       "comment" : "Note on the Other engine tile",
       "extractionState" : "manual",
@@ -217,6 +241,18 @@
         }
       }
     },
+    "Can" : {
+      "comment" : "Install sheet: what the script can do",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can"
+          }
+        }
+      }
+    },
     "Can't reach %@" : {
       "comment" : "Page-load failure title naming the host that didn't answer",
       "extractionState" : "manual",
@@ -242,13 +278,25 @@
       }
     },
     "Cancel" : {
-      "comment" : "Dismisses the folder rename alert",
+      "comment" : "Dismisses the folder rename alert; closes the install sheet and the Skim working screen",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cancel"
+          }
+        }
+      }
+    },
+    "Check the address, or try again in a moment." : {
+      "comment" : "Install failed: line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check the address, or try again in a moment."
           }
         }
       }
@@ -289,8 +337,20 @@
         }
       }
     },
+    "Directory" : {
+      "comment" : "The mods screen's directory segment",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Directory"
+          }
+        }
+      }
+    },
     "Done" : {
-      "comment" : "Closes Settings or the archive; leaves the bookmarks' edit mode",
+      "comment" : "Closes Settings, the archive or the mods screen; leaves the bookmarks' edit mode",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -321,6 +381,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Edit"
+          }
+        }
+      }
+    },
+    "Every site" : {
+      "comment" : "Install sheet: where a filter list applies",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every site"
+          }
+        }
+      }
+    },
+    "Filter list" : {
+      "comment" : "Install sheet preview: a filter list with no version",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter list"
+          }
+        }
+      }
+    },
+    "Filter list · v%@" : {
+      "comment" : "Install sheet preview: a filter list's version",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter list · v%@"
           }
         }
       }
@@ -373,6 +469,18 @@
         }
       }
     },
+    "Get" : {
+      "comment" : "Installs a directory mod",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get"
+          }
+        }
+      }
+    },
     "Get started" : {
       "comment" : "Welcome's only button",
       "extractionState" : "manual",
@@ -397,6 +505,78 @@
         }
       }
     },
+    "Install" : {
+      "comment" : "Installs the mod the sheet previewed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install"
+          }
+        }
+      }
+    },
+    "Install from URL" : {
+      "comment" : "The mods footer and the install sheet's title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install from URL"
+          }
+        }
+      }
+    },
+    "Installed" : {
+      "comment" : "The installed check's label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installed"
+          }
+        }
+      }
+    },
+    "Installed · %lld" : {
+      "comment" : "The mods screen's installed segment, with its count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Installed · %lld"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Installed · %lld"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Installing" : {
+      "comment" : "The drawing mark's label while an install runs",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installing"
+          }
+        }
+      }
+    },
     "It didn't answer. Try again in a moment." : {
       "comment" : "Page-load failure line for errors other than being offline",
       "extractionState" : "manual",
@@ -409,6 +589,18 @@
         }
       }
     },
+    "It names no site in @match or @include, so Magpie has nowhere to run it." : {
+      "comment" : "Install failed: line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It names no site in @match or @include, so Magpie has nowhere to run it."
+          }
+        }
+      }
+    },
     "Licence" : {
       "comment" : "About row: the app's licence",
       "extractionState" : "manual",
@@ -417,6 +609,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Licence"
+          }
+        }
+      }
+    },
+    "Magpie needs a link to a userscript (ending in .user.js) or a filter list." : {
+      "comment" : "Install failed: what Magpie needs",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Magpie needs a link to a userscript (ending in .user.js) or a filter list."
           }
         }
       }
@@ -457,6 +661,30 @@
         }
       }
     },
+    "Mods" : {
+      "comment" : "The mods screen's header",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mods"
+          }
+        }
+      }
+    },
+    "Mods from the directory or a link show up here." : {
+      "comment" : "The installed list's empty line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mods from the directory or a link show up here."
+          }
+        }
+      }
+    },
     "New folder" : {
       "comment" : "Makes a folder while editing the bookmarks",
       "extractionState" : "manual",
@@ -481,6 +709,18 @@
         }
       }
     },
+    "No answer from that link." : {
+      "comment" : "Install failed: the link didn't answer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No answer from that link."
+          }
+        }
+      }
+    },
     "No bookmarks yet" : {
       "comment" : "Empty bookmarks title",
       "extractionState" : "manual",
@@ -501,6 +741,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No tracking"
+          }
+        }
+      }
+    },
+    "Nobody has reviewed this mod. Only install it if you trust where it came from." : {
+      "comment" : "Install sheet warning: line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nobody has reviewed this mod. Only install it if you trust where it came from."
+          }
+        }
+      }
+    },
+    "Not in the directory." : {
+      "comment" : "Install sheet warning: lead",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not in the directory."
+          }
+        }
+      }
+    },
+    "Not reviewed" : {
+      "comment" : "Tag on a link-installed mod",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not reviewed"
           }
         }
       }
@@ -537,6 +813,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nothing in this folder"
+          }
+        }
+      }
+    },
+    "Nothing installed" : {
+      "comment" : "The installed list's empty title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing installed"
+          }
+        }
+      }
+    },
+    "Off" : {
+      "comment" : "A mod's switch, off",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        }
+      }
+    },
+    "On" : {
+      "comment" : "A mod's switch, on",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On"
           }
         }
       }
@@ -613,6 +925,18 @@
         }
       }
     },
+    "Popular this week" : {
+      "comment" : "Directory section title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Popular this week"
+          }
+        }
+      }
+    },
     "Privacy" : {
       "comment" : "Settings section label",
       "extractionState" : "manual",
@@ -625,6 +949,18 @@
         }
       }
     },
+    "Read and change pages on that site" : {
+      "comment" : "Install sheet: what a userscript can do, plainly",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read and change pages on that site"
+          }
+        }
+      }
+    },
     "Recently added" : {
       "comment" : "Bookmarks section label over the newest saves",
       "extractionState" : "manual",
@@ -633,6 +969,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Recently added"
+          }
+        }
+      }
+    },
+    "Remove" : {
+      "comment" : "The swipe action on an installed mod",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove"
           }
         }
       }
@@ -661,6 +1009,18 @@
         }
       }
     },
+    "Runs on" : {
+      "comment" : "Install sheet: where the script runs",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Runs on"
+          }
+        }
+      }
+    },
     "Save" : {
       "comment" : "Applies the folder rename",
       "extractionState" : "manual",
@@ -669,6 +1029,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Save"
+          }
+        }
+      }
+    },
+    "Script · by %@ · v%@" : {
+      "comment" : "Install sheet preview: the script's author and version",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Script · by %@ · v%@"
           }
         }
       }
@@ -817,6 +1189,18 @@
         }
       }
     },
+    "Swipe a mod left to remove it. Off keeps it, but it stops running." : {
+      "comment" : "The hint under the installed card",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe a mod left to remove it. Off keeps it, but it stops running."
+          }
+        }
+      }
+    },
     "Tabs" : {
       "comment" : "Reading bar button that opens the tab stack",
       "extractionState" : "manual",
@@ -861,6 +1245,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tap Bookmark in the menu to keep a page here."
+          }
+        }
+      }
+    },
+    "That script runs nowhere." : {
+      "comment" : "Install failed: no @match or @include",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That script runs nowhere."
+          }
+        }
+      }
+    },
+    "That's a web page, not a mod." : {
+      "comment" : "Install failed: the link was a page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That's a web page, not a mod."
           }
         }
       }
@@ -1021,6 +1429,54 @@
         }
       }
     },
+    "example.com/mod.user.js" : {
+      "comment" : "The install sheet's URL field placeholder",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "example.com/mod.user.js"
+          }
+        }
+      }
+    },
+    "filter list" : {
+      "comment" : "Row author line: a filter list with no author",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "filter list"
+          }
+        }
+      }
+    },
+    "filter list · %@" : {
+      "comment" : "Row author line: a filter list",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "filter list · %@"
+          }
+        }
+      }
+    },
+    "from a link" : {
+      "comment" : "Row author line suffix on a link install",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "from a link"
+          }
+        }
+      }
+    },
     "iOS Passwords" : {
       "comment" : "Settings row value: where passwords live",
       "extractionState" : "manual",
@@ -1041,6 +1497,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "magpie"
+          }
+        }
+      }
+    },
+    "script" : {
+      "comment" : "Row author line: a userscript with no author",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "script"
+          }
+        }
+      }
+    },
+    "script · %@" : {
+      "comment" : "Row author line: a userscript",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "script · %@"
+          }
+        }
+      }
+    },
+    "the sites it names: %@" : {
+      "comment" : "Install sheet: where a script with only @include rules runs",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the sites it names: %@"
           }
         }
       }
