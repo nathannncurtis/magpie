@@ -12,15 +12,17 @@ struct PageLoadFailure {
     let isOffline: Bool
 
     var title: String {
-        host.isEmpty ? "Can't reach this page" : "Can't reach \(host)"
+        host.isEmpty
+            ? String(localized: "Can't reach this page")
+            : String(localized: "Can't reach \(host)")
     }
 
     var line: String {
         if isOffline {
-            return "You're offline. It'll load when you're back."
+            return String(localized: "You're offline. It'll load when you're back.")
         }
         // COPY: review — 06 still has this line to write.
-        return "It didn't answer. Try again in a moment."
+        return String(localized: "It didn't answer. Try again in a moment.")
     }
 }
 

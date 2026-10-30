@@ -19,6 +19,7 @@ struct PlusButton: View {
         }
         .buttonStyle(.glassProminent)
         .tint(Palette.ink)
+        .accessibilityLabel(Text("New tab"))
     }
 }
 
