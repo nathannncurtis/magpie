@@ -47,7 +47,7 @@ struct RootView: View {
                         onSearchSubmit: { model.navigateCurrent($0) },
                         onSearchDismiss: { model.closeSearchOverPage() },
                         onAddressTap: { model.openSearchOverPage() },
-                        onTabsTap: { openTabs(viewport: geo.size) }
+                        onTabsTap: { model.openTabs(viewport: geo.size) }
                     )
                     .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("reading.screen")
@@ -57,11 +57,26 @@ struct RootView: View {
                         onOpen: { model.openTab($0) },
                         onNewTab: { model.newTabFromTabs() },
                         onClose: { model.closeTab($0) },
-                        onShowArchive: {},
+                        onShowArchive: { model.showArchive() },
                         transitionNamespace: cards
                     )
                     .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("tabs.screen")
+                case .archive:
+                    ArchiveScreen(
+                        store: model.store,
+                        onRestore: { model.restoreArchivedTab($0) },
+                        onDone: { model.doneWithArchive() }
+                    )
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("archive.screen")
+                case .bookmarks:
+                    BookmarksScreen(
+                        store: model.bookmarks,
+                        onOpen: { model.openBookmark($0) }
+                    )
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("bookmarks.screen")
                 case nil:
                     // Nothing has started yet: the mist, while the saved tabs load.
                     MistBackground()
@@ -104,14 +119,6 @@ struct RootView: View {
 
     private var transition: Animation? {
         reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation
-    }
-
-    /// The tab count: the page is snapshotted first, so the card shows what it showed.
-    private func openTabs(viewport: CGSize) {
-        Task { @MainActor in
-            await model.captureCurrentSnapshot(viewport: viewport)
-            model.showTabs()
-        }
     }
 }
 

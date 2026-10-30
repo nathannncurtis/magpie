@@ -96,6 +96,13 @@ enum Palette {
     static let searchFieldFill = dynamic(
         light: 0xFFFFFF, lightOpacity: 0.72, dark: 0x1D2023, darkOpacity: 1)
 
+    // MARK: Lists
+
+    /// The ring around each favicon in a stack of sources on the mist, so the tiles read
+    /// as one stack over the backdrop.
+    static let faviconRingOnMist = dynamic(
+        light: 0xE1F0EC, lightOpacity: 0.95, dark: 0x0C1211, darkOpacity: 1)
+
     // MARK: Settings
 
     /// The inner hairline on Settings' material groups.

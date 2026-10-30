@@ -211,6 +211,15 @@ final class TabStore {
         return true
     }
 
+    /// Deletes archived tabs for good, snapshot files included.
+    func deleteArchived(_ ids: [Tab.ID]) {
+        let doomed = Set(ids)
+        guard archivedTabs.contains(where: { doomed.contains($0.id) }) else { return }
+        archivedTabs.removeAll { doomed.contains($0.id) }
+        for id in ids { forgetSnapshot(for: id) }
+        saveIndex()
+    }
+
     // MARK: Writes
 
     /// Awaits every write scheduled so far, so tests can look at what was stored.
