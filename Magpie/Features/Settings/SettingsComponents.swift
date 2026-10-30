@@ -200,29 +200,27 @@ struct CookieDots: Shape {
 }
 
 /// The switch as the boards draw it: an ink track when on, `toggleOff` when not, and a
-/// knob that flips colour with the scheme.
+/// knob that flips colour with the scheme. The row carries the label; the switch draws
+/// alone, so the style leaves the label out.
 struct SettingsToggleStyle: ToggleStyle {
     @Environment(\.colorScheme) private var colorScheme
 
     func makeBody(configuration: Configuration) -> some View {
-        HStack {
-            configuration.label
-            Capsule()
-                .fill(configuration.isOn ? AnyShapeStyle(Palette.ink) : AnyShapeStyle(Palette.toggleOff))
-                .frame(width: 50, height: 30)
-                .overlay {
-                    Circle()
-                        .fill(Palette.toggleKnob)
-                        .frame(width: 26, height: 26)
-                        .offset(x: configuration.isOn ? 10 : -10)
-                        .shadow(
-                            color: colorScheme == .light ? .black.opacity(0.25) : .clear,
-                            radius: 2, y: 1)
-                }
-                .animation(.easeInOut(duration: 0.15), value: configuration.isOn)
-                .contentShape(.rect)
-                .onTapGesture { configuration.isOn.toggle() }
-        }
+        Capsule()
+            .fill(configuration.isOn ? AnyShapeStyle(Palette.ink) : AnyShapeStyle(Palette.toggleOff))
+            .frame(width: 50, height: 30)
+            .overlay {
+                Circle()
+                    .fill(Palette.toggleKnob)
+                    .frame(width: 26, height: 26)
+                    .offset(x: configuration.isOn ? 10 : -10)
+                    .shadow(
+                        color: colorScheme == .light ? .black.opacity(0.25) : .clear,
+                        radius: 2, y: 1)
+            }
+            .animation(.easeInOut(duration: 0.15), value: configuration.isOn)
+            .contentShape(.rect)
+            .onTapGesture { configuration.isOn.toggle() }
     }
 }
 

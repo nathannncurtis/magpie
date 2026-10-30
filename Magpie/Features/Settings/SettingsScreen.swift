@@ -121,6 +121,7 @@ struct SettingsScreen: View {
             Toggle(title, isOn: isOn)
                 .toggleStyle(SettingsToggleStyle())
                 .labelsHidden()
+                .accessibilityLabel(title)
         }
         .accessibilityIdentifier(id)
     }
