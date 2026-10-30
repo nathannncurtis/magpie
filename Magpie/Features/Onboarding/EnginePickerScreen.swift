@@ -13,7 +13,7 @@ struct EnginePickerScreen: View {
     var body: some View {
         VStack(spacing: 0) {
             OnboardingStepLabel(title: "Search")
-                // The board sets this block 80 from the top, 26 past its status bar.
+                // 26 below the safe-area top: the gap holds wherever the status bar ends.
                 .padding(.top, 26)
             Text("Where should searches go?")
                 .font(Typography.screenTitle)

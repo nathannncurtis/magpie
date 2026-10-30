@@ -75,11 +75,12 @@ Later launches restore the last tab, with no animation.
 
 ## 07a · Welcome (first launch only)
 - **Background:** the mist.
+- **Anchor:** the block's top sits 0.23 of the height below the safe-area top (about 176 pt on a standard phone).
 - **Centre:** the mark draws itself (`MarkSpinner`, played once), then "magpie" in `wordmark` and "The browser you shape." in `row` `textOnMistSecondary` settle in beneath it.
 - **Bottom:** the `PrimaryCTA` "Get started", with "Free and open source. No account. Nothing collected." in `small` under it.
 
 ## 07b · Pick a search engine
-- **Header:** a step label, then "Where should searches go?" in `screenTitle`, then "Pick one; you can switch any time from the menu."
+- **Header:** a step label 26 pt below the safe-area top, then "Where should searches go?" in `screenTitle`, then "Pick one; you can switch any time from the menu."
 - **Grid:** `EngineTile`s, two per row, in this fixed order: DuckDuckGo, Google, Brave Search, Kagi, Ecosia, Startpage, Bing, Other.
   - Each tile's note: No tracking / The usual / Own index / Paid, no ads / Plants trees / Google, privately / Microsoft / Any, by search URL.
   - **Nothing is pre-selected. No engine pays for placement.**

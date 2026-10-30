@@ -6,25 +6,33 @@ import SwiftUI
 struct WelcomeScreen: View {
     var onGetStarted: () -> Void
 
+    private enum WelcomeMetrics {
+        /// Where the block's top sits below the safe-area top, as a share of the
+        /// height on hand: about 176 pt on a standard phone, holding its place on any
+        /// height.
+        static let topFraction: CGFloat = 0.23
+    }
+
     var body: some View {
         ZStack {
-            VStack(spacing: 0) {
-                // The board puts this block 230 from the top, 176 past its status bar.
-                Color.clear.frame(height: 176)
-                Mark(size: 120, style: .sheen)
-                    .foregroundStyle(Palette.textPrimary)
-                    .accessibilityHidden(true)
-                Text("magpie")
-                    .font(Typography.wordmark)
-                    .tracking(Typography.wordmarkTracking)
-                    .foregroundStyle(Palette.textPrimary)
-                    .padding(.top, 16)
-                Text("The browser you shape.")
-                    .font(Typography.row)
-                    .foregroundStyle(Palette.textOnMistSecondary)
-                    .padding(.top, 2)
+            GeometryReader { geo in
+                VStack(spacing: 0) {
+                    Color.clear.frame(height: geo.size.height * WelcomeMetrics.topFraction)
+                    Mark(size: 120, style: .sheen)
+                        .foregroundStyle(Palette.textPrimary)
+                        .accessibilityHidden(true)
+                    Text("magpie")
+                        .font(Typography.wordmark)
+                        .tracking(Typography.wordmarkTracking)
+                        .foregroundStyle(Palette.textPrimary)
+                        .padding(.top, 16)
+                    Text("The browser you shape.")
+                        .font(Typography.row)
+                        .foregroundStyle(Palette.textOnMistSecondary)
+                        .padding(.top, 2)
+                }
+                .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
             VStack(spacing: 12) {
                 PrimaryCTA(title: "Get started", action: onGetStarted)
