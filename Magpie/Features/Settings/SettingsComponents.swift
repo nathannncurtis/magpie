@@ -11,6 +11,8 @@ struct SettingsGroup<Content: View>: View {
         VStack(spacing: 0) {
             content()
         }
+        // The inset rides inside, so the rows and their hairlines never run past the box.
+        .padding(.horizontal, Metrics.Spacing.insetList)
         .background(
             .regularMaterial,
             in: RoundedRectangle(cornerRadius: Metrics.Radius.boxGrouped, style: .continuous)
@@ -19,7 +21,6 @@ struct SettingsGroup<Content: View>: View {
             RoundedRectangle(cornerRadius: Metrics.Radius.boxGrouped, style: .continuous)
                 .strokeBorder(Palette.groupHairline, lineWidth: 0.75)
         )
-        .padding(.horizontal, Metrics.Spacing.insetList)
     }
 }
 

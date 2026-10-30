@@ -34,7 +34,8 @@ struct OnboardingStepLabel: View {
             .textCase(.uppercase)
             .foregroundStyle(Palette.labelOnMist)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 4)
+            // The screen's 16 inset plus the board's own 4.
+            .padding(.horizontal, Metrics.Spacing.insetList + 4)
             .accessibilityAddTraits(.isHeader)
     }
 }
@@ -50,24 +51,7 @@ struct EngineTile: View {
     var body: some View {
         Button(action: action) {
             ZStack(alignment: .topLeading) {
-                tileFill
-                if case .builtin(let searchEngine) = engine {
-                    Image("engine-\(searchEngine.id)")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 30, height: 30)
-                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                } else {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(Palette.engineTileOtherGlyph)
-                        Image(systemName: "plus")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(Palette.textPrimary)
-                    }
-                    .frame(width: 30, height: 30)
-                }
-
+                favicon
                 VStack(alignment: .leading, spacing: 1) {
                     Text(engine.title)
                         .font(Typography.rowTitle)
@@ -80,14 +64,20 @@ struct EngineTile: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
             }
+            // The board's tile padding: the favicon at (14, 12), the name and note at the
+            // bottom with the same all round.
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
             .frame(height: 92)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity)
+            .background(tileFill)
             .overlay {
                 if isSelected {
+                    // A 2 pt ring right on the tile's edge, sitting outside it as the
+                    // board's 2 px shadow ring does.
                     RoundedRectangle(cornerRadius: Metrics.Radius.tile, style: .continuous)
                         .stroke(Palette.ink, lineWidth: 2)
+                        .padding(-1)
                 }
             }
             .overlay(alignment: .topTrailing) {
@@ -99,6 +89,26 @@ struct EngineTile: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("picker.tile.\(engine.id)")
+    }
+
+    /// The engine's favicon top left, or the Other tile's plus glyph.
+    @ViewBuilder private var favicon: some View {
+        if case .builtin(let searchEngine) = engine {
+            Image("engine-\(searchEngine.id)")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 30, height: 30)
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        } else {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Palette.engineTileOtherGlyph)
+                Image(systemName: "plus")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(Palette.textPrimary)
+            }
+            .frame(width: 30, height: 30)
+        }
     }
 
     /// The tile's background: glass, denser once picked with the ink ring, or Other's

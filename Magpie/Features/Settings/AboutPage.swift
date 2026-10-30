@@ -8,7 +8,6 @@ struct AboutPage: View {
                 SettingsRow(icon: .symbol("info.circle"), title: "Version") {
                     value(Self.version)
                 }
-                .divided(true)
                 SettingsRow(icon: .symbol("doc.text"), title: "Licence") {
                     value("MPL-2.0")
                 }
@@ -20,6 +19,7 @@ struct AboutPage: View {
                         .foregroundStyle(Palette.textOnMistSecondaryMeta)
                 }
                 .action { openSource() }
+                .divided(true)
                 .accessibilityIdentifier("settings.about.source")
             }
 
