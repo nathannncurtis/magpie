@@ -284,3 +284,105 @@ struct TabStoreTests {
         #expect(!store.restore(a.id, now: date(100_060)))
     }
 }
+
+// MARK: Update
+
+@Suite("TabStore updates")
+@MainActor
+struct TabStoreUpdateTests {
+
+    private func date(_ seconds: TimeInterval) -> Date {
+        Date(timeIntervalSince1970: seconds)
+    }
+
+    private func url(_ host: String) -> URL {
+        URL(string: "https://\(host)") ?? URL(fileURLWithPath: "/")
+    }
+
+    @Test("update takes the page's address, title and icon and marks the tab read")
+    func updateTakesThePage() {
+        let store = TabStore()
+        let tab = store.newTab(url: url("a.example"), title: "", now: date(0))
+        let icon = url("a.example/favicon.ico")
+
+        store.update(
+            id: tab.id, url: url("a.example/page"), title: "A page",
+            faviconURL: icon, now: date(10))
+
+        #expect(store.tabs.first?.url == url("a.example/page"))
+        #expect(store.tabs.first?.title == "A page")
+        #expect(store.tabs.first?.faviconURL == icon)
+        #expect(store.tabs.first?.lastActive == date(10))
+    }
+
+    @Test("a blank title and a missing address leave the tab alone")
+    func updateSkipsWhatIsNotThere() {
+        let store = TabStore()
+        let tab = store.newTab(url: url("a.example"), title: "Kept", now: date(0))
+
+        store.update(id: tab.id, url: nil, title: "  \n", faviconURL: nil, now: date(10))
+
+        #expect(store.tabs.first?.url == url("a.example"))
+        #expect(store.tabs.first?.title == "Kept")
+        #expect(store.tabs.first?.lastActive == date(0))
+    }
+
+    @Test("update only knows the tabs it holds")
+    func updateIgnoresUnknownTabs() {
+        let store = TabStore()
+        store.newTab(title: "A", now: date(0))
+        let stranger = Tab(title: "Stranger", lastActive: date(0))
+
+        store.update(
+            id: stranger.id, url: url("b.example"), title: "B",
+            faviconURL: nil, now: date(10))
+
+        #expect(store.tabs.count == 1)
+        #expect(store.tabs.first?.title == "A")
+    }
+}
+
+// MARK: Loading
+
+@Suite("TabStore loading")
+@MainActor
+struct TabStoreLoadIndexTests {
+
+    @Test("loadIndex reads the saved tabs and the centred one")
+    func loadIndexReadsTheSavedTabs() async {
+        let a = Tab(title: "A", lastActive: Date(timeIntervalSince1970: 0))
+        let b = Tab(title: "B", lastActive: Date(timeIntervalSince1970: 10))
+        let persistence = InMemoryTabPersistence(
+            index: TabIndex(openTabs: [a, b], currentTabID: a.id, archivedTabs: []))
+
+        let store = TabStore(persistence: persistence)
+        await store.loadIndex()
+
+        #expect(store.tabs.map(\.title) == ["A", "B"])
+        #expect(store.currentTabID == a.id)
+    }
+
+    @Test("loadIndex centres the first tab when the saved one is gone")
+    func loadIndexFallsBackToTheFirstTab() async {
+        let saved = TabIndex(
+            openTabs: [Tab(title: "A", lastActive: Date(timeIntervalSince1970: 0))],
+            currentTabID: Tab.ID(),
+            archivedTabs: [])
+        let persistence = InMemoryTabPersistence(index: saved)
+
+        let store = TabStore(persistence: persistence)
+        await store.loadIndex()
+
+        #expect(store.currentTabID == store.tabs.first?.id)
+    }
+
+    @Test("loadIndex without a store behind it keeps the tabs it has")
+    func loadIndexWithoutPersistence() async {
+        let store = TabStore()
+        store.newTab(title: "A", now: Date(timeIntervalSince1970: 0))
+
+        await store.loadIndex()
+
+        #expect(store.tabs.count == 1)
+    }
+}
