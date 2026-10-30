@@ -98,9 +98,11 @@ struct LaunchIntro<Launch: View>: View {
                     .allowsHitTesting(!sheetUp)
                     // The intro's element rides on the stage, never around the sheet: a
                     // contain element left over the sheet starves the snapshots that read
-                    // the rows the field's typing inserts.
+                    // the rows the field's typing inserts. The value names the moment the
+                    // stage is in, so the UI tests' shots wait for the moment itself.
                     .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("launch.intro")
+                    .accessibilityValue(phase)
             }
         }
         .task { await run() }
@@ -149,6 +151,19 @@ struct LaunchIntro<Launch: View>: View {
     }
 
     // MARK: The sequence
+
+    /// The stage's moment: the mist arriving, the stroke drawing, the mark whole. The
+    /// draw's state flips when the stroke starts, not as it renders, so "drawing" spans
+    /// the whole animated draw.
+    private var phase: String {
+        if beadDropped {
+            "whole"
+        } else if trim > 0 {
+            "drawing"
+        } else {
+            "mist"
+        }
+    }
 
     /// Mist, draw, bead, hold, hand-off. Each step stands down if a tap has already
     /// handed off.

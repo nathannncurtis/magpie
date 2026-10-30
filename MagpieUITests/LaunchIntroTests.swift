@@ -2,9 +2,9 @@ import XCTest
 
 /// The cold-start intro (05 · 07), under both appearances: the mark mid-draw, whole with
 /// its bead seated, and the handed-off sheet with the keyboard up; the tap that skips it;
-/// and the whole mark under Reduce Motion. The phase shots run with the phases held past
-/// their beats, so each shot lands inside its phase whatever the runner's latency; the
-/// skip runs on the real clock.
+/// and the whole mark under Reduce Motion. The phase shots wait on the stage's value —
+/// the moment itself, not a clock — with the phases held past their beats so the moment
+/// outlasts the capture; the skip runs on the real clock.
 @MainActor
 final class LaunchIntroTests: XCTestCase {
 
@@ -31,14 +31,16 @@ final class LaunchIntroTests: XCTestCase {
         forwardShotsDir(to: app)
         app.launch()
 
-        // Mid-draw: the stroke partway along its centreline, no bead yet.
+        // Mid-draw: the value flips the moment the stroke starts; a second inside the
+        // held draw puts the shot partway along its centreline, no bead yet.
         let intro = app.descendants(matching: .any)["launch.intro"].firstMatch
         XCTAssertTrue(intro.waitForExistence(timeout: 20), "the intro")
-        Thread.sleep(forTimeInterval: 1.5)
+        waitValue(intro, "drawing", timeout: 10)
+        Thread.sleep(forTimeInterval: 1)
         shots.snap(app, "launch-intro-drawing")
 
-        // The hold: the mark whole, the bead seated in its dry gap.
-        Thread.sleep(forTimeInterval: 4)
+        // The hold: the value flips when the bead drops; the hand-off is a beat away.
+        waitValue(intro, "whole", timeout: 10)
         shots.snap(app, "launch-intro-whole")
 
         // The hand-off: the sheet up, the field focused, the keyboard with it.
@@ -95,12 +97,29 @@ final class LaunchIntroTests: XCTestCase {
         // The mark whole from the first moment: no draw, no bead drop.
         let intro = app.descendants(matching: .any)["launch.intro"].firstMatch
         XCTAssertTrue(intro.waitForExistence(timeout: 20), "the intro")
-        Thread.sleep(forTimeInterval: 1)
+        waitValue(intro, "whole", timeout: 10)
         shots.snap(app, "launch-intro-reduced")
 
         // The sheet still arrives, crossfading in.
         let field = app.descendants(matching: .any)["search.field"].firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: 20), "the sheet crossfades in")
+    }
+
+    /// Polls the element's accessibility value to the wanted one: XCUITest has no wait of
+    /// its own for values, only for existence.
+    private func waitValue(
+        _ element: XCUIElement,
+        _ value: String,
+        timeout: TimeInterval,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if (element.value as? String) == value { return }
+            Thread.sleep(forTimeInterval: 0.05)
+        }
+        XCTFail("the intro never read '\(value)'", file: file, line: line)
     }
 
     /// The shots directory, handed to the app where its capture log lives.
