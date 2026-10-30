@@ -33,7 +33,9 @@ struct MatchPattern: Codable, Equatable, Hashable, Sendable {
         guard let pathStart = remainder.firstIndex(of: "/") else { return nil }
         let host = String(remainder[..<pathStart])
         let path = String(remainder[pathStart...])
-        guard Self.isValid(host: host), !path.isEmpty else { return nil }
+        // A file pattern names no host: `file:///*` is the whole local file system.
+        let hostValid = host.isEmpty ? scheme == "file" : Self.isValid(host: host)
+        guard hostValid, !path.isEmpty else { return nil }
 
         self.scheme = scheme
         self.host = host
@@ -85,8 +87,11 @@ struct MatchPattern: Codable, Equatable, Hashable, Sendable {
         return "^\(schemePart)://\(hostPart)\(pathPart)$"
     }
 
+    /// A regex source with the pattern's metacharacters escaped. A `/` needs no escape —
+    /// it is escaped only when the source is written into a JavaScript literal.
     private static func escape(_ raw: String) -> String {
         NSRegularExpression.escapedPattern(for: raw)
+            .replacingOccurrences(of: "\\/", with: "/")
     }
 }
 
@@ -127,6 +132,7 @@ struct URLRule: Codable, Equatable, Hashable, Sendable {
             let escaped = NSRegularExpression.escapedPattern(for: pattern)
                 .replacingOccurrences(of: "\\*", with: ".*")
                 .replacingOccurrences(of: "\\?", with: ".")
+                .replacingOccurrences(of: "\\/", with: "/")
             return "^\(escaped)$"
         }
     }
@@ -338,10 +344,10 @@ struct Userscript: Equatable, Sendable {
     }
 }
 
-/// A rule source, made safe to embed between a JavaScript regex literal's slashes. `/` is
-/// the only character the sources can carry that needs it: ICU needs it bare and a
-/// JavaScript literal needs it escaped, so the escaping happens only when the source is
-/// written into one.
+/// A rule source, made safe to embed between a JavaScript regex literal's slashes. A bare
+/// `/` would close the literal, so it is escaped; an escape pair already in the source
+/// passes through, since JavaScript reads it the same way ICU does. A lone trailing
+/// backslash is closed, so it cannot escape the literal's closing slash.
 enum RuleRegexJS {
 
     static func literalSafe(_ source: String) -> String {
@@ -350,11 +356,10 @@ enum RuleRegexJS {
         var escaped = false
         for character in source {
             if escaped {
-                out.append("\\")
                 out.append(character)
                 escaped = false
             } else if character == "\\" {
-                out.append("\\")
+                out.append(character)
                 escaped = true
             } else if character == "/" {
                 out.append("\\/")
