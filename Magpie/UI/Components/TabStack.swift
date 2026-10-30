@@ -163,11 +163,13 @@ struct TabStack: View {
             lift = 0
         }
         return TabCard(
-            tab: tab, snapshot: tab.snapshot ?? snapshots[tab.id], namespace: namespace
+            tab: tab,
+            snapshot: tab.snapshot ?? snapshots[tab.id],
+            size: frame.size,
+            namespace: namespace
         )
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(tab.id == currentID ? "tabs.card.current" : "tabs.card.neighbour")
-        .frame(width: frame.width, height: frame.height)
         .position(x: frame.midX + neighbourOffset(from: index - current, stride: stride), y: frame.midY + lift)
         .zIndex(Double(100 - abs(index - current)))
         .onTapGesture {
