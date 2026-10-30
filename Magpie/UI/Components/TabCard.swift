@@ -12,8 +12,6 @@ struct TabCard: View {
     var snapshot: Data?
     var namespace: Namespace.ID?
 
-    @Environment(\.colorScheme) private var colorScheme
-
     private enum CardMetrics {
         /// The white ring around the snapshot, and the hairline outside it.
         static let ringWidth: CGFloat = 5
@@ -87,15 +85,15 @@ struct TabCard: View {
     }
 
     private var ringColor: Color {
-        colorScheme == .dark ? Color.white.opacity(0.06) : Color.white.opacity(0.38)
+        Palette.tabCardRing
     }
 
     private var hairlineColor: Color {
-        colorScheme == .dark ? Color.white.opacity(0.16) : Color.white.opacity(0.75)
+        Palette.tabCardHairline
     }
 
     private var shadowColor: Color {
-        colorScheme == .dark ? Color(hex: 0x000000, opacity: 0.60) : Color(hex: 0x102824, opacity: 0.35)
+        Palette.tabCardShadow
     }
 }
 

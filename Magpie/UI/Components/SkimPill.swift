@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 /// The Skim offer at the trailing end of a suggestion row: the small mark and the word,
 /// resting or primed.
@@ -18,7 +17,7 @@ struct SkimPill: View {
         }
     }
 
-    /// Layout and colour numbers from the Skim-pill spec.
+    /// Layout numbers from the Skim-pill spec.
     private enum Layout {
         static let markSize: CGFloat = 13
         static let gap: CGFloat = 6
@@ -26,13 +25,6 @@ struct SkimPill: View {
         static let verticalPadding: CGFloat = 6
         static let borderWidth: CGFloat = 1
         static let highlightHeight: CGFloat = 1.5
-
-        static let restingBackground = Color.dynamic(
-            light: 0xFFFFFF, lightOpacity: 0.45, dark: 0xFFFFFF, darkOpacity: 0.07)
-        static let restingBorder = Color.dynamic(
-            light: 0x101115, lightOpacity: 0.16, dark: 0xFFFFFF, darkOpacity: 0.18)
-        static let restingHighlight = Color.dynamic(
-            light: 0xFFFFFF, lightOpacity: 0.90, dark: 0xFFFFFF, darkOpacity: 0)
     }
 
     let state: State
@@ -65,14 +57,14 @@ struct SkimPill: View {
 
     /// Solid ink when primed; otherwise translucent with a border and a top highlight.
     private var fill: Color {
-        state == .primed ? Palette.ink : Layout.restingBackground
+        state == .primed ? Palette.ink : Palette.skimPillFill
     }
 
     @ViewBuilder
     private var border: some View {
         if state == .resting {
             Capsule()
-                .strokeBorder(Layout.restingBorder, lineWidth: Layout.borderWidth)
+                .strokeBorder(Palette.skimPillBorder, lineWidth: Layout.borderWidth)
         }
     }
 
@@ -81,7 +73,7 @@ struct SkimPill: View {
     private var highlight: some View {
         if state == .resting {
             LinearGradient(
-                colors: [Layout.restingHighlight, .clear],
+                colors: [Palette.skimPillHighlight, .clear],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -89,31 +81,6 @@ struct SkimPill: View {
             .padding(.horizontal, Layout.borderWidth)
             .allowsHitTesting(false)
         }
-    }
-}
-
-private extension Color {
-    /// An sRGB colour that switches with the system appearance.
-    static func dynamic(
-        light: UInt32, lightOpacity: Double, dark: UInt32, darkOpacity: Double
-    ) -> Color {
-        Color(
-            UIColor { traits in
-                traits.userInterfaceStyle == .dark
-                    ? UIColor(hex: dark, opacity: darkOpacity)
-                    : UIColor(hex: light, opacity: lightOpacity)
-            })
-    }
-}
-
-private extension UIColor {
-    /// An sRGB colour from a 0xRRGGBB value, at the given opacity.
-    convenience init(hex: UInt32, opacity: Double) {
-        self.init(
-            red: CGFloat((hex >> 16) & 0xFF) / 255,
-            green: CGFloat((hex >> 8) & 0xFF) / 255,
-            blue: CGFloat(hex & 0xFF) / 255,
-            alpha: CGFloat(opacity))
     }
 }
 

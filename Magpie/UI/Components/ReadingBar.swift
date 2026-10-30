@@ -5,16 +5,11 @@ import UIKit
 /// reads on the tint it took from the page (03 · Chrome).
 enum ReadableForeground {
 
-    /// On a light tint: the warm dark of the spec's default.
-    static let onLightTint = Color(hex: 0x3A2E26)
-    /// On a dark tint: the off-white of the spec's dark default.
-    static let onDarkTint = Color(hex: 0xF2F2EE)
-
     /// The tint's relative luminance at or above which the warm dark reads.
     private static let lightTintLuminance = 0.5
 
     static func foreground(for tint: Color, scheme: ColorScheme) -> Color {
-        isLight(tint, scheme: scheme) ? onLightTint : onDarkTint
+        isLight(tint, scheme: scheme) ? Palette.onLightPageTint : Palette.onDarkPageTint
     }
 
     /// Whether the tint reads as light under the given appearance.

@@ -80,6 +80,43 @@ enum Palette {
     static let warningStrong = dynamic(light: 0x4A2412, dark: 0xFFD9C7)
     /// The scrim behind sheets. The light opacity sits anywhere in an 18-22% band; this is its middle.
     static let scrim = dynamic(light: 0x101816, lightOpacity: 0.20, dark: 0x000000, darkOpacity: 0.32)
+
+    // MARK: Reading chrome
+
+    /// The readable foreground over a light page tint: the spec's warm dark default.
+    static let onLightPageTint = Color(hex: 0x3A2E26)
+    /// The readable foreground over a dark page tint: the spec's dark default.
+    static let onDarkPageTint = Color(hex: 0xF2F2EE)
+
+    // MARK: Search
+
+    /// The search field's inner fill.
+    static let searchFieldFill = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.72, dark: 0x1D2023, darkOpacity: 1)
+
+    // MARK: Skim pill
+
+    /// The resting Skim pill's fill.
+    static let skimPillFill = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.45, dark: 0xFFFFFF, darkOpacity: 0.07)
+    /// The resting Skim pill's border.
+    static let skimPillBorder = dynamic(
+        light: 0x101115, lightOpacity: 0.16, dark: 0xFFFFFF, darkOpacity: 0.18)
+    /// The resting Skim pill's inner top highlight; gone in dark.
+    static let skimPillHighlight = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.90, dark: 0xFFFFFF, darkOpacity: 0)
+
+    // MARK: Tab cards
+
+    /// The white ring around a tab card's snapshot.
+    static let tabCardRing = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.38, dark: 0xFFFFFF, darkOpacity: 0.06)
+    /// The hairline outside a tab card's ring.
+    static let tabCardHairline = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.75, dark: 0xFFFFFF, darkOpacity: 0.16)
+    /// The soft shadow under a tab card (01 Shadows).
+    static let tabCardShadow = dynamic(
+        light: 0x102824, lightOpacity: 0.35, dark: 0x000000, darkOpacity: 0.60)
 }
 
 private extension Palette {

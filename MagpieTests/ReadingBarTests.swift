@@ -42,22 +42,22 @@ struct ReadableForegroundTests {
     func extremes(scheme: ColorScheme) {
         #expect(
             ReadableForeground.foreground(for: .white, scheme: scheme)
-                == ReadableForeground.onLightTint)
+                == Palette.onLightPageTint)
         #expect(
-            ReadableForeground.foreground(for: .black, scheme: scheme) == ReadableForeground.onDarkTint)
+            ReadableForeground.foreground(for: .black, scheme: scheme) == Palette.onDarkPageTint)
     }
 
     @Test("a dark page tint reads the off-white")
     func darkTint() {
         let teal = Color(hex: 0x0D9488)
         #expect(!ReadableForeground.isLight(teal, scheme: .light))
-        #expect(ReadableForeground.foreground(for: teal, scheme: .light) == ReadableForeground.onDarkTint)
+        #expect(ReadableForeground.foreground(for: teal, scheme: .light) == Palette.onDarkPageTint)
     }
 
     @Test("the tint's opacity does not change the foreground")
     func opacityIgnored() {
         let faint = Color(hex: 0xFFFFFF, opacity: 0.1)
-        #expect(ReadableForeground.foreground(for: faint, scheme: .light) == ReadableForeground.onLightTint)
+        #expect(ReadableForeground.foreground(for: faint, scheme: .light) == Palette.onLightPageTint)
     }
 }
 
