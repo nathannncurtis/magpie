@@ -170,6 +170,9 @@ struct SearchSheet: View {
             arrive()
             selectCarriedText()
         }
+        .onChange(of: focusSuspended) { _, suspended in
+            focused = !suspended
+        }
     }
 
     /// The address a page's sheet opens with arrives selected (04 · 02), so typing replaces
@@ -180,9 +183,6 @@ struct SearchSheet: View {
             try? await Task.sleep(for: .milliseconds(150))
             UIApplication.shared.sendAction(
                 #selector(UIResponder.selectAll(_:)), to: nil, from: nil, for: nil)
-        }
-        .onChange(of: focusSuspended) { _, suspended in
-            focused = !suspended
         }
     }
 
