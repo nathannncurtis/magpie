@@ -3,9 +3,8 @@ import UIKit
 
 /// One card in the tab stack: the page snapshot at 62% of the screen's scale, in a
 /// 5 pt white ring with an outer hairline and the soft shadow. The stack names the size;
-/// the picture fills it from the top, cropped to the card's rounded shape — a fill-sized
-/// image left to size itself would report its own, larger bounds and run under the
-/// neighbours.
+/// the picture matches its width, aspect kept, from the top — the card is the page
+/// shrunk, so the whole page width shows and only its depth is cropped away.
 ///
 /// A `namespace` wires the card into the page ↔ card transition: both geometry effects
 /// are keyed by the tab id, so the reading screen can match against it.
@@ -48,10 +47,17 @@ struct TabCard: View {
 
     @ViewBuilder
     private var content: some View {
-        if let image = snapshot.flatMap(UIImage.init(data:)) {
+        if let image = snapshot.flatMap(UIImage.init(data:)), image.size.width > 0 {
+            // The card is the page shrunk: the picture matches the card's width, aspect
+            // kept, and runs past the bottom — top-aligned, cropped by the card's shape.
             Image(uiImage: image)
                 .resizable()
-                .scaledToFill()
+                .frame(
+                    width: size.width,
+                    height: size.width * image.size.height / image.size.width
+                )
+                .accessibilityElement(children: .ignore)
+                .accessibilityIdentifier("tabs.card.snapshot")
         } else {
             placeholder
         }
