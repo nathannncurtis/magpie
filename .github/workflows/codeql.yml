@@ -80,11 +80,13 @@ jobs:
         include: ${{ fromJSON(needs.changes.outputs.matrix) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # Project generation runs before CodeQL init: init puts the shell under its tracer, and Homebrew refuses to
-      # install from there.
+      # CodeQL's Swift tracer runs under Rosetta, and Xcode 27 ships its macro plugin server for Apple silicon only,
+      # so the scan builds with the newest Xcode 26 instead. Project generation runs before init: Homebrew refuses
+      # to install from under the tracer.
       - if: matrix.language == 'swift'
         run: |
-          sudo xcode-select -s /Applications/Xcode_27.1.app
+          sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)"
+          xcodebuild -version
           command -v xcodegen >/dev/null || brew install xcodegen
           xcodegen generate
       - uses: github/codeql-action/init@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
@@ -94,7 +96,7 @@ jobs:
       - if: matrix.language == 'swift'
         run: |
           xcodebuild build -project Magpie.xcodeproj -scheme Magpie -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath build CODE_SIGNING_ALLOWED=NO ARCHS=arm64 ONLY_ACTIVE_ARCH=YES
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO
       - uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
         with:
           category: /language:${{ matrix.language }}
