@@ -9,7 +9,8 @@ struct WelcomeScreen: View {
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                Color.clear.frame(height: 172)
+                // The board puts this block 230 from the top, 176 past its status bar.
+                Color.clear.frame(height: 176)
                 Mark(size: 120, style: .sheen)
                     .foregroundStyle(Palette.textPrimary)
                     .accessibilityHidden(true)
