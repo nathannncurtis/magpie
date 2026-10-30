@@ -113,7 +113,9 @@ struct ArchiveScreen: View {
                     .listRowSeparator(.hidden)
                 }
                 .onDelete { offsets in
-                    store.deleteArchived(offsets.map { group.tabs[$0].id })
+                    let tabs = group.tabs
+                    store.deleteArchived(
+                        offsets.compactMap { tabs.indices.contains($0) ? tabs[$0].id : nil })
                 }
             }
         }

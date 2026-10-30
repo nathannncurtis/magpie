@@ -76,11 +76,14 @@ struct AppModelListsTests {
         let persistence = InMemoryTabPersistence()
         let model = makeModel(tabs: persistence)
         model.openFromLaunch(url("stale.example"), now: date(0))
+        model.openFromLaunch(url("current.example"), now: date(100))
         model.showTabs()
-        _ = model.store.archiveStale(now: date(0), after: 0)
-        let archived = model.store.archivedTabs[0]
+        let stale = model.store.tabs[0].id
+        _ = model.store.archiveStale(now: date(100), after: 10)
 
-        model.store.deleteArchived([archived.id])
+        #expect(model.store.archivedTabs.map(\.id) == [stale])
+
+        model.store.deleteArchived([stale])
         #expect(model.store.archivedTabs.isEmpty)
     }
 

@@ -86,6 +86,7 @@ final class UITestPageServer: @unchecked Sendable {
         <html>
         <head>
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="color-scheme" content="light dark">
         <title>\(title)</title>
         <link rel="icon" href="/icon.png">
         <style>

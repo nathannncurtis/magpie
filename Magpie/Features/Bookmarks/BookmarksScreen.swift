@@ -177,7 +177,9 @@ struct BookmarksScreen: View {
         }
         .onDelete { offsets in
             let folders = store.folders
-            for index in offsets { store.removeFolder(folders[index].id) }
+            for index in offsets where folders.indices.contains(index) {
+                store.removeFolder(folders[index].id)
+            }
         }
     }
 
@@ -200,7 +202,9 @@ struct BookmarksScreen: View {
         }
         .onDelete { offsets in
             let bookmarks = visibleBookmarks
-            for index in offsets { store.remove(bookmarks[index].id) }
+            for index in offsets where bookmarks.indices.contains(index) {
+                store.remove(bookmarks[index].id)
+            }
         }
     }
 
@@ -259,7 +263,9 @@ struct BookmarksScreen: View {
                         .listRow()
                     }
                     .onDelete { offsets in
-                        for index in offsets { store.remove(bookmarks[index].id) }
+                        for index in offsets where bookmarks.indices.contains(index) {
+                            store.remove(bookmarks[index].id)
+                        }
                     }
                 }
                 .listStyle(.plain)

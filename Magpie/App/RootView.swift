@@ -46,7 +46,7 @@ struct RootView: View {
                         onSearchSubmit: { model.navigateCurrent($0) },
                         onSearchDismiss: { model.closeSearchOverPage() },
                         onAddressTap: { model.openSearchOverPage() },
-                        onTabsTap: { openTabs(viewport: geo.size) }
+                        onTabsTap: { model.openTabs(viewport: geo.size) }
                     )
                     .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("reading.screen")
@@ -96,14 +96,6 @@ struct RootView: View {
 
     private var transition: Animation? {
         reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation
-    }
-
-    /// The tab count: the page is snapshotted first, so the card shows what it showed.
-    private func openTabs(viewport: CGSize) {
-        Task { @MainActor in
-            await model.captureCurrentSnapshot(viewport: viewport)
-            model.showTabs()
-        }
     }
 }
 
