@@ -82,43 +82,45 @@ struct SearchSheet: View {
     }
 
     var body: some View {
-        GeometryReader { geo in
-            let bottomInset = geo.safeAreaInsets.bottom
-            VStack(spacing: 0) {
-                tapAway
-                sheetSurface(bottomInset: bottomInset)
-            }
+        VStack(spacing: 0) {
+            tapAway
+            sheetBody
+                .ignoresSafeArea(.keyboard, edges: .bottom)
         }
-        .ignoresSafeArea(edges: [.top, .bottom])
         .task(id: text) {
             await reloadRows()
         }
     }
 
-    /// Everything above the sheet. On the mist it is clear; over a page it is the scrim.
+    /// Everything above the sheet. On the mist it is clear; over a page it is the scrim,
+    /// which runs on behind the keyboard and under the status bar.
     private var tapAway: some View {
         Rectangle()
             .fill(opensFromPage ? AnyShapeStyle(Palette.scrim) : AnyShapeStyle(.clear))
+            .ignoresSafeArea(edges: .top)
+            .ignoresSafeArea(.keyboard, edges: .bottom)
             .contentShape(Rectangle())
             .onTapGesture(perform: onDismiss)
             .accessibilityIdentifier("search.scrim")
     }
 
-    /// The sheet rides the keyboard: its content ends where the keyboard begins, while the
-    /// surface runs on behind it to the bottom edge. `bottomInset` is the keyboard's height,
-    /// or the home indicator's distance when the keyboard is away.
-    private func sheetSurface(bottomInset: CGFloat) -> some View {
-        sheetContent
-            .padding(.bottom, bottomInset)
-            .frame(maxWidth: .infinity)
-            .modifier(
-                SheetSurface(
-                    opensFromPage: opensFromPage,
-                    shape: sheetShape,
-                    namespace: morphNamespace,
-                    fillSettled: fillSettled)
-            )
-            .accessibilityIdentifier("search.sheet")
+    /// The sheet rides the keyboard: its content ends at the keyboard while the surface runs
+    /// on behind it. `Color.clear` fills the space the keyboard covers.
+    @ViewBuilder
+    private var sheetBody: some View {
+        VStack(spacing: 0) {
+            sheetContent
+            Color.clear
+        }
+        .frame(maxWidth: .infinity)
+        .modifier(
+            SheetSurface(
+                opensFromPage: opensFromPage,
+                shape: sheetShape,
+                namespace: morphNamespace,
+                fillSettled: fillSettled)
+        )
+        .accessibilityIdentifier("search.sheet")
     }
 
     private var sheetContent: some View {
