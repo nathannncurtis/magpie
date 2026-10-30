@@ -272,10 +272,10 @@ struct ModsScreen: View {
         guard let id = landedModID else { return }
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(2))
-            if landedModID == id {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    landedModID = nil
-                }
+            // The UI tests hold it further, until their shot has caught it.
+            guard !UITestEnvironment.holdsInstallCheck, landedModID == id else { return }
+            withAnimation(.easeInOut(duration: 0.2)) {
+                landedModID = nil
             }
         }
     }
