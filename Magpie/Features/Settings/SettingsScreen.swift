@@ -25,7 +25,7 @@ struct SettingsScreen: View {
 
                     toggleRow(
                         icon: .mark, title: "Skim for me",
-                        id: "settings.skim", isDivided: false,
+                        id: "settings.skim", isDivided: true,
                         isOn: Binding(
                             get: { model.preferences.skimEnabled },
                             set: { model.preferences.skimEnabled = $0 }))
@@ -35,7 +35,7 @@ struct SettingsScreen: View {
                 SettingsGroup {
                     toggleRow(
                         icon: .symbol("shield.lefthalf.filled"), title: "Ads & trackers",
-                        id: "settings.ads", isDivided: true,
+                        id: "settings.ads", isDivided: false,
                         isOn: Binding(
                             get: { model.blocker.blocksAdsAndTrackers },
                             set: { model.blocker.blocksAdsAndTrackers = $0 }))
@@ -56,6 +56,7 @@ struct SettingsScreen: View {
                         SettingsChevron()
                     }
                     .action { path.append(.filterLists) }
+                    .divided(true)
                     .accessibilityIdentifier("settings.filterLists")
                 }
 
@@ -73,6 +74,7 @@ struct SettingsScreen: View {
                         SettingsChevron()
                     }
                     .action { openPasswords() }
+                    .divided(true)
                     .accessibilityIdentifier("settings.passwords")
 
                     SettingsRow(icon: .symbol("link"), title: "About Magpie") {
@@ -80,6 +82,7 @@ struct SettingsScreen: View {
                         SettingsChevron()
                     }
                     .action { path.append(.about) }
+                    .divided(true)
                     .accessibilityIdentifier("settings.about")
                 }
             }
