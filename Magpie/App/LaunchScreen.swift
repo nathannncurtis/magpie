@@ -40,6 +40,7 @@ struct LaunchScreen: View {
                 arrived = true
             }
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("launch.screen")
     }
 }

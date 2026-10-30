@@ -29,7 +29,6 @@ struct RootView: View {
                         onOpen: { model.openFromLaunch($0) },
                         onDismiss: { model.dismissLaunchSearch() }
                     )
-                    .accessibilityIdentifier("launch.screen")
                 case .reading(let searchOpen):
                     ReadingScreen(
                         session: model.currentSession,
@@ -48,6 +47,7 @@ struct RootView: View {
                         onAddressTap: { model.openSearchOverPage() },
                         onTabsTap: { openTabs(viewport: geo.size) }
                     )
+                    .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("reading.screen")
                 case .tabs:
                     TabsScreen(
@@ -58,11 +58,13 @@ struct RootView: View {
                         onShowArchive: {},
                         transitionNamespace: cards
                     )
+                    .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("tabs.screen")
                 case nil:
                     // Nothing has started yet: the mist, while the saved tabs load.
                     MistBackground()
                         .ignoresSafeArea()
+                        .accessibilityIdentifier("boot.mist")
                 }
             }
             .animation(movesWithChrome ? transition : nil, value: model.surface)
