@@ -27,6 +27,11 @@ final class FlowTests: XCTestCase {
         app.launchArguments += [
             "-uiTesting", "-uiTestingResetStore", "-AppleInterfaceStyle", appearance,
         ]
+        // The app's capture log lands beside the shots; it cannot see the runner's own
+        // environment, so the directory is handed over.
+        if let shotsDir = ProcessInfo.processInfo.environment["MAGPIE_SHOTS_DIR"] {
+            app.launchEnvironment["MAGPIE_SHOTS_DIR"] = shotsDir
+        }
         shots = ShotWriter(test: self, prefix: appearance.lowercased())
         self.app = app
         app.launch()

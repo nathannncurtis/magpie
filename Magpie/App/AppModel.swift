@@ -62,7 +62,7 @@ final class AppModel {
     /// The live page sessions, by tab.
     private(set) var sessions: [Tab.ID: ReadingSession] = [:]
     private var sessionTasks: [Tab.ID: Task<Void, Never>] = [:]
-    @ObservationIgnored private var snapshotTask: Task<Void, Never>?
+    @ObservationIgnored private var snapshotTasks: [Tab.ID: Task<Void, Never>] = [:]
 
     init(
         store: TabStore = TabStore(),
@@ -133,7 +133,7 @@ final class AppModel {
         let session = ReadingSession(url: tab.url ?? Self.blankPage)
         sessions[tab.id] = session
         sessionTasks[tab.id] = Task { await session.run() }
-        session.onPageSettled = { [weak self] in self?.syncTab(for: tab.id) }
+        session.onPageSettled = { [weak self] in self?.pageSettled(for: tab.id) }
         pruneSessions()
         return session
     }
@@ -174,6 +174,25 @@ final class AppModel {
             now: .now)
     }
 
+    /// A page settled: the tab takes what the page now shows. The capture is debounced — a
+    /// settle that lands while one is still in flight replaces it.
+    private func pageSettled(for id: Tab.ID) {
+        syncTab(for: id)
+        captureSnapshot(for: id, trigger: "settle")
+    }
+
+    /// The page's picture onto its tab, whenever it answers.
+    private func captureSnapshot(for id: Tab.ID, viewport: CGSize? = nil, trigger: String) {
+        guard let session = sessions[id] else { return }
+        snapshotTasks[id]?.cancel()
+        snapshotTasks[id] = Task { @MainActor in
+            let data = await session.snapshot(viewport: viewport, trigger: trigger)
+            guard !Task.isCancelled, let data else { return }
+            store.setSnapshot(data, for: id)
+            SnapshotLog.event("\(trigger) stored \(data.count)B tab=\(id.uuidString.prefix(4))")
+        }
+    }
+
     // MARK: Actions
 
     /// A submitted search or address from the launch sheet: a new tab, opened on the spot.
@@ -204,15 +223,15 @@ final class AppModel {
         surface = .reading(searchOpen: false)
     }
 
-    /// The tab count: the page folds into its card. The surface moves at once; the page's
-    /// picture is taken alongside, ungated, and lands on the card if it makes it — a page
-    /// that misses the window keeps its previous snapshot.
+    /// The tab count: the page folds into its card. The surface moves at once; a tab that
+    /// still has no picture gets a best-effort one alongside, ungated.
     func openTabs(viewport: CGSize) {
-        if let tab = store.currentTab, let session = sessions[tab.id] {
-            snapshotTask?.cancel()
-            snapshotTask = Task { @MainActor in
-                guard let data = await session.snapshot(viewport: viewport) else { return }
+        if let tab = store.currentTab, let session = sessions[tab.id], tab.snapshot == nil {
+            Task { @MainActor in
+                guard let data = await session.snapshot(viewport: viewport, trigger: "leave")
+                else { return }
                 store.setSnapshot(data, for: tab.id)
+                SnapshotLog.event("leave stored \(data.count)B tab=\(tab.id.uuidString.prefix(4))")
             }
         }
         surface = .tabs
