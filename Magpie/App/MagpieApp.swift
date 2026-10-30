@@ -12,7 +12,7 @@ struct MagpieApp: App {
                 .preferredColorScheme(UITestEnvironment.colorScheme)
                 .environment(model)
                 .task {
-                    if UITestEnvironment.isUITesting { UITestPageServer.shared.start() }
+                    if UITestEnvironment.isUITesting { await UITestPageServer.shared.start() }
                     await model.start()
                 }
                 .onChange(of: scenePhase) { _, phase in

@@ -81,6 +81,8 @@ final class ReadingSession {
 
     /// The standing wait for the page's first layout, while a capture is held back.
     @ObservationIgnored private var layoutWatch: Task<Void, Never>?
+    /// The standing wait for the current load to be done, whatever the event streams say.
+    @ObservationIgnored private var loadWatch: Task<Void, Never>?
 
     /// Whether the page has settled at least once — through the load event, or one of the
     /// screen's capture opportunities. The reuse refire waits for it, so a load still in
@@ -321,6 +323,39 @@ final class ReadingSession {
         loadTask = Task { [weak self] in
             await self?.drive(sequence)
         }
+        watchLoad()
+    }
+
+    /// Watches the page itself, not its event streams, until the load is done: no longer
+    /// loading, with a URL and no failure. Then the page settles — the tab takes its
+    /// title and its picture — whether or not the page is on screen, and whether or not
+    /// either navigation stream reported the end. The page's own export paints with no
+    /// view, so a tab left the moment its address was submitted still gets its picture.
+    private func watchLoad() {
+        loadWatch?.cancel()
+        loadWatch = Task { [weak self] in
+            try? await Task.sleep(for: Self.loadWatchStart)
+            let deadline = ContinuousClock.now + Self.loadWatchLimit
+            while ContinuousClock.now < deadline {
+                guard !Task.isCancelled, let self else { return }
+                if self.failure != nil { return }
+                if !self.page.isLoading, self.page.url != nil {
+                    SnapshotLog.event(
+                        "load done \(self.logTag) progress=\(self.page.estimatedProgress) "
+                            + "url=\(self.page.url?.absoluteString ?? "nil")")
+                    self.loadWatch = nil
+                    self.settle()
+                    return
+                }
+                try? await Task.sleep(for: Self.loadWatchInterval)
+            }
+            guard let self else { return }
+            self.loadWatch = nil
+            SnapshotLog.event(
+                "load watch gave up \(self.logTag) loading=\(self.page.isLoading) "
+                    + "progress=\(self.page.estimatedProgress) "
+                    + "url=\(self.page.url?.absoluteString ?? "nil")")
+        }
     }
 
     /// Observes one load: a throw is the page failing to load. The load's own sequence
@@ -555,6 +590,11 @@ final class ReadingSession {
     private static let viewCap: Duration = .milliseconds(400)
     /// How long a held capture waits for the page's first layout before giving up.
     private static let layoutWatchLimit: Duration = .seconds(15)
+    /// The load watch: a beat for the load to begin, then a look every interval, up to
+    /// the limit.
+    private static let loadWatchStart: Duration = .milliseconds(250)
+    private static let loadWatchInterval: Duration = .milliseconds(200)
+    private static let loadWatchLimit: Duration = .seconds(20)
 }
 
 extension ReadingSession: Equatable {
