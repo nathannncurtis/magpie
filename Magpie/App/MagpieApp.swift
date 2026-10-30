@@ -9,6 +9,7 @@ struct MagpieApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .preferredColorScheme(UITestEnvironment.colorScheme)
                 .environment(model)
                 .task {
                     if UITestEnvironment.isUITesting { UITestPageServer.shared.start() }

@@ -48,13 +48,20 @@ final class ShotWriter {
 @MainActor
 extension XCUIElement {
 
-    /// Waits until the label reads `text`, exactly or contained in it.
+    /// Waits until the element is there and its label reads `text`, exactly or contained in
+    /// it. Reading the label of an element that is not there throws, so existence comes
+    /// first and a miss returns false instead.
     @discardableResult
     func waitForLabel(
         _ text: String, contains: Bool = false, timeout: TimeInterval
     ) -> Bool {
+        guard waitForExistence(timeout: timeout) else { return false }
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
+            guard exists else {
+                Thread.sleep(forTimeInterval: 0.1)
+                continue
+            }
             let label = self.label
             if contains ? label.contains(text) : label == text { return true }
             Thread.sleep(forTimeInterval: 0.1)

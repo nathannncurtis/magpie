@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// The launch and in-page search sheet: the field, up to three suggestion rows, and the
 /// keyboard, reading as one piece.
@@ -88,6 +89,16 @@ struct SearchSheet: View {
             sheetBody
                 .ignoresSafeArea(.keyboard, edges: .bottom)
         }
+        .background {
+            // Over a page, the whole page dims evenly, edge to edge behind the sheet; the
+            // dim arrives with the solid fill as the bar grows into the sheet.
+            if opensFromPage {
+                Rectangle()
+                    .fill(Palette.scrim)
+                    .ignoresSafeArea()
+                    .opacity(fillSettled ? 1 : 0)
+            }
+        }
         .onGeometryChange(for: CGFloat.self) { proxy in
             proxy.safeAreaInsets.bottom
         } action: { inset in
@@ -98,13 +109,10 @@ struct SearchSheet: View {
         }
     }
 
-    /// Everything above the sheet; it takes all the slack. On the mist it is clear; over a
-    /// page it is the scrim, which runs on behind the keyboard and under the status bar.
+    /// The area above the sheet: a tap there folds the sheet away.
     private var tapAway: some View {
-        Rectangle()
-            .fill(opensFromPage ? AnyShapeStyle(Palette.scrim) : AnyShapeStyle(.clear))
+        Color.clear
             .ignoresSafeArea(edges: .top)
-            .ignoresSafeArea(.keyboard, edges: .bottom)
             .contentShape(Rectangle())
             .onTapGesture(perform: onDismiss)
             .accessibilityIdentifier("search.scrim")
@@ -154,6 +162,18 @@ struct SearchSheet: View {
         .onAppear {
             focused = true
             arrive()
+            selectCarriedText()
+        }
+    }
+
+    /// The address a page's sheet opens with arrives selected (04 · 02), so typing replaces
+    /// it outright.
+    private func selectCarriedText() {
+        guard !text.isEmpty else { return }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(150))
+            UIApplication.shared.sendAction(
+                #selector(UIResponder.selectAll(_:)), to: nil, from: nil, for: nil)
         }
     }
 

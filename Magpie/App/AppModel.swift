@@ -46,6 +46,7 @@ final class AppModel {
     /// The live page sessions, by tab.
     private(set) var sessions: [Tab.ID: ReadingSession] = [:]
     private var sessionTasks: [Tab.ID: Task<Void, Never>] = [:]
+    @ObservationIgnored private var snapshotTask: Task<Void, Never>?
 
     init(
         store: TabStore = TabStore(),
@@ -180,12 +181,18 @@ final class AppModel {
         surface = .reading(searchOpen: false)
     }
 
-    /// The tab count: the page folds into its card. Called before the surface moves, so the
-    /// card can show what the page showed.
-    func captureCurrentSnapshot(viewport: CGSize) async {
-        guard let tab = store.currentTab, let session = sessions[tab.id] else { return }
-        guard let data = await session.snapshot(viewport: viewport) else { return }
-        store.setSnapshot(data, for: tab.id)
+    /// The tab count: the page folds into its card. The surface moves at once; the page's
+    /// picture is taken alongside, ungated, and lands on the card if it makes it — a page
+    /// that misses the window keeps its previous snapshot.
+    func openTabs(viewport: CGSize) {
+        if let tab = store.currentTab, let session = sessions[tab.id] {
+            snapshotTask?.cancel()
+            snapshotTask = Task { @MainActor in
+                guard let data = await session.snapshot(viewport: viewport) else { return }
+                store.setSnapshot(data, for: tab.id)
+            }
+        }
+        surface = .tabs
     }
 
     /// The tabs screen.
