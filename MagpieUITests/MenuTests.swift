@@ -60,12 +60,9 @@ final class MenuTests: XCTestCase {
         settingsRow.tap()
         let settingsCookies = app.descendants(matching: .any)["settings.cookies"].firstMatch
         land("settings-from-menu") { settingsCookies.waitForExistence(timeout: 20) }
-        let settingsToggle = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "label == %@", "Cookie banners")).firstMatch
-        land("settings-cookie-toggle") { settingsToggle.waitForExistence(timeout: 10) }
         shots.snap(app, "settings-from-menu")
         XCTAssertEqual(
-            settingsToggle.value as? String, "0",
+            settingsCookies.value as? String, "0",
             "Settings reads the same choice the menu made")
 
         // Done: back on the page, the menu folded away.

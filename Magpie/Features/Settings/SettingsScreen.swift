@@ -127,8 +127,8 @@ struct SettingsScreen: View {
                 .toggleStyle(SettingsToggleStyle())
                 .labelsHidden()
                 .accessibilityLabel(title)
+                .accessibilityIdentifier(id)
         }
-        .accessibilityIdentifier(id)
     }
 
     private func rowValue(_ text: String) -> some View {
