@@ -104,6 +104,7 @@ final class AppModel {
             return session
         }
         let session = ReadingSession(url: tab.url ?? Self.blankPage)
+        session.logTag = "tab=\(tab.id.uuidString.prefix(4))"
         sessions[tab.id] = session
         sessionTasks[tab.id] = Task { await session.run() }
         session.onPageSettled = { [weak self] in self?.pageSettled(for: tab.id) }
@@ -226,7 +227,7 @@ final class AppModel {
                 captureGates[id] = nil
                 return
             }
-            let data = await session.snapshot(trigger: trigger)
+            let outcome = await session.snapshot(trigger: trigger)
             gate = captureGates[id] ?? CaptureGate()
             gate.isRunning = false
             if let rerun = gate.rerunTrigger {
@@ -234,22 +235,28 @@ final class AppModel {
                 gate.rerunTrigger = nil
             }
             captureGates[id] = gate
-            guard let data else {
+            switch outcome {
+            case .notReady:
+                // The page has not laid out; the session's layout watch re-fires the
+                // opportunity when it does. A held capture owes no retry rung.
+                continue
+            case .miss:
                 // Nothing else is waiting: climb the ladder, if the tab still holds the
                 // screen's attention.
                 if captureGates[id]?.pendingTrigger == nil {
                     scheduleRetry(for: id)
                 }
                 continue
-            }
-            retryAttempts[id] = 0
-            store.setSnapshot(data, for: id)
-            SnapshotLog.event("\(trigger) stored \(data.count)B tab=\(id.uuidString.prefix(4))")
-            // The page's own colour is sampled only now that a picture exists: at commit
-            // time the page has not painted yet, and script there has been seen to stall
-            // the load.
-            if session.pageBackground == nil {
-                await session.refreshPageBackground()
+            case .stored(let data):
+                retryAttempts[id] = 0
+                store.setSnapshot(data, for: id)
+                SnapshotLog.event("\(trigger) stored \(data.count)B tab=\(id.uuidString.prefix(4))")
+                // The page's own colour is sampled only now that a picture exists: at
+                // commit time the page has not painted yet, and script there has been
+                // seen to stall the load.
+                if session.pageBackground == nil {
+                    await session.refreshPageBackground()
+                }
             }
         }
     }

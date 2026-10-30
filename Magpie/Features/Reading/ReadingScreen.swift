@@ -25,9 +25,10 @@ struct ReadingScreen: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
     @State private var collapse: CGFloat = 0
-    /// The page area's size as last measured, handed to a session that arrives after the
-    /// last geometry change — a session change alone measures nothing.
-    @State private var pageSize: CGSize?
+    /// The page area's size while the screen is at rest, handed to a session that arrives
+    /// after the last geometry change — a session change alone measures nothing.
+    @State private var restingSize: CGSize?
+    @State private var sizeSettleTask: Task<Void, Never>?
     @State private var chrome = ChromeCollapse()
     @State private var snapTask: Task<Void, Never>?
     @State private var tintRetryTask: Task<Void, Never>?
@@ -37,6 +38,8 @@ struct ReadingScreen: View {
     private static let slimBottomDrop: CGFloat = 10
     /// A pause this long below the collapse threshold snaps the bar back to full.
     private static let snapDelay: Duration = .milliseconds(250)
+    /// How long a size must hold before it counts as the screen at rest.
+    private static let sizeSettleDelay: Duration = .milliseconds(200)
     /// How long to let the page re-render under a new appearance before re-reading it.
     private static let tintRetryDelay: Duration = .milliseconds(600)
     /// The opacity page tints take through the glass (02 · Glass).
@@ -62,20 +65,39 @@ struct ReadingScreen: View {
             .onGeometryChange(for: CGSize.self) { proxy in
                 proxy.size
             } action: { size in
-                pageSize = size
-                guard let session, session.viewportSize != size else { return }
-                session.viewportSize = size
-                session.captureOpportunity()
+                // A capture happens only at rest. With the sheet or keyboard up the page
+                // is squeezed, and a picture of that is a picture of the wrong shape; a
+                // size that keeps changing is one of them in motion. Only a size that
+                // holds reaches the session.
+                sizeSettleTask?.cancel()
+                guard !isSearchOpen else { return }
+                let heldSize = size
+                sizeSettleTask = Task {
+                    try? await Task.sleep(for: Self.sizeSettleDelay)
+                    guard !Task.isCancelled else { return }
+                    restingSize = heldSize
+                    guard let session else { return }
+                    if session.viewportSize != heldSize {
+                        session.viewportSize = heldSize
+                    }
+                    session.captureOpportunity()
+                }
             }
             // A session can arrive, or its page can commit, with no geometry change to
             // follow — both are capture opportunities of their own. The capture itself
             // debounces: one still in flight is replaced by the next.
             .onChange(of: session) { _, incoming in
                 guard let incoming else { return }
-                if let pageSize, incoming.viewportSize == nil {
-                    incoming.viewportSize = pageSize
+                if let restingSize, incoming.viewportSize == nil {
+                    incoming.viewportSize = restingSize
                 }
                 incoming.captureOpportunity()
+            }
+            // The sheet closing is the resting-size opportunity a capture waited out,
+            // once the dismissal's own motion is over.
+            .onChange(of: isSearchOpen) { _, open in
+                guard !open else { return }
+                settleThenCapture()
             }
             .onChange(of: session?.page.url) { _, _ in
                 session?.captureOpportunity()
@@ -89,6 +111,8 @@ struct ReadingScreen: View {
         .onDisappear {
             snapTask?.cancel()
             tintRetryTask?.cancel()
+            sizeSettleTask?.cancel()
+            session?.screenWentAway()
         }
     }
 
@@ -143,6 +167,10 @@ struct ReadingScreen: View {
                             .frame(width: 0, height: 0)
                             .allowsHitTesting(false)
                     }
+                    // One view per session: a page re-hosted on a session change has
+                    // been seen to keep the old view's stale handle, and a fresh view
+                    // leaves no doubt about which page the probe names.
+                    .id(ObjectIdentifier(session))
                 }
             }
             .modifier(CardMatch(namespace: cardNamespace, id: tabID))
@@ -170,6 +198,16 @@ struct ReadingScreen: View {
         guard step != .unchanged else { return }
         apply(step)
         scheduleSnap()
+    }
+
+    /// Fires the capture opportunity once the screen has been still for the settle delay.
+    private func settleThenCapture() {
+        sizeSettleTask?.cancel()
+        sizeSettleTask = Task {
+            try? await Task.sleep(for: Self.sizeSettleDelay)
+            guard !Task.isCancelled, let session else { return }
+            session.captureOpportunity()
+        }
     }
 
     /// Expands the bar: the slim pill's tap, and search opening from it.
@@ -251,6 +289,9 @@ private struct WebViewProbe: UIViewRepresentable {
     }
 
     func updateUIView(_ view: ProbeView, context: Context) {
+        // The screen's session can change under the same probe: re-bind it, or the
+        // probe keeps serving the first session's view.
+        view.session = session
         view.remember()
     }
 
