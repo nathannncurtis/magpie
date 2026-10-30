@@ -68,8 +68,16 @@ final class TabStore {
         return tab
     }
 
-    /// Makes the tab current and marks it active.
-    func select(_ id: Tab.ID, now: Date) {
+    /// Centres a tab in the stack. Browsing the stack is not use: only opening a
+    /// tab or navigating in it marks it active.
+    func select(_ id: Tab.ID) {
+        guard tabs.contains(where: { $0.id == id }) else { return }
+        currentTabID = id
+        saveIndex()
+    }
+
+    /// Makes the tab current and marks it active — opening it, or navigating in it.
+    func activate(_ id: Tab.ID, now: Date) {
         guard let i = tabs.firstIndex(where: { $0.id == id }) else { return }
         currentTabID = id
         tabs[i].lastActive = now

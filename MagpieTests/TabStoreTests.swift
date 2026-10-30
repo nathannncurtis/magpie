@@ -25,13 +25,26 @@ struct TabStoreTests {
         #expect(store.tabs.last?.url == URL(string: "https://b.example"))
     }
 
-    @Test("select makes a tab current and marks it active")
-    func selectTouches() {
+    @Test("select centres a tab without marking it active")
+    func selectCentresWithoutTouching() {
         let store = TabStore()
         let first = store.newTab(title: "A", now: date(0))
         store.newTab(title: "B", now: date(10))
 
-        store.select(first.id, now: date(20))
+        store.select(first.id)
+
+        #expect(store.currentTabID == first.id)
+        #expect(store.tabs.first?.lastActive == date(0))
+        #expect(store.tabs.last?.lastActive == date(10))
+    }
+
+    @Test("activate makes a tab current and marks it active")
+    func activateTouches() {
+        let store = TabStore()
+        let first = store.newTab(title: "A", now: date(0))
+        store.newTab(title: "B", now: date(10))
+
+        store.activate(first.id, now: date(20))
 
         #expect(store.currentTabID == first.id)
         #expect(store.tabs.first?.lastActive == date(20))
@@ -92,7 +105,7 @@ struct TabStoreTests {
         let a = store.newTab(title: "A", now: date(0))
         let b = store.newTab(title: "B", now: date(0))
         let c = store.newTab(title: "C", now: date(0))
-        store.select(a.id, now: date(1))
+        store.activate(a.id, now: date(1))
 
         store.close(b.id)
 
