@@ -65,8 +65,27 @@ final class SkimTests: XCTestCase {
         Thread.sleep(forTimeInterval: 2)
         shots.snap(app, shot)
 
-        // A citation chip scrolls to its source card.
-        app.buttons["Source 3"].firstMatch.tap()
+        // Every citation link in the claim renders; none collapses away.
+        let citationLinks = app.links.matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "magpie-cite://"))
+        XCTAssertGreaterThanOrEqual(citationLinks.count, 2)
+        for index in 0..<citationLinks.count {
+            XCTAssertGreaterThan(
+                citationLinks.element(boundBy: index).frame.width, 0,
+                "citation link \(index) collapsed to zero width")
+        }
+
+        // An inline citation Link taps, then its card lands on screen.
+        let citation = app.links["magpie-cite://3"].firstMatch
+        land("page-citation-link") { citation.waitForExistence(timeout: 10) }
+        if !citation.isHittable { app.swipeUp() }
+        land("page-citation-tap") {
+            let tappable = NSPredicate(format: "hittable == true")
+            return XCTWaiter().wait(
+                for: [XCTNSPredicateExpectation(predicate: tappable, object: citation)], timeout: 10
+            ) == .completed
+        }
+        citation.tap()
         let third = element("skim.source.3")
         land("page-third-source") {
             let landed = NSPredicate(format: "hittable == true")
