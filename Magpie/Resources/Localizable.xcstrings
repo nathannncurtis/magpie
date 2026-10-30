@@ -1,6 +1,54 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%lld days" : {
+      "extractionState" : "manual",
+      "comment" : "Archive interval step in days",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld day"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld days"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld hours" : {
+      "extractionState" : "manual",
+      "comment" : "Archive interval step in hours",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld hour"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld hours"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld open" : {
       "extractionState" : "manual",
       "comment" : "Open-tab count in the tabs screen's bottom row",
@@ -21,6 +69,78 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "%lld weeks" : {
+      "extractionState" : "manual",
+      "comment" : "Archive interval step in weeks",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld week"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld weeks"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "About Magpie" : {
+      "extractionState" : "manual",
+      "comment" : "Settings row and page: about the app",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About Magpie"
+          }
+        }
+      }
+    },
+    "Ads & trackers" : {
+      "extractionState" : "manual",
+      "comment" : "Settings toggle row: ad and tracker blocking",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ads & trackers"
+          }
+        }
+      }
+    },
+    "Any, by search URL" : {
+      "extractionState" : "manual",
+      "comment" : "Note on the Other engine tile",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Any, by search URL"
+          }
+        }
+      }
+    },
+    "Archive tabs after" : {
+      "extractionState" : "manual",
+      "comment" : "Settings row and page: the archive interval",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archive tabs after"
           }
         }
       }
@@ -85,6 +205,102 @@
         }
       }
     },
+    "Continue" : {
+      "extractionState" : "manual",
+      "comment" : "The engine picker's CTA before anything is picked",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
+          }
+        }
+      }
+    },
+    "Continue with %@" : {
+      "extractionState" : "manual",
+      "comment" : "The engine picker's CTA once an engine is picked",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue with %@"
+          }
+        }
+      }
+    },
+    "Cookie banners" : {
+      "extractionState" : "manual",
+      "comment" : "Settings toggle row: cookie banner blocking",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cookie banners"
+          }
+        }
+      }
+    },
+    "Done" : {
+      "extractionState" : "manual",
+      "comment" : "Settings' top-right button",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        }
+      }
+    },
+    "Filter lists" : {
+      "extractionState" : "manual",
+      "comment" : "Settings row and page: the blocking filter lists",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter lists"
+          }
+        }
+      }
+    },
+    "Free and open source. No account. Nothing collected." : {
+      "extractionState" : "manual",
+      "comment" : "Welcome fine print, also on About",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free and open source. No account. Nothing collected."
+          }
+        }
+      }
+    },
+    "Get started" : {
+      "extractionState" : "manual",
+      "comment" : "Welcome's only button",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get started"
+          }
+        }
+      }
+    },
+    "Google, privately" : {
+      "extractionState" : "manual",
+      "comment" : "Note on the Startpage tile",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Google, privately"
+          }
+        }
+      }
+    },
     "It didn't answer. Try again in a moment." : {
       "extractionState" : "manual",
       "comment" : "Page-load failure line for errors other than being offline",
@@ -93,6 +309,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "It didn't answer. Try again in a moment."
+          }
+        }
+      }
+    },
+    "Licence" : {
+      "extractionState" : "manual",
+      "comment" : "About row: the app's licence",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Licence"
+          }
+        }
+      }
+    },
+    "Make Magpie your default browser" : {
+      "extractionState" : "manual",
+      "comment" : "Default browser card title",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make Magpie your default browser"
           }
         }
       }
@@ -109,6 +349,18 @@
         }
       }
     },
+    "Microsoft" : {
+      "extractionState" : "manual",
+      "comment" : "Note on the Bing tile",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microsoft"
+          }
+        }
+      }
+    },
     "New tab" : {
       "extractionState" : "manual",
       "comment" : "Tabs screen button that opens the launch search as a new tab",
@@ -117,6 +369,162 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "New tab"
+          }
+        }
+      }
+    },
+    "No tracking" : {
+      "extractionState" : "manual",
+      "comment" : "Note on the DuckDuckGo tile",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No tracking"
+          }
+        }
+      }
+    },
+    "Not updated yet" : {
+      "extractionState" : "manual",
+      "comment" : "Filter lists timestamp before any refresh",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not updated yet"
+          }
+        }
+      }
+    },
+    "Other" : {
+      "extractionState" : "manual",
+      "comment" : "The engine picker's last tile, and the engine list's last row",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other"
+          }
+        }
+      }
+    },
+    "Own index" : {
+      "extractionState" : "manual",
+      "comment" : "Note on the Brave Search tile",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Own index"
+          }
+        }
+      }
+    },
+    "Paid, no ads" : {
+      "extractionState" : "manual",
+      "comment" : "Note on the Kagi tile",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paid, no ads"
+          }
+        }
+      }
+    },
+    "Passwords" : {
+      "extractionState" : "manual",
+      "comment" : "Settings row: where passwords live",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwords"
+          }
+        }
+      }
+    },
+    "Pick one; you can switch any time from the menu." : {
+      "extractionState" : "manual",
+      "comment" : "The engine picker's single line under its question",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick one; you can switch any time from the menu."
+          }
+        }
+      }
+    },
+    "Plants trees" : {
+      "extractionState" : "manual",
+      "comment" : "Note on the Ecosia tile",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plants trees"
+          }
+        }
+      }
+    },
+    "Privacy" : {
+      "extractionState" : "manual",
+      "comment" : "Settings section label",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy"
+          }
+        }
+      }
+    },
+    "Search" : {
+      "extractionState" : "manual",
+      "comment" : "Settings section label; the picker's step label",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search"
+          }
+        }
+      }
+    },
+    "Search URL, with %s for the query" : {
+      "extractionState" : "manual",
+      "comment" : "Placeholder of the Other engine's URL field",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search URL, with %s for the query"
+          }
+        }
+      }
+    },
+    "Search engine" : {
+      "extractionState" : "manual",
+      "comment" : "Settings row and page: which engine searches run on",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search engine"
+          }
+        }
+      }
+    },
+    "Settings" : {
+      "extractionState" : "manual",
+      "comment" : "The Settings screen's title",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
           }
         }
       }
@@ -133,6 +541,42 @@
         }
       }
     },
+    "Skim for me" : {
+      "extractionState" : "manual",
+      "comment" : "Settings toggle row: the Skim pill in the search sheet",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skim for me"
+          }
+        }
+      }
+    },
+    "Source code" : {
+      "extractionState" : "manual",
+      "comment" : "About row: where the source lives",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source code"
+          }
+        }
+      }
+    },
+    "Suggestions" : {
+      "extractionState" : "manual",
+      "comment" : "Settings toggle row: the search sheet's suggestion rows",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggestions"
+          }
+        }
+      }
+    },
     "Tabs" : {
       "extractionState" : "manual",
       "comment" : "Reading bar button that opens the tab stack",
@@ -141,6 +585,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tabs"
+          }
+        }
+      }
+    },
+    "Tabs & more" : {
+      "extractionState" : "manual",
+      "comment" : "Settings section label",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabs & more"
+          }
+        }
+      }
+    },
+    "The address needs %s where the query goes, on http or https." : {
+      "extractionState" : "manual",
+      "comment" : "Why an Other engine URL is not accepted",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The address needs %s where the query goes, on http or https."
+          }
+        }
+      }
+    },
+    "The browser you shape." : {
+      "extractionState" : "manual",
+      "comment" : "Welcome's line under the name",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The browser you shape."
+          }
+        }
+      }
+    },
+    "The usual" : {
+      "extractionState" : "manual",
+      "comment" : "Note on the Google tile",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The usual"
           }
         }
       }
@@ -157,6 +649,78 @@
         }
       }
     },
+    "Update now" : {
+      "extractionState" : "manual",
+      "comment" : "Filter lists page row: refresh every list now",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update now"
+          }
+        }
+      }
+    },
+    "Updated %@ ago" : {
+      "extractionState" : "manual",
+      "comment" : "Filter lists timestamp, %@ being like 2 h",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updated %@ ago"
+          }
+        }
+      }
+    },
+    "Updated just now" : {
+      "extractionState" : "manual",
+      "comment" : "Filter lists timestamp within a minute of a refresh",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updated just now"
+          }
+        }
+      }
+    },
+    "Use this URL" : {
+      "extractionState" : "manual",
+      "comment" : "Engine list page: save the Other engine's URL",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use this URL"
+          }
+        }
+      }
+    },
+    "Version" : {
+      "extractionState" : "manual",
+      "comment" : "About row: the app's version",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        }
+      }
+    },
+    "Where should searches go?" : {
+      "extractionState" : "manual",
+      "comment" : "The engine picker's question",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Where should searches go?"
+          }
+        }
+      }
+    },
     "You're offline. It'll load when you're back." : {
       "extractionState" : "manual",
       "comment" : "Page-load failure line when the network path is down",
@@ -165,6 +729,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "You're offline. It'll load when you're back."
+          }
+        }
+      }
+    },
+    "iOS Passwords" : {
+      "extractionState" : "manual",
+      "comment" : "Settings row value: where passwords live",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS Passwords"
+          }
+        }
+      }
+    },
+    "magpie" : {
+      "extractionState" : "manual",
+      "comment" : "The wordmark on Welcome",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "magpie"
           }
         }
       }
