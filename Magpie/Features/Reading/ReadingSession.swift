@@ -63,19 +63,19 @@ final class ReadingSession {
     /// The viewport the page is shown at, kept by the reading screen for captures.
     var viewportSize: CGSize?
 
-    /// Whether the page has settled at least once — through the load event, or a
-    /// committed page settling when its viewport becomes known. The reuse refire waits
-    /// for it, so a load still in flight never writes its half-state onto the tab.
+    /// Whether the page has settled at least once — through the load event, or one of the
+    /// screen's capture opportunities. The reuse refire waits for it, so a load still in
+    /// flight never writes its half-state onto the tab.
     private(set) var hasSettled = false
 
-    /// The reading screen has geometry for this session: a page that committed with no
-    /// failure settles now, capture included. The load event's own settle is not relied
-    /// on for the picture — it has not been seen to arrive on the simulator. This counts
-    /// as a settle.
-    func viewportKnown() {
-        guard failure == nil, page.url != nil else { return }
-        hasSettled = true
-        onPageSettled?()
+    /// The page settles — the tab takes what it shows, capture included — whenever one of
+    /// the screen's capture opportunities finds the page showing at a known viewport: the
+    /// viewport arriving, the screen's session changing, or the page's URL committing.
+    /// The load event's own settle is not relied on for the picture; it has not been seen
+    /// to arrive on the simulator. This counts as a settle.
+    func captureOpportunity() {
+        guard viewportSize != nil, failure == nil, page.url != nil else { return }
+        settleWithLateBeat()
     }
 
     /// The web view SwiftUI built for this page, kept by the reading screen's probe.
@@ -176,9 +176,13 @@ final class ReadingSession {
         }
     }
 
-    /// Tells the owner the page settled. A title can land after the event, so it settles
-    /// once more a beat later.
+    /// Tells the owner the page settled. A title and the first paint can land after the
+    /// moment that fired this, so it settles once more a beat later.
     private func settle() {
+        settleWithLateBeat()
+    }
+
+    private func settleWithLateBeat() {
         hasSettled = true
         onPageSettled?()
         Task { [weak self] in
@@ -298,11 +302,16 @@ final class ReadingSession {
             SnapshotLog.event("\(trigger) skip viewport=nil")
             return nil
         }
+        if let found = onScreenWebView() {
+            SnapshotLog.event(
+                "\(trigger) view found[\(found.source)] inset=\(found.view.scrollView.adjustedContentInset.top) safe=\(found.view.safeAreaInsets.top)"
+            )
+        }
         let region = WebPage.ExportedContentConfiguration.Region.rect(
             CGRect(origin: .zero, size: size))
         let exportThrown = ErrorBox()
         if let data = await capped(
-            Self.captureCap,
+            Self.exportCap,
             {
                 do {
                     return try await self.page.exported(
@@ -330,7 +339,7 @@ final class ReadingSession {
         let viewStart = ContinuousClock.now
         let viewThrown = ErrorBox()
         let data = await capped(
-            Self.captureCap,
+            Self.viewCap,
             {
                 do {
                     return try await Self.viewSnapshot(found.view, Self.snapshotConfig(size))
@@ -400,8 +409,19 @@ final class ReadingSession {
             + Int(parts.attoseconds / 1_000_000_000_000_000)
     }
 
-    /// How long either capture path may take before the next one is tried.
-    private static let captureCap: Duration = .milliseconds(400)
+    /// How long each capture path may take before the next one is tried. The export gets
+    /// the longer window — it is the picture worth keeping — and the view path remains
+    /// only its fallback.
+    private static let exportCap: Duration = .milliseconds(1_000)
+    private static let viewCap: Duration = .milliseconds(400)
+}
+
+extension ReadingSession: Equatable {
+
+    /// Identity: the screen's change triggers compare sessions by who they are.
+    nonisolated static func == (lhs: ReadingSession, rhs: ReadingSession) -> Bool {
+        lhs === rhs
+    }
 }
 
 extension UIView {

@@ -25,6 +25,9 @@ struct ReadingScreen: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
     @State private var collapse: CGFloat = 0
+    /// The page area's size as last measured, handed to a session that arrives after the
+    /// last geometry change — a session change alone measures nothing.
+    @State private var pageSize: CGSize?
     @State private var chrome = ChromeCollapse()
     @State private var snapTask: Task<Void, Never>?
     @State private var tintRetryTask: Task<Void, Never>?
@@ -59,9 +62,23 @@ struct ReadingScreen: View {
             .onGeometryChange(for: CGSize.self) { proxy in
                 proxy.size
             } action: { size in
+                pageSize = size
                 guard let session, session.viewportSize != size else { return }
                 session.viewportSize = size
-                session.viewportKnown()
+                session.captureOpportunity()
+            }
+            // A session can arrive, or its page can commit, with no geometry change to
+            // follow — both are capture opportunities of their own. The capture itself
+            // debounces: one still in flight is replaced by the next.
+            .onChange(of: session) { _, incoming in
+                guard let incoming else { return }
+                if let pageSize, incoming.viewportSize == nil {
+                    incoming.viewportSize = pageSize
+                }
+                incoming.captureOpportunity()
+            }
+            .onChange(of: session?.page.url) { _, _ in
+                session?.captureOpportunity()
             }
         }
         .onChange(of: colorScheme) { _, _ in rereadPageTint() }
