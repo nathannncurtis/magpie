@@ -15,6 +15,11 @@ udid=${SIM_UDID:-$(xcrun simctl list devices available -j |
   jq -r '[.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone"))] | last | .udid')}
 test -n "$udid" && test "$udid" != null
 
+# UI tests write a PNG per flow step here (the simulator shares the host filesystem); CI uploads them.
+shots=${MAGPIE_SHOTS_DIR:-$PWD/shots}
+mkdir -p "$shots"
+export TEST_RUNNER_MAGPIE_SHOTS_DIR="$shots"
+
 set +e
 xcodebuild test \
   -project Magpie.xcodeproj -scheme Magpie \

@@ -81,8 +81,14 @@ jobs:
         run: sudo xcode-select -s /Applications/Xcode_27.1.app && xcodebuild -version && swift --version
       - name: Build and test
         run: bash .github/scripts/app.sh
+      - if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: flow-shots
+          path: shots/
+          if-no-files-found: ignore
 
-  # The design board is one self-contained HTML page; check it parses and loads nothing it shouldn't.
+  # The design board is one self-contained HTML page; check its charset and that it loads nothing it shouldn't.
   board:
     needs: changes
     if: needs.changes.outputs.board == 'true'
