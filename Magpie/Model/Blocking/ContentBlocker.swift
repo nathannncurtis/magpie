@@ -55,7 +55,6 @@ final class ContentBlocker {
 
     private static let adsKey = "blocksAdsAndTrackers"
     private static let cookiesKey = "blocksCookieBanners"
-    private static let modsKey = "appliesModLists"
 
     var blocksAdsAndTrackers: Bool {
         didSet {
@@ -74,14 +73,8 @@ final class ContentBlocker {
     }
 
     /// Whether the lists mod installs block too. On while any filter-list mod is enabled;
-    /// the mod store owns the lists themselves.
-    var appliesModLists: Bool {
-        didSet {
-            guard oldValue != appliesModLists else { return }
-            defaults.set(appliesModLists, forKey: Self.modsKey)
-            reapply()
-        }
-    }
+    /// the mod store owns the lists and hands them over through `setModLists`.
+    private(set) var appliesModLists = false
 
     /// When the filter lists last updated, for the Settings "Filter lists" row.
     private(set) var lastUpdated: Date?
@@ -94,10 +87,9 @@ final class ContentBlocker {
     init(store: any RuleSetProviding, defaults: UserDefaults = .standard) {
         self.store = store
         self.defaults = defaults
-        defaults.register(defaults: [Self.adsKey: true, Self.cookiesKey: true, Self.modsKey: true])
+        defaults.register(defaults: [Self.adsKey: true, Self.cookiesKey: true])
         blocksAdsAndTrackers = defaults.bool(forKey: Self.adsKey)
         blocksCookieBanners = defaults.bool(forKey: Self.cookiesKey)
-        appliesModLists = defaults.bool(forKey: Self.modsKey)
     }
 
     /// Refreshes the lists when stale, then updates the Settings row's timestamp and
@@ -109,8 +101,9 @@ final class ContentBlocker {
     }
 
     /// Takes the mod-installed lists and re-applies what pages carry, so the `.mods` set
-    /// follows the enabled filter-list mods.
+    /// follows the enabled filter-list mods: on while any of them is enabled.
     func setModLists(_ lists: [FilterList]) async {
+        appliesModLists = !lists.isEmpty
         await store.setUserLists(lists)
         await applyEnabledSets()
     }

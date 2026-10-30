@@ -115,4 +115,29 @@ struct ContentBlockerControllerTests {
         await blocker.refresh()
         #expect(controller.tokens.count == 2)
     }
+
+    @Test("the lists mod installs block on top, while any of them is enabled")
+    func modListsOnTop() async {
+        let blocker = makeBlocker()
+        let controller = FakeController()
+        await blocker.attach(controller)
+
+        let modList = FilterList.userAdded(
+            id: "midnight", title: "Midnight Pages", url: url("https://e.example/list.txt"))
+        await blocker.setModLists([modList])
+        #expect(controller.tokens == ["list-adsAndTrackers", "list-cookieBanners", "list-mods"])
+
+        blocker.blocksCookieBanners = false
+        await settle()
+        #expect(controller.tokens == ["list-adsAndTrackers", "list-mods"])
+
+        // The last list going away takes the set with it.
+        await blocker.setModLists([])
+        await settle()
+        #expect(controller.tokens == ["list-adsAndTrackers"])
+    }
+
+    private func url(_ address: String) -> URL {
+        URL(string: address) ?? URL(fileURLWithPath: "/")
+    }
 }
