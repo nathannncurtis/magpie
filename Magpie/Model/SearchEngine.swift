@@ -92,6 +92,25 @@ struct SearchEngine: Equatable, Identifiable, Sendable {
         return Self.url(fromTemplate: suggestTemplate, inserting: query)
     }
 
+    /// The query a results URL holds, when the URL is this engine's results page: the
+    /// text between the template's parts around `%s`, decoded. The encoded query can
+    /// never hold the URL's own separators, so the split point is fixed.
+    func resultsQuery(for url: URL) -> String? {
+        guard let placeholder = searchTemplate.range(of: "%s") else { return nil }
+        let address = url.absoluteString
+        let prefix = String(searchTemplate[..<placeholder.lowerBound])
+        let suffix = String(searchTemplate[placeholder.upperBound...])
+        guard
+            address.hasPrefix(prefix),
+            address.hasSuffix(suffix),
+            address.count >= prefix.count + suffix.count
+        else { return nil }
+        let encoded = String(address.dropFirst(prefix.count).dropLast(suffix.count))
+        guard let query = encoded.removingPercentEncoding else { return nil }
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
     /// Substitutes the encoded query for `%s` in a URL template.
     private static func url(fromTemplate template: String, inserting query: String) -> URL? {
         guard let encoded = query.addingPercentEncoding(withAllowedCharacters: queryAllowed) else {

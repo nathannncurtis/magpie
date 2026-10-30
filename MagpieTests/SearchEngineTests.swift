@@ -94,4 +94,67 @@ struct SearchEngineTests {
                 == "https://duckduckgo.com/ac/?q=car%20%26%20bike&type=list")
         #expect(SearchEngine.builtins[4].suggestURL(for: "anything") == nil)
     }
+
+    @Test("every engine's results page gives the query back")
+    func resultsQueries() {
+        for engine in SearchEngine.builtins {
+            guard let url = engine.searchURL(for: "magpie test") else {
+                Issue.record("no url for \(engine.id)")
+                continue
+            }
+            #expect(
+                engine.resultsQuery(for: url) == "magpie test", "no query for \(engine.id)")
+        }
+    }
+
+    @Test("a results query with the encoded characters round-trips")
+    func resultsQueryEscaping() {
+        let raw = "a&b#c+d e🕊"
+        for engine in SearchEngine.builtins {
+            guard let url = engine.searchURL(for: raw) else {
+                Issue.record("no url for \(engine.id)")
+                continue
+            }
+            #expect(engine.resultsQuery(for: url) == raw, "no query for \(engine.id)")
+        }
+    }
+
+    @Test("the Other engine's results page gives the query back")
+    func otherResultsQuery() {
+        let other = SearchEngine.other(template: "https://example.org/search?q=%s&safe=1")
+        guard let other, let url = other.searchURL(for: "quiet web") else {
+            Issue.record("no other engine url")
+            return
+        }
+        #expect(other.resultsQuery(for: url) == "quiet web")
+        #expect(
+            other.resultsQuery(
+                for: URL(string: "https://example.org/search?q=&safe=1")!) == nil)
+    }
+
+    @Test("a page that is not the engine's results page holds no query")
+    func nonResultsPages() {
+        let duckduckgo = SearchEngine.builtins[0]
+        let google = SearchEngine.builtins[1]
+
+        // The engine's own site, off the results path.
+        #expect(
+            duckduckgo.resultsQuery(for: URL(string: "https://duckduckgo.com/about")!) == nil)
+        // Another engine's results page.
+        guard let foreign = google.searchURL(for: "magpie test") else {
+            Issue.record("no google url")
+            return
+        }
+        #expect(duckduckgo.resultsQuery(for: foreign) == nil)
+
+        // A page carrying the template's own placeholder, which never decodes.
+        #expect(
+            duckduckgo.resultsQuery(for: URL(string: "https://duckduckgo.com/?q=%s")!) == nil)
+        // A query that trims away to nothing.
+        guard let blank = duckduckgo.searchURL(for: " ") else {
+            Issue.record("no blank url")
+            return
+        }
+        #expect(duckduckgo.resultsQuery(for: blank) == nil)
+    }
 }

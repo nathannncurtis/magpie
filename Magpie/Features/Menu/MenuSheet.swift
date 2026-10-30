@@ -193,10 +193,10 @@ struct MenuSheet: View {
         model.currentSession?.page.url ?? model.store.currentTab?.url
     }
 
-    /// The Skim tile: the page's own address, read.
+    /// The Skim tile: the search behind a results page, or the page's own title, read.
     private func skim() {
-        guard let address = model.currentSession?.page.url?.absoluteString else { return }
-        model.startSkim(query: address)
+        guard let query = model.skimTileQuery else { return }
+        model.startSkim(query: query)
     }
 
     private func toggleBookmark() {

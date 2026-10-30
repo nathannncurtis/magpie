@@ -370,6 +370,23 @@ final class AppModel {
 
     // MARK: Skim
 
+    /// The query the menu's Skim tile reads: the search behind the page when it is a
+    /// results page on a known engine, otherwise the page's title, falling back to its
+    /// host. Never the page's address itself.
+    var skimTileQuery: String? {
+        guard let tab = store.currentTab else { return nil }
+        if let url = tab.url {
+            let engines = [engine] + SearchEngine.builtins
+            if let query = engines.lazy.compactMap({ $0.resultsQuery(for: url) }).first {
+                return query
+            }
+        }
+        let title = tab.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !title.isEmpty { return title }
+        let host = HostFormatter.host(for: tab.url)
+        return host.isEmpty ? nil : host
+    }
+
     /// A Skim pill, or a retry: read the top results for the query and build the
     /// page, on the Skim surface.
     func startSkim(query: String) {

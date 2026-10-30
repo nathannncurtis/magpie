@@ -83,4 +83,61 @@ struct MenuModelTests {
         #expect(preferences.archiveInterval == 3 * 24 * 60 * 60)
         #expect(Preferences.archiveIntervalLabel(preferences.archiveInterval) == "3 days")
     }
+
+    @Test("the Skim tile reads the search behind the engine's results page")
+    func skimTileReadsTheCurrentEngine() {
+        let model = makeModel()
+        guard let results = model.engine.searchURL(for: "magpie test") else {
+            Issue.record("no results url")
+            return
+        }
+        model.openFromLaunch(results)
+
+        #expect(model.skimTileQuery == "magpie test")
+    }
+
+    @Test("the Skim tile reads another engine's results page the same way")
+    func skimTileReadsAForeignEngine() {
+        let model = makeModel()
+        guard let results = SearchEngine.builtins[1].searchURL(for: "quiet web") else {
+            Issue.record("no results url")
+            return
+        }
+        model.openFromLaunch(results)
+
+        #expect(model.skimTileQuery == "quiet web")
+    }
+
+    @Test("off a results page, the Skim tile reads the title, then the host")
+    func skimTileFallsBackToTitleThenHost() {
+        let model = makeModel()
+
+        // A page with its own title.
+        model.openFromLaunch(url("https://quietweb.org/reading"))
+        guard let titled = model.store.currentTab else {
+            Issue.record("no tab")
+            return
+        }
+        model.store.update(
+            id: titled.id,
+            url: url("https://quietweb.org/reading"),
+            title: "The web, read slowly",
+            faviconURL: nil,
+            now: .now)
+        #expect(model.skimTileQuery == "The web, read slowly")
+
+        // A page whose title has not landed yet.
+        model.openFromLaunch(url("https://www.debuyer.com/care"))
+        guard let bare = model.store.currentTab else {
+            Issue.record("no tab")
+            return
+        }
+        model.store.update(
+            id: bare.id,
+            url: url("https://www.debuyer.com/care"),
+            title: "  ",
+            faviconURL: nil,
+            now: .now)
+        #expect(model.skimTileQuery == "debuyer.com")
+    }
 }
