@@ -36,7 +36,7 @@ Later launches restore the last tab, with no animation.
 ## 03 · Tabs
 - **Layout:** a `TabStack` on the mist. The current tab is centred; the others sit to each side, with labels above.
 - **Gestures:** fling up to close; tap to open; swipe sideways to move through the stack.
-- **Bottom row:** the Archived chip (opens 09), the open count, and + (opens the launch search sheet, 01, on the mist, as a new tab).
+- **Bottom row:** the Archived chip (opens 09), the open count, and + (opens the launch search sheet, 01, on the mist, as a new tab). The row sits like the bars (foundations · bottom controls), its bottom edge `max(26, safe-area-bottom − 8)` above the physical bottom; the stack keeps clear of the status bar.
 - **Auto-archive:** tabs untouched for the set time move to Archive. The default is 1 day, adjustable from 12 hours to 30 days, ON by default.
 
 ## 04 · Skim page

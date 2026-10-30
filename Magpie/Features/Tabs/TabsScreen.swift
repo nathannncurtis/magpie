@@ -22,16 +22,13 @@ struct TabsScreen: View {
     private enum ScreenMetrics {
         /// The bottom row's inset from the sides.
         static let rowInset: CGFloat = 16
-        /// Where the row sits above the physical bottom edge.
-        static let bottomEdge: CGFloat = 34
-        /// Kept above a taller home indicator, the way the bars' 26 pt rule does.
-        static let aboveHomeIndicator: CGFloat = 8
     }
 
     var body: some View {
         ZStack(alignment: .bottom) {
+            MistBackground()
+                .ignoresSafeArea()
             GeometryReader { geo in
-                MistBackground()
                 TabStack(
                     tabs: store.tabs,
                     currentID: store.currentTabID,
@@ -47,18 +44,14 @@ struct TabsScreen: View {
                 .accessibilityIdentifier("tabs.stack")
             }
             bottomRow
-                .padding(
-                    .bottom,
-                    max(
-                        ScreenMetrics.bottomEdge,
-                        bottomInset - ScreenMetrics.aboveHomeIndicator))
+                .padding(.bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset))
         }
         .onGeometryChange(for: CGFloat.self) {
             $0.safeAreaInsets.bottom
         } action: {
             bottomInset = $0
         }
-        .ignoresSafeArea()
+        .ignoresSafeArea(edges: .bottom)
     }
 
     private var bottomRow: some View {
