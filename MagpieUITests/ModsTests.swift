@@ -66,20 +66,24 @@ final class ModsTests: XCTestCase {
         shots.snap(app, "install-failed")
 
         // 06 · the install: the sheet drops and the confirmation row lands behind it.
-        openSheet(appearance: appearance)
+        // The check is read the moment it pops — and this launch holds it, so the shot
+        // catches it whatever the runner's latency; the released app clears it on beat.
+        openSheet(appearance: appearance, holdingInstallCheck: true)
         typeLink("http://127.0.0.1:53117/mod.user.js")
         land("sheet-preview-again") { preview.waitForExistence(timeout: 15) }
         dropKeyboard()
         app.buttons["mods.sheet.install"].tap()
+        land("row-checked") { seen(installedCheck, timeout: 10) }
         land("sheet-dropped") { gone(sheetField, timeout: 10) }
-        land("row-landed") { firstRow.waitForExistence(timeout: 10) }
-        land("row-checked") { installedCheck.waitForExistence(timeout: 10) }
         shots.snap(app, "mod-installed")
     }
 
     // MARK: Launching and typing
 
-    private func launch(appearance: String, resetting: Bool = false, seeding: Bool = false) {
+    private func launch(
+        appearance: String, resetting: Bool = false, seeding: Bool = false,
+        holdingInstallCheck: Bool = false
+    ) {
         app?.terminate()
         let app = XCUIApplication()
         app.launchArguments = ["-uiTesting", "-uiTestingSurface=mods", "-AppleInterfaceStyle", appearance]
@@ -89,13 +93,16 @@ final class ModsTests: XCTestCase {
         if seeding {
             app.launchArguments.append("-uiTestingModsInstalled")
         }
+        if holdingInstallCheck {
+            app.launchArguments.append("-uiTestingHoldInstallCheck")
+        }
         self.app = app
         app.launch()
     }
 
     /// Opens a fresh install sheet over the mods screen.
-    private func openSheet(appearance: String) {
-        launch(appearance: appearance)
+    private func openSheet(appearance: String, holdingInstallCheck: Bool = false) {
+        launch(appearance: appearance, holdingInstallCheck: holdingInstallCheck)
         land("sheet-footer") { installFooter.waitForExistence(timeout: 20) }
         installFooter.tap()
         land("sheet-open") { sheetField.waitForExistence(timeout: 10) }
@@ -112,6 +119,16 @@ final class ModsTests: XCTestCase {
     private func dropKeyboard() {
         guard app.keyboards.element.exists else { return }
         app.staticTexts["Install from URL"].firstMatch.tap()
+    }
+
+    /// Whether an element has arrived, polled short.
+    private func seen(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if element.exists { return true }
+            Thread.sleep(forTimeInterval: 0.1)
+        }
+        return element.exists
     }
 
     /// Whether an element has left the screen.
@@ -136,7 +153,6 @@ final class ModsTests: XCTestCase {
     private var preview: XCUIElement { app.descendants(matching: .any)["mods.sheet.preview"].firstMatch }
     private var warning: XCUIElement { app.descendants(matching: .any)["mods.sheet.warning"].firstMatch }
     private var failure: XCUIElement { app.descendants(matching: .any)["mods.sheet.failure"].firstMatch }
-    private var firstRow: XCUIElement { app.descendants(matching: .any)["mods.row"].firstMatch }
     private var installedCheck: XCUIElement {
         app.descendants(matching: .any)["mods.installedCheck"].firstMatch
     }

@@ -263,12 +263,12 @@ struct ModsScreen: View {
             landedModID = id
         }
         Task { @MainActor in
-            // The check holds through the sheet's drop and the moment of reading it.
-            try? await Task.sleep(for: .seconds(6))
-            if landedModID == id {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    landedModID = nil
-                }
+            // The check holds behind the dropping sheet long enough to be seen.
+            try? await Task.sleep(for: .seconds(2))
+            // The UI tests hold it further, until their shot has caught it.
+            guard !UITestEnvironment.holdsInstallCheck, landedModID == id else { return }
+            withAnimation(.easeInOut(duration: 0.2)) {
+                landedModID = nil
             }
         }
     }

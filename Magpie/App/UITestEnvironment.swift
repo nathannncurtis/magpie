@@ -36,6 +36,12 @@ enum UITestEnvironment {
         ProcessInfo.processInfo.arguments.contains("-uiTestingModsInstalled")
     }
 
+    /// Whether the landed install's check holds past its beat, so the UI test's shot can
+    /// catch it whatever the runner's latency; the released app clears it on time.
+    static var holdsInstallCheck: Bool {
+        ProcessInfo.processInfo.arguments.contains("-uiTestingHoldInstallCheck")
+    }
+
     /// The appearance the tests ask for by launch argument (`-AppleInterfaceStyle Dark`),
     /// applied by the app itself so every run lands in the scheme it asked for. Nil when
     /// the tests set no preference, and always nil outside the UI tests.
