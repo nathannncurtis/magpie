@@ -76,7 +76,7 @@ Stagger lists 25–30 ms per item. Content inside a sheet starts 50 ms after the
 - **Sequence:**
   1. The mist fades up from paper (250 ms).
   2. The mark draws over 700 ms, and the bead drops in at the end (`snap`).
-  3. The mark rises 40–60 pt and fades as the search sheet rises from the bottom (`chrome`).
+  3. The whole stage — paper, mist and mark — fades as the search sheet rises from the bottom (`chrome`), the mark rising 40 pt within it. Under Reduce Motion it is one 200 ms crossfade.
 - **Total:** about 1.9 s. Tapping skips it.
 - **Reduce Motion:** the mark appears whole and the sheet fades in.
 

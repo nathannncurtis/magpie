@@ -22,6 +22,9 @@ private enum Timing {
     static let hold: TimeInterval = 0.3
     /// Every moment under Reduce Motion.
     static let reducedFade: TimeInterval = 0.2
+    /// How long the handed-off stage lingers before it is cleared away: the chrome
+    /// spring's settle, so the clear lands once nothing of the stage is left to see.
+    static let stageLinger: TimeInterval = 0.9
     /// How long the drawn phases hold in the UI tests' shot mode.
     static let heldPhase: TimeInterval = 4
 
@@ -35,11 +38,12 @@ private enum Timing {
 }
 
 /// 05 · 07 Launch: the cold-start intro wrapped around the launch screen. The mist fades
-/// up from paper, the mark draws itself once and holds in its sheen, then steps aside —
-/// rising 40 pt and fading — as the launch screen's sheet rises from the bottom, its
-/// field focused with the keyboard. A tap anywhere skips straight to that hand-off, and
-/// after it the sheet takes every touch. Under Reduce Motion the mark stands whole and
-/// the sheet crossfades in.
+/// up from paper, the mark draws itself once and holds in its sheen, then hands off:
+/// the whole stage — paper, mist and mark — fades as the launch screen's sheet rises
+/// from the bottom, the mark rising 40 pt within it, its field focused with the
+/// keyboard. A tap anywhere skips straight to that hand-off, and after it the sheet
+/// takes every touch. Under Reduce Motion the mark stands whole and the sheet
+/// crossfades in.
 ///
 /// `plays` is the app model's one trigger: a cold start with no tab to restore and
 /// onboarding behind it. Every other arrival of the launch screen — a restored tab, the
@@ -71,7 +75,10 @@ struct LaunchIntro<Launch: View>: View {
     @State private var trim: CGFloat = 0
     @State private var beadDropped = false
     @State private var markAside = false
-    /// The stepped-aside mark, cleared away once its fade has run.
+    /// The handed-off stage, faded to nothing as the sheet rises through it.
+    @State private var stageFaded = false
+    /// The faded stage, cleared away once its fade has run: cleanup only, nothing left
+    /// to see by then.
     @State private var markGone = false
 
     init(
@@ -108,14 +115,16 @@ struct LaunchIntro<Launch: View>: View {
         .task { await run() }
         .task(id: sheetUp) {
             guard sheetUp, intro else { return }
-            await sleep(0.9)
+            await sleep(motionReduced ? Timing.reducedFade : Timing.stageLinger)
             markGone = true
         }
         .onDisappear { onFinished() }
     }
 
     /// The intro's stage: paper, the mist fading up over it, and the mark drawing at two
-    /// fifths of the height. A tap anywhere on it skips.
+    /// fifths of the height. A tap anywhere on it skips. The whole stage fades at the
+    /// hand-off — the sheet rising behind it runs on mist of its own, but the paper has
+    /// to dissolve, not drop away.
     private var markStage: some View {
         GeometryReader { geo in
             ZStack {
@@ -127,6 +136,7 @@ struct LaunchIntro<Launch: View>: View {
             }
         }
         .ignoresSafeArea()
+        .opacity(stageFaded ? 0 : 1)
         .contentShape(Rectangle())
         .onTapGesture(perform: skip)
     }
@@ -191,7 +201,8 @@ struct LaunchIntro<Launch: View>: View {
         handOff()
     }
 
-    /// Reduce Motion: the mark whole, then the sheet crossfading in as the mark fades out.
+    /// Reduce Motion: the mark whole, then the sheet crossfading in as the stage fades
+    /// out.
     private func runReduced() async {
         withAnimation(.easeInOut(duration: Timing.reducedFade)) {
             mistUp = true
@@ -202,21 +213,24 @@ struct LaunchIntro<Launch: View>: View {
         beadDropped = true
         await sleep(Timing.holdBeat)
         guard !sheetUp else { return }
-        withAnimation(.easeInOut(duration: Timing.reducedFade)) {
+        handOff()
+    }
+
+    /// The stage hands off to the sheet: paper, mist and mark fading as the sheet rises
+    /// through them, the mark rising 40 pt within it.
+    private func handOff() {
+        withAnimation(handOffAnimation) {
             markAside = true
+            stageFaded = true
             sheetUp = true
         }
         onFinished()
     }
 
-    /// The mark steps aside, rising and fading, as the sheet rises: both on the chrome
-    /// spring.
-    private func handOff() {
-        withAnimation(Springs.chrome.animation) {
-            markAside = true
-            sheetUp = true
-        }
-        onFinished()
+    /// The hand-off's own motion: the chrome spring, or Reduce Motion's crossfade — a
+    /// skip under Reduce Motion is a crossfade too.
+    private var handOffAnimation: Animation {
+        motionReduced ? .easeInOut(duration: Timing.reducedFade) : Springs.chrome.animation
     }
 
     /// A tap while the intro is up: straight to the hand-off.
