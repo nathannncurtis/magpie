@@ -28,6 +28,7 @@ struct SearchField: View {
                 .submitLabel(.search)
                 .focused(focus)
                 .onSubmit(onSubmit)
+                .accessibilityIdentifier("search.field")
             EngineTag(name: engineName)
         }
         .padding(

@@ -10,7 +10,10 @@ struct MagpieApp: App {
         WindowGroup {
             RootView()
                 .environment(model)
-                .task { await model.start() }
+                .task {
+                    if UITestEnvironment.isUITesting { UITestPageServer.shared.start() }
+                    await model.start()
+                }
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .active { model.refreshArchive() }
                 }

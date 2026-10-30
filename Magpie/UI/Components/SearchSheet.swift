@@ -132,7 +132,6 @@ struct SearchSheet: View {
             .padding(.horizontal, Metrics.Spacing.insetFloating)
             .padding(.top, Layout.topPadding)
             .opacity(fieldArrived ? 1 : 0)
-            .accessibilityIdentifier("search.field")
             rowList
                 .padding(.horizontal, Layout.rowListInset)
                 .padding(.top, Layout.rowListInset)

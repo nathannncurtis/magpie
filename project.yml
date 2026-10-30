@@ -38,15 +38,28 @@ targets:
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
+  MagpieUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - MagpieUITests
+    dependencies:
+      - target: Magpie
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Magpie
 schemes:
   Magpie:
     build:
       targets:
         Magpie: all
         MagpieTests: [test]
+        MagpieUITests: [test]
     run:
       config: Debug
     test:
       config: Debug
       targets:
         - MagpieTests
+        - MagpieUITests
