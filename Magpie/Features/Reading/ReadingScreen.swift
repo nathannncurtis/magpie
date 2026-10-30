@@ -15,6 +15,9 @@ struct ReadingScreen: View {
     var engine: SearchEngine
     /// Whether the search sheet over the page shows its Skim pill.
     var skimEnabled: Bool = true
+    /// Whether Skim runs on this device at all: the menu's Skim tile hides when it
+    /// can't, whatever the pill's own toggle says.
+    var skimRunsHere: Bool = true
     var suggestionsEnabled: Bool = true
     /// While a full screen (Settings) covers the sheet over the page.
     var focusSuspended: Bool = false
@@ -81,7 +84,7 @@ struct ReadingScreen: View {
             host: session?.failure?.host ?? HostFormatter.host(for: session?.page.url),
             tabCount: tabCount,
             canGoBack: session?.canGoBack ?? false,
-            skimOffered: skimEnabled,
+            skimOffered: skimRunsHere,
             barBottomEdge: bottomEdge,
             morphNamespace: chromeNamespace,
             onBack: { session?.goBack() },
