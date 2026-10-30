@@ -21,6 +21,9 @@ struct ReadingScreen: View {
     var onSearchDismiss: () -> Void
     var onAddressTap: () -> Void = {}
     var onTabsTap: () -> Void = {}
+    /// The page area's size, kept past this screen: a session made with no reading
+    /// screen up still needs a region to capture at.
+    var onPageSize: (CGSize) -> Void = { _ in }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
@@ -71,6 +74,9 @@ struct ReadingScreen: View {
                 // holds reaches the session.
                 sizeSettleTask?.cancel()
                 guard !isSearchOpen else { return }
+                // The size itself is a fact about the screen, passed on at once; only
+                // the session's capture waits for it to hold.
+                onPageSize(size)
                 let heldSize = size
                 sizeSettleTask = Task {
                     try? await Task.sleep(for: Self.sizeSettleDelay)

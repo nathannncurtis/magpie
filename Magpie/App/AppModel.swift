@@ -105,6 +105,7 @@ final class AppModel {
         }
         let session = ReadingSession(url: tab.url ?? Self.blankPage)
         session.logTag = "tab=\(tab.id.uuidString.prefix(4))"
+        session.viewportSize = restingPageSize
         sessions[tab.id] = session
         sessionTasks[tab.id] = Task { await session.run() }
         session.onPageSettled = { [weak self] in self?.pageSettled(for: tab.id) }
@@ -114,6 +115,21 @@ final class AppModel {
     }
 
     private static let blankPage = URL(string: "about:blank") ?? URL(fileURLWithPath: "/")
+
+    /// The page area's size while the reading screen was last at rest. A session made
+    /// with no reading screen up — an address submitted and left at once — still needs a
+    /// region to capture at, and no screen will measure one for it.
+    @ObservationIgnored private var restingPageSize: CGSize?
+
+    /// The reading screen's word for the page area's size. The fact is remembered for
+    /// sessions made with no screen up, and handed to any session off screen — its own
+    /// screen may have left before its size held, or squeezed on the way out.
+    func notePageSize(_ size: CGSize) {
+        restingPageSize = size
+        for (_, session) in sessions {
+            session.noteViewport(size)
+        }
+    }
 
     /// Keeps only the current tab's session and the most recently read others.
     private func pruneSessions() {

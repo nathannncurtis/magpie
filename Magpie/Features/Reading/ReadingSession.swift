@@ -98,7 +98,12 @@ final class ReadingSession {
     /// paint and has been seen to stall the load.
     func captureOpportunity() {
         guard viewportSize != nil, failure == nil, page.url != nil else { return }
-        guard contentHasLaidOut() else {
+        guard let found = onScreenWebView() else {
+            // No view at all: the page is off screen, and nothing can land there. Its
+            // settle comes from the load's own end, watched apart from the screen.
+            return
+        }
+        guard found.view.scrollView.contentSize.width > 0 else {
             watchForLayout()
             return
         }
@@ -149,11 +154,26 @@ final class ReadingSession {
     /// built after the probe first looks, and swapped for a new one later.
     @ObservationIgnored var webViewLookup: (@MainActor () -> WKWebView?)?
 
+    /// The screen measured the page area. A session with no view on screen — its tab
+    /// left — takes the size whatever it had: its captures are the page's own export,
+    /// which wants the region the page shows at with nothing covering it. A smaller
+    /// size is a cover still on it — the sheet, the keyboard — and never replaces a
+    /// truer one.
+    func noteViewport(_ size: CGSize) {
+        guard onScreenWebView() == nil else { return }
+        if let current = viewportSize, size.height < current.height { return }
+        guard viewportSize != size else { return }
+        viewportSize = size
+    }
+
     /// The reading screen went away: the page's view leaves the hierarchy, so its
     /// handle is dropped — a detached view held alive keeps its accessibility line open,
     /// which has been seen to wedge the app's accessibility snapshot — and its focus
-    /// goes with it. The probe re-finds the view when the page returns to the screen.
+    /// goes with it. The layout watch waits on a view that is leaving, so it stops. The
+    /// probe re-finds the view when the page returns to the screen.
     func screenWentAway() {
+        layoutWatch?.cancel()
+        layoutWatch = nil
         webView?.endEditing(true)
         webView = nil
     }
@@ -223,7 +243,10 @@ final class ReadingSession {
         """#
 
     /// Starts the session: the first load, then the standing watch on navigation events.
+    /// The watch subscribes after the load is issued, and a page served fast can outrun
+    /// it — the load's own sequence, in `drive`, spans every event of that load.
     func run() async {
+        SnapshotLog.event("observer start \(logTag)")
         open(initialURL)
         while !Task.isCancelled {
             do {
@@ -293,17 +316,22 @@ final class ReadingSession {
         failure = nil
         pageBackground = nil
         loadTask?.cancel()
+        SnapshotLog.event("load \(logTag) \(requestedURL?.absoluteString ?? "nil")")
         let sequence = events()
         loadTask = Task { [weak self] in
             await self?.drive(sequence)
         }
     }
 
-    /// Observes one load: a throw is the page failing to load.
+    /// Observes one load: a throw is the page failing to load. The load's own sequence
+    /// ends when the load does, so that end settles the page even when the session-wide
+    /// watch — subscribed after the load was issued — saw none of it.
     private func drive<Events: AsyncSequence>(_ events: Events) async
     where Events.Element == WebPage.NavigationEvent, Events.Failure == Error {
         do {
             for try await _ in events {}
+            SnapshotLog.event("load finished \(logTag)")
+            settle()
         } catch {
             fail(with: error)
         }
@@ -367,9 +395,11 @@ final class ReadingSession {
     /// page's own export is preferred; a renderer that never answers falls back to the
     /// web view, through the handle the reading screen's probe keeps. Both are capped: a
     /// page that misses both windows reads as a miss, and a late answer is dropped. A
-    /// page with no view on screen, or no layout yet, is not ready — the capture is held
-    /// for the layout watch, not spent on the retry ladder. Every step is logged, because
-    /// the captures are being diagnosed on the simulator.
+    /// page with no view on screen — a tab left the moment its address was submitted — is
+    /// captured by the page's export alone, once its load has settled; a page with no
+    /// layout yet is not ready, held for the layout watch rather than spent on the retry
+    /// ladder. Every step is logged, because the captures are being diagnosed on the
+    /// simulator.
     func snapshot(trigger: String) async -> CaptureOutcome {
         let start = ContinuousClock.now
         guard failure == nil, page.url != nil else {
@@ -383,25 +413,33 @@ final class ReadingSession {
         }
         // The region is the remembered viewport; the view's bounds and its scroll view's
         // content size are what the page actually laid out at — logged together so a
-        // picture that crops says which two disagreed.
-        guard let found = onScreenWebView() else {
-            SnapshotLog.event("\(trigger) notReady view=none")
-            return .notReady
-        }
-        let scroll = found.view.scrollView
-        guard scroll.contentSize.width > 0 else {
+        // picture that crops says which two disagreed. A page with no view is off
+        // screen: one that has settled carries its picture inside it, and the page's own
+        // export paints without a view; one still on its way is held.
+        let found = onScreenWebView()
+        if let found {
+            let scroll = found.view.scrollView
+            guard scroll.contentSize.width > 0 else {
+                SnapshotLog.event(
+                    "\(trigger) notReady region=\(Int(size.width))x\(Int(size.height)) view="
+                        + "\(Int(found.view.bounds.width))x\(Int(found.view.bounds.height))"
+                        + " content=\(Int(scroll.contentSize.width))x\(Int(scroll.contentSize.height))"
+                )
+                return .notReady
+            }
             SnapshotLog.event(
-                "\(trigger) notReady region=\(Int(size.width))x\(Int(size.height)) view="
+                "\(trigger) capture region=\(Int(size.width))x\(Int(size.height)) view="
                     + "\(Int(found.view.bounds.width))x\(Int(found.view.bounds.height))"
                     + " content=\(Int(scroll.contentSize.width))x\(Int(scroll.contentSize.height))"
             )
-            return .notReady
+        } else {
+            guard hasSettled else {
+                SnapshotLog.event("\(trigger) notReady view=none")
+                return .notReady
+            }
+            SnapshotLog.event(
+                "\(trigger) capture region=\(Int(size.width))x\(Int(size.height)) view=none settled")
         }
-        SnapshotLog.event(
-            "\(trigger) capture region=\(Int(size.width))x\(Int(size.height)) view="
-                + "\(Int(found.view.bounds.width))x\(Int(found.view.bounds.height))"
-                + " content=\(Int(scroll.contentSize.width))x\(Int(scroll.contentSize.height))"
-        )
         let region = WebPage.ExportedContentConfiguration.Region.rect(
             CGRect(origin: .zero, size: size))
         let exportThrown = ErrorBox()
@@ -426,6 +464,9 @@ final class ReadingSession {
         } else {
             SnapshotLog.event("\(trigger) export nil \(Self.ms(since: start))ms")
         }
+        // Off screen there is no view to fall back to: the page's export was the one
+        // shot at its picture.
+        guard let found else { return .miss }
         let viewStart = ContinuousClock.now
         let viewThrown = ErrorBox()
         let data = await capped(

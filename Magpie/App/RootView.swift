@@ -41,8 +41,14 @@ struct RootView: View {
                         onSearchSubmit: { model.navigateCurrent($0) },
                         onSearchDismiss: { model.closeSearchOverPage() },
                         onAddressTap: { model.openSearchOverPage() },
-                        onTabsTap: { model.showTabs() }
+                        onTabsTap: { model.showTabs() },
+                        onPageSize: { model.notePageSize($0) }
                     )
+                    // The page never answers the keyboard. An address just submitted
+                    // arrives with the keys still dropping, and a first frame squeezed
+                    // by them is the wrong size to arm captures at; the sheet over the
+                    // page is the piece that rides the keys.
+                    .ignoresSafeArea(.keyboard, edges: searchOpen ? [] : .bottom)
                     .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("reading.screen")
                 case .tabs:
