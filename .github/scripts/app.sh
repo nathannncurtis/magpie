@@ -9,9 +9,10 @@ xcodegen generate
 
 xcrun swift-format lint --strict --recursive --parallel Magpie $(ls -d MagpieTests MagpieUITests Packages 2>/dev/null)
 
-# The newest iPhone simulator this Xcode ships, so the job doesn't break when device names change.
-udid=$(xcrun simctl list devices available -j |
-  jq -r '[.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone"))] | last | .udid')
+# SIM_UDID picks a device (parallel local runs each use their own); otherwise the newest iPhone
+# simulator this Xcode ships, so the job doesn't break when device names change.
+udid=${SIM_UDID:-$(xcrun simctl list devices available -j |
+  jq -r '[.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone"))] | last | .udid')}
 test -n "$udid" && test "$udid" != null
 
 set +e
