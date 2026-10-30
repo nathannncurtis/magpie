@@ -152,8 +152,7 @@ private struct ArchiveRow: View {
             }
         }
         .padding(.horizontal, Metrics.Spacing.insetList)
-        .contentShape(.rect)
-        .onTapGesture(perform: onRestore)
+        .rowPress(perform: onRestore)
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("archive.row.\(tab.title)")
     }

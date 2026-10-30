@@ -165,8 +165,7 @@ struct BookmarksScreen: View {
                 separator(visible: index > 0)
             }
             .padding(.horizontal, Metrics.Spacing.insetList)
-            .contentShape(.rect)
-            .onTapGesture { folderTapped(folder) }
+            .rowPress { folderTapped(folder) }
             .accessibilityAddTraits(.isButton)
             .accessibilityIdentifier("bookmarks.folder.\(folder.name)")
             .listRow()
@@ -221,8 +220,7 @@ struct BookmarksScreen: View {
         }
         .padding(.vertical, 8)
         .padding(.horizontal, Metrics.Spacing.insetList)
-        .contentShape(.rect)
-        .onTapGesture { store.addDefaultFolder() }
+        .rowPress { store.addDefaultFolder() }
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("bookmarks.newFolder")
     }
@@ -388,8 +386,7 @@ private struct BookmarkRow: View {
             }
         }
         .padding(.horizontal, Metrics.Spacing.insetList)
-        .contentShape(.rect)
-        .onTapGesture(perform: onOpen)
+        .rowPress(perform: onOpen)
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("bookmarks.row.\(bookmark.title)")
     }
