@@ -38,14 +38,19 @@ struct StackLayoutTests {
     private var cardWidth: CGFloat { container.width * 0.62 }
     private var stride: CGFloat { cardWidth + 14 }
 
+    /// CGRect positions add widths onto origins, so derived edges can round a ulp.
+    private func approximately(_ a: CGFloat, _ b: CGFloat) -> Bool {
+        abs(a - b) < 0.001
+    }
+
     @Test("the current card is centred at 62% of the container")
     func currentCardCentred() {
         let frame = StackLayout.cardFrame(offset: 0, container: container)
 
-        #expect(frame.width == cardWidth)
-        #expect(frame.height == container.height * 0.62)
-        #expect(frame.midX == container.width / 2)
-        #expect(frame.midY == container.height / 2)
+        #expect(approximately(frame.width, cardWidth))
+        #expect(approximately(frame.height, container.height * 0.62))
+        #expect(approximately(frame.midX, container.width / 2))
+        #expect(approximately(frame.midY, container.height / 2))
     }
 
     @Test("neighbours peek in from both edges by the same amount")
@@ -57,16 +62,16 @@ struct StackLayoutTests {
         let rightPeek = container.width - right.minX
         #expect(leftPeek > 0)
         #expect(rightPeek > 0)
-        #expect(abs(leftPeek - rightPeek) < 0.001)
-        #expect(left.maxX == stride - cardWidth / 2)
-        #expect(right.minX == container.width / 2 + stride - cardWidth / 2)
+        #expect(approximately(leftPeek, rightPeek))
+        #expect(approximately(leftPeek, container.width / 2 - stride + cardWidth / 2))
+        #expect(approximately(right.minX, container.width / 2 + stride - cardWidth / 2))
     }
 
     @Test("a drag shifts every card with it")
     func dragShiftsTheRow() {
         let frame = StackLayout.cardFrame(offset: 0, container: container, drag: -40)
 
-        #expect(frame.midX == container.width / 2 - 40)
+        #expect(approximately(frame.midX, container.width / 2 - 40))
     }
 
     @Test("a label leads its card and stops short of the next one")
@@ -75,9 +80,9 @@ struct StackLayoutTests {
         let nextLeading = StackLayout.cardFrame(offset: 1, container: container).minX
         let window = StackLayout.labelWindow(card: card, nextCardLeading: nextLeading, containerWidth: container.width)
 
-        #expect(window.minX == card.minX + 6)
-        #expect(window.maxX == min(card.maxX, nextLeading - 6, container.width - 16))
-        #expect(window.maxY == card.minY - 12)
+        #expect(approximately(window.minX, card.minX + 6))
+        #expect(approximately(window.maxX, min(card.maxX, nextLeading - 6, container.width - 16)))
+        #expect(approximately(window.maxY, card.minY - 12))
         #expect(window.height == 22)
     }
 
@@ -87,7 +92,7 @@ struct StackLayoutTests {
         let nextLeading = StackLayout.cardFrame(offset: 0, container: container).minX
         let window = StackLayout.labelWindow(card: card, nextCardLeading: nextLeading, containerWidth: container.width)
 
-        #expect(window.minX == 14)
-        #expect(window.maxX == min(card.maxX, nextLeading - 6))
+        #expect(approximately(window.minX, 14))
+        #expect(approximately(window.maxX, min(card.maxX, nextLeading - 6)))
     }
 }
