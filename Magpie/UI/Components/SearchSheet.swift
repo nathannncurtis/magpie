@@ -42,6 +42,7 @@ struct SearchSheet: View {
     @State private var fieldArrived = false
     @State private var fillSettled = false
     @State private var dragOffset: CGFloat = 0
+    @State private var bottomInset: CGFloat = 0
     @FocusState private var focused: Bool
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -87,13 +88,18 @@ struct SearchSheet: View {
             sheetBody
                 .ignoresSafeArea(.keyboard, edges: .bottom)
         }
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.safeAreaInsets.bottom
+        } action: { inset in
+            bottomInset = inset
+        }
         .task(id: text) {
             await reloadRows()
         }
     }
 
-    /// Everything above the sheet. On the mist it is clear; over a page it is the scrim,
-    /// which runs on behind the keyboard and under the status bar.
+    /// Everything above the sheet; it takes all the slack. On the mist it is clear; over a
+    /// page it is the scrim, which runs on behind the keyboard and under the status bar.
     private var tapAway: some View {
         Rectangle()
             .fill(opensFromPage ? AnyShapeStyle(Palette.scrim) : AnyShapeStyle(.clear))
@@ -104,13 +110,15 @@ struct SearchSheet: View {
             .accessibilityIdentifier("search.scrim")
     }
 
-    /// The sheet rides the keyboard: its content ends at the keyboard while the surface runs
-    /// on behind it. `Color.clear` fills the space the keyboard covers.
+    /// The sheet hugs its content and rides the keyboard: the tail is exactly the keyboard's
+    /// height (the home indicator's once it is away), so the rows sit on the keys and the
+    /// surface runs on behind them to the bottom edge.
     @ViewBuilder
     private var sheetBody: some View {
         VStack(spacing: 0) {
             sheetContent
             Color.clear
+                .frame(height: bottomInset)
         }
         .frame(maxWidth: .infinity)
         .modifier(
