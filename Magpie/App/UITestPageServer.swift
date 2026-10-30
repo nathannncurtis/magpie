@@ -31,15 +31,27 @@ final class UITestPageServer: @unchecked Sendable {
 
     /// One request, one reply, one closed connection.
     private func serve(_ connection: NWConnection) {
-        connection.receiveMessage { data, _, _, error in
-            guard error == nil else {
-                connection.cancel()
-                return
-            }
-            let reply = self.reply(to: data ?? Data())
+        receiveHead(of: connection, buffer: Data())
+    }
+
+    /// Reads the request as a stream until its head ends. A message receive has no
+    /// boundary to find in TCP — it waits for the peer to close, so a client that keeps
+    /// the connection open for its reply never gets one.
+    private func receiveHead(of connection: NWConnection, buffer: Data) {
+        let headEnd = Data("\r\n\r\n".utf8)
+        if buffer.range(of: headEnd) != nil || buffer.count > 16 * 1024 {
+            let reply = self.reply(to: buffer)
             connection.send(
                 content: reply,
                 completion: .contentProcessed { _ in connection.cancel() })
+            return
+        }
+        connection.receive(minimumIncompleteLength: 1, maximumLength: 64 * 1024) { data, _, _, error in
+            guard error == nil, let data, !data.isEmpty else {
+                connection.cancel()
+                return
+            }
+            self.receiveHead(of: connection, buffer: buffer + data)
         }
     }
 
