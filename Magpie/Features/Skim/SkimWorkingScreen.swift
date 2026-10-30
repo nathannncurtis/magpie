@@ -109,8 +109,8 @@ struct SkimWorkingScreen: View {
                 .contentShape(.capsule)
         }
         .buttonStyle(.plain)
-        .glassEffect(.regular.interactive(), in: .capsule)
         .accessibilityIdentifier("skim.cancel")
+        .glassEffect(.regular.interactive(), in: .capsule)
     }
 
     /// The query as the board writes it: the first letter up, the rest as typed.

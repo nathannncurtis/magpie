@@ -48,8 +48,8 @@ struct SkimQueryBar: View {
         }
         .buttonStyle(.plain)
         .foregroundStyle(Palette.textPrimary)
-        .glassEffect(.regular, in: .capsule)
         .accessibilityIdentifier("skim.queryBar")
+        .glassEffect(.regular, in: .capsule)
     }
 }
 
