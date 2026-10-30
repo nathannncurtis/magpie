@@ -18,16 +18,37 @@ struct SearchComponentsTests {
         #expect(SkimPill.State.resolve(skimEnabled: true, primed: false) == .resting)
     }
 
+    @Test("the artwork traced from the asset is whole")
+    func markArtwork() {
+        #expect(MarkPath.brush.count == 11)
+        #expect(MarkPath.brush.allSatisfy { !$0.isEmpty })
+        // The dry gap and the bead lie inside the artwork's square.
+        let gap = MarkPath.dryGapCenter
+        let bead = MarkPath.beadCenter
+        #expect(gap.x > 0 && gap.x < MarkPath.units && gap.y > 0 && gap.y < MarkPath.units)
+        #expect(bead.x > 0 && bead.x < MarkPath.units && bead.y > 0 && bead.y < MarkPath.units)
+    }
+
     @Test("the mark fills its design space without spilling it")
     func markGeometry() {
         let bounds = MarkGeometry.drawnBounds
-        #expect(bounds.minX >= 0 && bounds.maxX <= MarkGeometry.units)
-        #expect(bounds.minY >= 0 && bounds.maxY <= MarkGeometry.units)
-        #expect(bounds.width > MarkGeometry.units / 2)
-        #expect(bounds.height > MarkGeometry.units / 2)
-        // The bead sits inside the sweep's arms, not over its ends.
-        let beadTop = MarkGeometry.beadCenter.y - MarkGeometry.beadRadius
-        #expect(beadTop > bounds.minY + MarkGeometry.strokeWidth)
+        #expect(bounds.minX >= 0 && bounds.maxX <= MarkPath.units)
+        #expect(bounds.minY >= 0 && bounds.maxY <= MarkPath.units)
+        #expect(bounds.width > MarkPath.units / 2)
+        #expect(bounds.height > MarkPath.units / 2)
+        // Fitting the mark keeps its aspect and centres it.
+        let square = CGRect(x: 0, y: 0, width: 100, height: 100)
+        let fitted = MarkPath.brushPath().applying(MarkGeometry.transform(into: square))
+            .boundingRect
+        #expect(abs(fitted.midX - square.midX) < 1)
+        #expect(abs(fitted.midY - square.midY) < 1)
+    }
+
+    @Test("the reveal centreline lives in the artwork's space")
+    func markCentreline() {
+        let bounds = MarkGeometry.centreline().boundingRect
+        #expect(bounds.minX >= 0 && bounds.maxX <= MarkPath.units)
+        #expect(bounds.minY >= 0 && bounds.maxY <= MarkPath.units)
     }
 
     @Test("the stub provider filters by prefix and honours the enabled flag")

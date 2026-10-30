@@ -2,17 +2,16 @@ import SwiftUI
 
 /// The Magpie mark: one brushstroke that drops, sweeps under a sheen bead and lifts away dry.
 ///
-/// The stroke follows the mark's centreline in its 600-unit design space, drawn with a
-/// 170-unit round-cap pen; the bead sits where the sweep cradles it.
+/// The artwork is traced exactly from the design asset; `size` is the side it scales into.
 struct Mark: View {
 
     /// How the mark is coloured.
     enum Style {
-        /// The stroke in the current colour, the bead in the sheen gradient.
+        /// The brush in the current colour, the bead in the sheen gradient.
         case sheen
-        /// Stroke and bead both in the current colour.
+        /// Brush and bead both in the current colour.
         case solid
-        /// The stroke alone, for small marks in pills and buttons.
+        /// The brush alone, for small marks in pills and buttons.
         case strokeOnly
     }
 
@@ -22,73 +21,53 @@ struct Mark: View {
 
     var body: some View {
         ZStack {
-            MarkStroke()
-                .stroke(
-                    style: StrokeStyle(
-                        lineWidth: MarkGeometry.strokeWidth * scale,
-                        lineCap: .round,
-                        lineJoin: .round))
+            MarkBrushShape()
             if style != .strokeOnly {
-                MarkBead()
-                    .fill(beadFill)
+                if style == .sheen {
+                    MarkBeadShape().fill(Palette.sheen)
+                } else {
+                    MarkBeadShape()
+                }
             }
         }
         .frame(width: size, height: size)
     }
+}
 
-    private var scale: CGFloat {
-        size / max(MarkGeometry.drawnBounds.width, MarkGeometry.drawnBounds.height)
-    }
-
-    private var beadFill: AnyShapeStyle {
-        style == .sheen ? AnyShapeStyle(Palette.sheen) : AnyShapeStyle(.primary)
+/// The artwork's brush, as one filled path.
+extension MarkPath {
+    static func brushPath() -> Path {
+        var path = Path()
+        for subpath in brush {
+            guard let first = subpath.first else { continue }
+            path.move(to: first)
+            for point in subpath.dropFirst() {
+                path.addLine(to: point)
+            }
+            path.closeSubpath()
+        }
+        return path
     }
 }
 
-/// The mark's geometry, in its 600-unit design space.
+/// Geometry built from the artwork: what the drawn mark covers, and how to fit it into a rect.
 enum MarkGeometry {
 
-    /// One side of the design space.
-    static let units: CGFloat = 600
-    /// The round-cap pen width the brushstroke is drawn with.
-    static let strokeWidth: CGFloat = 170
-    /// The bead, where the sweep cradles it.
-    static let beadCenter = CGPoint(x: 316.4, y: 351.6)
-    static let beadRadius: CGFloat = 68
-
-    /// The stroke's centreline: it drops, sweeps under the bead and lifts away dry.
-    static func centreline() -> Path {
-        var path = Path()
-        path.move(to: CGPoint(x: 170, y: 96))
-        path.addLine(to: CGPoint(x: 150, y: 140))
-        path.addCurve(
-            to: CGPoint(x: 300, y: 420),
-            control1: CGPoint(x: 96, y: 250),
-            control2: CGPoint(x: 140, y: 420))
-        path.addCurve(
-            to: CGPoint(x: 380, y: 286),
-            control1: CGPoint(x: 400, y: 420),
-            control2: CGPoint(x: 440, y: 330))
-        path.addLine(to: CGPoint(x: 330, y: 250))
-        return path
-    }
-
-    /// Everything the drawn mark covers, stroke and bead together.
+    /// Everything the drawn mark covers, brush and bead together, in the artwork's space.
     static let drawnBounds: CGRect = {
-        let stroked = centreline().cgPath.copy(
-            strokingWithWidth: strokeWidth,
-            lineCap: .round,
-            lineJoin: .round,
-            miterLimit: 0)
-        var bounds = stroked.boundingBoxOfPath
-        bounds = bounds.union(
-            CGRect(
-                x: beadCenter.x - beadRadius, y: beadCenter.y - beadRadius,
-                width: beadRadius * 2, height: beadRadius * 2))
-        return bounds
+        let brush = MarkPath.brushPath().boundingRect
+        let gap = CGRect(
+            x: MarkPath.dryGapCenter.x - MarkPath.dryGapRadius,
+            y: MarkPath.dryGapCenter.y - MarkPath.dryGapRadius,
+            width: MarkPath.dryGapRadius * 2, height: MarkPath.dryGapRadius * 2)
+        let bead = CGRect(
+            x: MarkPath.beadCenter.x - MarkPath.beadRadius,
+            y: MarkPath.beadCenter.y - MarkPath.beadRadius,
+            width: MarkPath.beadRadius * 2, height: MarkPath.beadRadius * 2)
+        return brush.union(gap).union(bead)
     }()
 
-    /// Maps the design space so the drawn mark fills `rect`.
+    /// Maps the artwork's space so the drawn mark fills `rect`, keeping its aspect.
     static func transform(into rect: CGRect) -> CGAffineTransform {
         let scale = min(
             rect.width / max(drawnBounds.width, 1),
@@ -97,22 +76,51 @@ enum MarkGeometry {
         let offsetY = rect.midY - (drawnBounds.midY * scale)
         return CGAffineTransform(translationX: offsetX, y: offsetY).scaledBy(x: scale, y: scale)
     }
-}
 
-/// The brushstroke, scaled into the mark's frame.
-private struct MarkStroke: Shape {
-    func path(in rect: CGRect) -> Path {
-        MarkGeometry.centreline().applying(MarkGeometry.transform(into: rect))
+    /// The draw-on reveal centreline from the foundations spec, mapped from its 600-unit
+    /// space into the artwork's 512-unit space. Unused until the draw-on animation lands.
+    static func centreline() -> Path {
+        let scale = MarkPath.units / 600
+        var path = Path()
+        path.move(to: CGPoint(x: 170 * scale, y: 96 * scale))
+        path.addLine(to: CGPoint(x: 150 * scale, y: 140 * scale))
+        path.addCurve(
+            to: CGPoint(x: 300 * scale, y: 420 * scale),
+            control1: CGPoint(x: 96 * scale, y: 250 * scale),
+            control2: CGPoint(x: 140 * scale, y: 420 * scale))
+        path.addCurve(
+            to: CGPoint(x: 380 * scale, y: 286 * scale),
+            control1: CGPoint(x: 400 * scale, y: 420 * scale),
+            control2: CGPoint(x: 440 * scale, y: 330 * scale))
+        path.addLine(to: CGPoint(x: 330 * scale, y: 250 * scale))
+        return path
     }
 }
 
-/// The sheen bead, scaled with the stroke.
-private struct MarkBead: Shape {
+/// The brushstroke and its dry gap, scaled into the mark's frame.
+private struct MarkBrushShape: Shape {
     func path(in rect: CGRect) -> Path {
         let transform = MarkGeometry.transform(into: rect)
-        let center = CGPoint(x: MarkGeometry.beadCenter.x, y: MarkGeometry.beadCenter.y)
+        var path = MarkPath.brushPath().applying(transform)
+
+        var gap = Path(
+            ellipseIn: CGRect(
+                x: MarkPath.dryGapCenter.x - MarkPath.dryGapRadius,
+                y: MarkPath.dryGapCenter.y - MarkPath.dryGapRadius,
+                width: MarkPath.dryGapRadius * 2, height: MarkPath.dryGapRadius * 2))
+        gap = gap.applying(transform)
+        path.addPath(gap)
+        return path
+    }
+}
+
+/// The sheen bead, scaled with the brush.
+private struct MarkBeadShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        let transform = MarkGeometry.transform(into: rect)
+        let center = CGPoint(x: MarkPath.beadCenter.x, y: MarkPath.beadCenter.y)
             .applying(transform)
-        let radius = MarkGeometry.beadRadius * transform.a
+        let radius = MarkPath.beadRadius * transform.a
         return Path(
             ellipseIn: CGRect(
                 x: center.x - radius, y: center.y - radius,
