@@ -106,6 +106,8 @@ struct FileSystemModStoreIO: ModStoreIO {
                 ).first ?? FileManager.default.temporaryDirectory
             self.directory = support.appending(component: "Mods", directoryHint: .isDirectory)
         }
+        try? FileManager.default.createDirectory(
+            at: valuesDirectory, withIntermediateDirectories: true)
         try? FileManager.default.createDirectory(at: self.directory, withIntermediateDirectories: true)
     }
 
@@ -152,14 +154,16 @@ struct FileSystemModStoreIO: ModStoreIO {
         }
     }
 
+    private var valuesDirectory: URL {
+        directory.appending(component: "values", directoryHint: .isDirectory)
+    }
+
     private func bodyURL(for id: String) -> URL {
         directory.appending(component: "\(id).user.js")
     }
 
     private func valuesURL(for modID: String) -> URL {
-        directory
-            .appending(component: "values", directoryHint: .isDirectory)
-            .appending(component: "\(modID).json")
+        valuesDirectory.appending(component: "\(modID).json")
     }
 }
 
