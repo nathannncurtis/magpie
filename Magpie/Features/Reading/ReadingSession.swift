@@ -53,6 +53,9 @@ final class ReadingSession {
     let page = WebPage()
 
     private let initialURL: URL
+    /// The URL the session last asked to load. Its host is what a failure names, so a
+    /// failure always has one even when the page never got far enough to have a URL.
+    private(set) var requestedURL: URL?
     private var loadTask: Task<Void, Never>?
 
     private let monitor = NWPathMonitor()
@@ -83,6 +86,7 @@ final class ReadingSession {
 
     init(url: URL) {
         initialURL = url
+        requestedURL = url
         monitor.pathUpdateHandler = { [weak self] path in
             let online = path.status == .satisfied
             Task { @MainActor in
@@ -127,6 +131,7 @@ final class ReadingSession {
 
     /// Loads a page outright.
     func open(_ url: URL) {
+        requestedURL = url
         startLoad { self.page.load(url) }
     }
 
@@ -138,6 +143,7 @@ final class ReadingSession {
     /// Goes back one page.
     func goBack() {
         guard let back = page.backForwardList.backList.last else { return }
+        requestedURL = back.url
         startLoad { self.page.load(back) }
     }
 
@@ -177,7 +183,8 @@ final class ReadingSession {
                 .notConnectedToInternet, .networkConnectionLost, .dataNotAllowed,
             ].contains(urlError.code)
         }
-        failure = PageLoadFailure(host: HostFormatter.host(for: page.url), isOffline: offline)
+        failure = PageLoadFailure(
+            host: HostFormatter.host(for: requestedURL ?? page.url), isOffline: offline)
         pageBackground = nil
     }
 

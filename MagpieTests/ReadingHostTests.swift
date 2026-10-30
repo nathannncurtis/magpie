@@ -16,6 +16,7 @@ struct ReadingHostTests {
             ("https://www.quietweb.org/notes/", "quietweb.org"),
             ("https://WWW.QuietWeb.ORG/", "quietweb.org"),
             ("https://127.0.0.1:8080/", "127.0.0.1"),
+            ("http://example.org:81/", "example.org"),
             ("https://[::1]:8443/", "::1"),
             ("https://xn--bcher-kva.de/", "bücher.de"),
             ("https://xn--bcher-kva.xn--espaol-zwa.org/", "bücher.español.org"),
