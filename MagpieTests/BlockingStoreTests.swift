@@ -280,7 +280,8 @@ struct BlockingStoreTests {
         #expect(firstIdentifiers.count == 1)
 
         clock.now = Self.epoch.addingTimeInterval(FilterListStore.refreshInterval + 60)
-        stubBodies([ads.url.absoluteString: Self.adsBody + "||added.later^\n"])
+        // A new ETag, or the conditional request would 304 and nothing would change.
+        stubBodies([ads.url.absoluteString: Self.adsBody + "||added.later^\n"], etag: "v2")
         await store.refreshIfNeeded()
 
         #expect(chunks(compiler.compiled).count == 2)
@@ -326,7 +327,8 @@ struct BlockingStoreTests {
 
         compiler.failNextCompiles(true)
         clock.now = Self.epoch.addingTimeInterval(FilterListStore.refreshInterval + 60)
-        stubBodies([ads.url.absoluteString: Self.adsBody + "||added.later^\n"])
+        // New content and a new ETag, so the rebuild really reaches the failing compile.
+        stubBodies([ads.url.absoluteString: Self.adsBody + "||added.later^\n"], etag: "v2")
         await store.refreshIfNeeded()
 
         #expect(await store.ruleLists(for: .adsAndTrackers).count == firstIdentifiers.count)
