@@ -22,6 +22,8 @@ struct RootView: View {
                 case .launchSearch:
                     LaunchScreen(
                         engine: model.engine,
+                        skimEnabled: model.skimEnabled,
+                        suggestionsEnabled: model.suggestionsEnabled,
                         suggestions: model.suggestions,
                         recents: model.recents,
                         onOpen: { model.openFromLaunch($0) },
@@ -35,6 +37,8 @@ struct RootView: View {
                         tabCount: model.store.tabs.count,
                         isSearchOpen: searchOpen,
                         engine: model.engine,
+                        skimEnabled: model.skimEnabled,
+                        suggestionsEnabled: model.suggestionsEnabled,
                         suggestions: model.suggestions,
                         recents: model.recents,
                         chromeNamespace: chrome,
@@ -67,6 +71,25 @@ struct RootView: View {
                 movesWithChrome = true
             }
         }
+        // The first launch: Welcome, then the engine picker, over whatever is beneath.
+        .fullScreenCover(isPresented: onboardingUp) {
+            OnboardingFlow(preferences: model.preferences)
+        }
+        .fullScreenCover(isPresented: settingsBinding) {
+            SettingsScreen()
+        }
+    }
+
+    private var onboardingUp: Binding<Bool> {
+        Binding(
+            get: { model.needsOnboarding },
+            set: { _ in model.completeOnboarding() })
+    }
+
+    private var settingsBinding: Binding<Bool> {
+        Binding(
+            get: { model.showsSettings },
+            set: { if !$0 { model.showsSettings = false } })
     }
 
     private var transition: Animation? {
