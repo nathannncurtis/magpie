@@ -34,7 +34,10 @@ struct ModRow: View {
 
     var body: some View {
         ZStack(alignment: .trailing) {
-            if onRemove != nil {
+            // Mounted only while the row is actually aside: at rest nothing sits
+            // behind it to edge out past its rounded corners. Settling back to 0
+            // inside withAnimation fades it out in step with the row's slide.
+            if onRemove != nil, swipeOffset < 0 {
                 removeBehind
             }
             row
@@ -73,6 +76,9 @@ struct ModRow: View {
             trailingView
         }
         .padding(.vertical, Layout.verticalPadding)
+        // The card's own colour, so the row is opaque: the swipe action under it shows
+        // only where a swipe has moved the row aside, never through empty space.
+        .background(Palette.card)
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("mods.row")
     }
@@ -106,7 +112,14 @@ struct ModRow: View {
             .foregroundStyle(.white)
             .frame(width: Layout.swipeOpenWidth, alignment: .center)
             .frame(maxHeight: .infinity)
-            .background(Palette.teal, in: Rectangle())
+            // Rounded to the card's radius, the shape that covers it: a square
+            // tile would reach past the row's rounded ends at the corners.
+            .background(
+                Palette.teal,
+                in: RoundedRectangle(
+                    cornerRadius: Metrics.Radius.card,
+                    style: .continuous)
+            )
             .accessibilityIdentifier("mods.remove")
     }
 

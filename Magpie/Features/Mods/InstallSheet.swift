@@ -42,6 +42,8 @@ struct InstallSheet: View {
     @State private var phase: Phase = .idle
     @State private var inspectedURL: URL?
     @State private var readTask: Task<Void, Never>?
+    @State private var contentHeight: CGFloat = 0
+    @State private var bottomInset: CGFloat = 0
     @FocusState private var fieldFocused: Bool
 
     @Environment(\.dismiss) private var dismiss
@@ -66,7 +68,21 @@ struct InstallSheet: View {
                         bottom: 0, trailing: Layout.sideInset))
         }
         .padding(.bottom, 16)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .frame(maxWidth: .infinity, alignment: .top)
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.size.height
+        } action: { height in
+            contentHeight = height
+        }
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.safeAreaInsets.bottom
+        } action: { inset in
+            bottomInset = inset
+        }
+        // The card hugs its content: its height is the content plus whatever sits at the
+        // bottom — the home indicator, or the keyboard while the field is focused — so
+        // the buttons rest just above either.
+        .presentationDetents([.height(contentHeight + bottomInset)])
         .onChange(of: linkText) { _, text in
             queueRead(of: text)
         }

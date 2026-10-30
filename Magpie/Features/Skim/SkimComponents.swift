@@ -139,31 +139,65 @@ struct PhotoHeader: View {
         static let gap: CGFloat = 3
         /// The large tile's share of the mosaic's width.
         static let largeShare: CGFloat = 1.55 / 2.55
+        /// Where the block's photos start fading into the paper the title sits on.
+        static let fadeFrom: Double = 0.87
+        /// Where the fade is fully paper — above the block's edge, so no tile
+        /// edge shows through the last points of the blend.
+        static let fadeEnd: Double = 0.98
     }
 
     var body: some View {
         GeometryReader { geo in
             if photos.count >= 3 {
-                mosaic(width: geo.size.width)
+                mosaic(size: geo.size)
             } else if let hero = photos.first {
                 SkimPhoto(url: hero, revealed: revealed > 0)
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .clipped()
             }
         }
         .frame(height: Layout.height)
+        .overlay(Self.paperFade)
         .accessibilityHidden(true)
     }
 
-    /// Three or more photos: one large tile beside two stacked.
-    private func mosaic(width: CGFloat) -> some View {
-        let large = (width - Layout.gap) * Layout.largeShare
-        return HStack(spacing: Layout.gap) {
+    /// Three or more photos: one large tile and two stacked, one flush block —
+    /// shared top and bottom edges, the board's gap between tiles.
+    private func mosaic(size: CGSize) -> some View {
+        let columns = size.width - Layout.gap
+        let large = columns * Layout.largeShare
+        let small = columns - large
+        let stacked = (size.height - Layout.gap) / 2
+        return HStack(alignment: .top, spacing: Layout.gap) {
             SkimPhoto(url: photos[0], revealed: revealed > 0)
-                .frame(width: large)
+                .frame(width: large, height: size.height)
+                .clipped()
             VStack(spacing: Layout.gap) {
                 SkimPhoto(url: photos[1], revealed: revealed > 1)
+                    .frame(width: small, height: stacked)
+                    .clipped()
                 SkimPhoto(url: photos[2], revealed: revealed > 2)
+                    .frame(width: small, height: stacked)
+                    .clipped()
             }
         }
+        .frame(width: size.width, height: size.height)
+    }
+
+    /// The block's bottom fading into the page's paper, so the title below reads
+    /// on paper, never across a tile edge. Fully paper above the edge: the fill
+    /// photos are clipped to their frames, and the fade holds opaque paper
+    /// through its last stretch.
+    private static var paperFade: some View {
+        LinearGradient(
+            stops: [
+                .init(color: Palette.skimBackground.opacity(0), location: Layout.fadeFrom),
+                .init(color: Palette.skimBackground, location: Layout.fadeEnd),
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .allowsHitTesting(false)
     }
 }
 
@@ -185,7 +219,6 @@ private struct SkimPhoto: View {
         }
         .opacity(revealed ? 1 : 0)
         .scaleEffect(revealed ? 1 : 1.04)
-        .clipped()
     }
 }
 
@@ -240,12 +273,12 @@ struct SkimHeader: View {
 
 // MARK: - Section
 
-/// One point of a Skim page (03 · Skim): an emoji tile, then the term, a dash,
-/// the claim, and the citation dots that stand behind it.
+/// One point of a Skim page (03 · Skim): an emoji tile, then the claim as one
+/// run of text — term, dash, claim — with its citations inline at its end,
+/// each a circled digit on the sheen that taps to its source.
 struct SkimSectionRow: View {
 
     let section: SkimSection
-    let sources: [SkimSourceRef]
     let onCitation: (Int) -> Void
 
     private enum Layout {
@@ -253,8 +286,9 @@ struct SkimSectionRow: View {
         static let radius: CGFloat = 9
         static let emojiSize: CGFloat = 16
         static let gap: CGFloat = 10
-        static let dotGap: CGFloat = 3
-        static let dotRowGap: CGFloat = 6
+        /// The citation dot that sits inline at the claim's end.
+        static let dotSize: CGFloat = 17
+        static let dotLift: CGFloat = 2
     }
 
     var body: some View {
@@ -265,25 +299,63 @@ struct SkimSectionRow: View {
                 .overlay(
                     Text(section.emoji)
                         .font(.system(size: Layout.emojiSize)))
-            VStack(alignment: .leading, spacing: Layout.dotRowGap) {
-                Text("\(Text(section.term).fontWeight(.semibold)) — \(section.claim)")
-                    .font(Typography.body)
-                    .lineSpacing(Typography.bodyLineSpacing)
-                HStack(spacing: Layout.dotGap) {
-                    ForEach(section.citations, id: \.self) { citation in
-                        CitationDot(
-                            number: citation,
-                            previewURL: sources.indices.contains(citation - 1)
-                                ? sources[citation - 1].url : nil
-                        ) {
-                            onCitation(citation)
-                        }
-                    }
-                }
-            }
+            claim
+                .lineSpacing(Typography.bodyLineSpacing)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, 14)
-        .accessibilityElement(children: .combine)
+        .environment(
+            \.openURL,
+            OpenURLAction { url in
+                guard let citation = Self.citation(from: url) else { return .systemAction }
+                onCitation(citation)
+                return .handled
+            })
+    }
+
+    /// The claim with its citations inline: per citation, one thin space then
+    /// a circled digit in the sheen's solid mid tone — itself the link that
+    /// taps to its source.
+    private var claim: Text {
+        var text = AttributedString()
+        var term = AttributedString(section.term)
+        term.font = Typography.body.weight(.semibold)
+        text += term
+        var rest = AttributedString(" — \(section.claim)")
+        rest.font = Typography.body
+        text += rest
+        for citation in section.citations {
+            var space = AttributedString(Self.thinSpace)
+            space.font = .system(size: Layout.dotSize)
+            text += space
+            var dot = AttributedString(Self.dotGlyph(for: citation))
+            dot.font = .system(size: Layout.dotSize)
+            dot.foregroundColor = Palette.sheenMid
+            dot.baselineOffset = Layout.dotLift
+            dot.link = URL(string: "magpie-cite://\(citation)")
+            text += dot
+        }
+        return Text(text)
+    }
+
+    /// The circled-digit characters citations 1-10 show inline.
+    private static let dotGlyphs = [
+        "\u{2776}", "\u{2777}", "\u{2778}", "\u{2779}", "\u{277A}",
+        "\u{277B}", "\u{277C}", "\u{277D}", "\u{277E}", "\u{277F}",
+    ]
+
+    private static func dotGlyph(for citation: Int) -> String {
+        (1...10).contains(citation) ? dotGlyphs[citation - 1] : "(\(citation))"
+    }
+
+    private static let thinSpace = "\u{2009}"
+
+    /// The citation a link run points at, when it is one of ours.
+    private static func citation(from url: URL) -> Int? {
+        guard url.scheme == "magpie-cite", let host = url.host(), let number = Int(host) else {
+            return nil
+        }
+        return number
     }
 }
 

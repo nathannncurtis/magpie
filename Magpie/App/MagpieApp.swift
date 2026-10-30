@@ -12,9 +12,10 @@ struct MagpieApp: App {
                 .preferredColorScheme(UITestEnvironment.colorScheme)
                 .environment(model)
                 .task {
-                    if UITestEnvironment.isUITesting { UITestPageServer.shared.start() }
+                    if UITestEnvironment.isUITesting { await UITestPageServer.shared.start() }
                     await model.start()
                     UITestEnvironment.applySurfaceOverride(to: model)
+                    await UITestEnvironment.play(UITestEnvironment.script, on: model)
                 }
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .active {

@@ -104,6 +104,39 @@ enum UITestEnvironment {
         return style.lowercased() == "dark" ? .dark : .light
     }
 
+    /// A scripted run of steps after launch, for reproducing a flow from the command line
+    /// without the UI test runner: `-uiTestingScript "open:URL;wait:MS;tabs"`. Only under
+    /// the UI tests.
+    static var script: [String] {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard isUITesting, let flag = arguments.firstIndex(of: "-uiTestingScript"),
+            arguments.indices.contains(flag + 1)
+        else { return [] }
+        return arguments[flag + 1].split(separator: ";").map(String.init)
+    }
+
+    /// Plays the script against the model: `open:` submits an address as from the launch
+    /// sheet, `wait:` pauses, `tabs` shows the tabs screen.
+    @MainActor
+    static func play(_ steps: [String], on model: AppModel) async {
+        for step in steps {
+            if step.hasPrefix("open:"), let url = URL(string: String(step.dropFirst(5))) {
+                SnapshotLog.event("script open \(url.absoluteString)")
+                model.openFromLaunch(url)
+            } else if step.hasPrefix("wait:"), let ms = Int(step.dropFirst(5)) {
+                try? await Task.sleep(for: .milliseconds(ms))
+            } else if step == "tabs" {
+                SnapshotLog.event("script tabs")
+                model.showTabs()
+            } else if step.hasPrefix("card:"), let index = Int(step.dropFirst(5)),
+                model.store.tabs.indices.contains(index)
+            {
+                SnapshotLog.event("script card \(index)")
+                model.openTab(model.store.tabs[index].id)
+            }
+        }
+    }
+
     /// The model the app runs with: the live one, or the UI tests' own.
     @MainActor
     static func makeModel() -> AppModel {

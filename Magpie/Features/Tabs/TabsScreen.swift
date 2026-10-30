@@ -10,6 +10,8 @@ struct TabsScreen: View {
     var onNewTab: () -> Void
     var onClose: (Tab.ID) -> Void
     var onShowArchive: () -> Void
+    /// The page's own sampled colour, for the space below a short page's picture.
+    var pageBackground: (Tab.ID) -> Color? = { _ in nil }
     /// Wired to the reading screen's half of the page ↔ card transition.
     var transitionNamespace: Namespace.ID? = nil
 
@@ -37,6 +39,7 @@ struct TabsScreen: View {
                     onOpen: onOpen,
                     onClose: onClose,
                     snapshotLoader: { await store.loadSnapshot(for: $0) },
+                    pageBackground: pageBackground,
                     namespace: transitionNamespace
                 )
                 .frame(width: geo.size.width, height: geo.size.height)
