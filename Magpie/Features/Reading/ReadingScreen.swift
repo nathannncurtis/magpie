@@ -56,6 +56,11 @@ struct ReadingScreen: View {
                     }
                 }
             }
+            .onGeometryChange(for: CGSize.self) { proxy in
+                proxy.size
+            } action: { size in
+                session?.viewportSize = size
+            }
         }
         .onChange(of: colorScheme) { _, _ in rereadPageTint() }
         .onDisappear {

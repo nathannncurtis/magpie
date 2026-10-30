@@ -2,6 +2,7 @@ import Foundation
 import Network
 import Observation
 import SwiftUI
+import UIKit
 import WebKit
 
 /// What the can't-load page says (04 · 15; copy in 06 · Edge states).
@@ -58,6 +59,9 @@ final class ReadingSession {
 
     /// Called whenever the page settles or moves, so the tab can take what it now shows.
     var onPageSettled: (@MainActor () -> Void)?
+
+    /// The viewport the page is shown at, kept by the reading screen for captures.
+    var viewportSize: CGSize?
 
     private let initialURL: URL
     /// The URL the session last asked to load. Its host is what a failure names, so a
@@ -255,12 +259,115 @@ final class ReadingSession {
         pageIconURL = url
     }
 
-    /// The page as an image: what the tab's card shows while the page itself is away.
-    func snapshot(viewport: CGSize) async -> Data? {
+    /// The page as an image: what the tab's card shows while the page itself is away. The
+    /// page's own export is preferred; a renderer that never answers falls back to the web
+    /// view in the window, when this page is the one on screen. Both are capped: a page
+    /// that misses both windows reads as nil, and a late answer is dropped.
+    func snapshot(viewport: CGSize? = nil) async -> Data? {
         guard failure == nil, page.url != nil else { return nil }
+        guard let size = viewport ?? viewportSize else { return nil }
         let region = WebPage.ExportedContentConfiguration.Region.rect(
-            CGRect(origin: .zero, size: viewport))
-        return try? await page.exported(
-            as: .image(region: region, allowTransparentBackground: false))
+            CGRect(origin: .zero, size: size))
+        if let data = await capped(
+            Self.captureCap,
+            {
+                try? await self.page.exported(
+                    as: .image(region: region, allowTransparentBackground: false))
+            })
+        {
+            return data
+        }
+        guard let view = onScreenWebView() else { return nil }
+        let config = WKSnapshotConfiguration()
+        config.rect = CGRect(origin: .zero, size: size)
+        return await capped(
+            Self.captureCap,
+            {
+                guard let image = try? await Self.viewSnapshot(view, config) else { return nil }
+                return image.pngData()
+            })
+    }
+
+    /// The web view's own snapshot, through its completion-based API.
+    private static func viewSnapshot(
+        _ view: WKWebView, _ config: WKSnapshotConfiguration
+    ) async throws -> UIImage {
+        try await withCheckedThrowingContinuation { continuation in
+            view.takeSnapshot(with: config) { image, error in
+                if let image {
+                    continuation.resume(returning: image)
+                } else if let error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(throwing: SnapshotUnavailable())
+                }
+            }
+        }
+    }
+
+    /// The web view showing this page, when it is the one on screen. The page carries no
+    /// view of its own, so the window is walked and the URL settles whose view it is.
+    private func onScreenWebView() -> WKWebView? {
+        let windows = UIApplication.shared.connectedScenes.compactMap {
+            ($0 as? UIWindowScene)?.keyWindow
+        }
+        for window in windows {
+            if let view = window.firstSubview(of: WKWebView.self), view.url == page.url {
+                return view
+            }
+        }
+        return nil
+    }
+
+    /// How long either capture path may take before the next one is tried.
+    private static let captureCap: Duration = .milliseconds(400)
+}
+
+private extension UIView {
+
+    /// The first subview of the given kind, depth first.
+    func firstSubview<T: UIView>(of kind: T.Type) -> T? {
+        if let found = self as? T { return found }
+        for subview in subviews {
+            if let found = subview.firstSubview(of: kind) { return found }
+        }
+        return nil
+    }
+}
+
+/// The web view answered with neither an image nor an error.
+private struct SnapshotUnavailable: Error {}
+
+/// Runs a capture under a cap: one that does not answer in time reads as nil. All on the
+/// main actor, where the page lives.
+@MainActor
+private func capped(
+    _ cap: Duration, _ capture: @escaping @MainActor () async -> Data?
+) async -> Data? {
+    await withCheckedContinuation { continuation in
+        let gate = ResumeGate(continuation)
+        Task { gate.resume(await capture()) }
+        Task {
+            try? await Task.sleep(for: cap)
+            gate.resume(nil)
+        }
+    }
+}
+
+/// Hands the value to the first of many finishers; the rest are dropped.
+@MainActor
+private final class ResumeGate {
+    private var continuation: CheckedContinuation<Data?, Never>?
+    private var resumed = false
+
+    init(_ continuation: CheckedContinuation<Data?, Never>) {
+        self.continuation = continuation
+    }
+
+    func resume(_ value: Data?) {
+        guard !resumed else { return }
+        resumed = true
+        continuation?.resume(returning: value)
+        continuation = nil
     }
 }

@@ -162,22 +162,24 @@ struct TabStack: View {
         } else {
             lift = 0
         }
-        return TabCard(tab: tab, snapshot: snapshots[tab.id], namespace: namespace)
-            .accessibilityElement(children: .contain)
-            .accessibilityIdentifier(tab.id == currentID ? "tabs.card.current" : "tabs.card.neighbour")
-            .frame(width: frame.width, height: frame.height)
-            .position(x: frame.midX + neighbourOffset(from: index - current, stride: stride), y: frame.midY + lift)
-            .zIndex(Double(100 - abs(index - current)))
-            .onTapGesture {
-                guard flyingID == nil else { return }
-                if tab.id == currentID {
-                    onOpen(tab.id)
-                } else {
-                    withAnimation(reduceMotion ? StackMetrics.crossfade : Springs.settle.animation) {
-                        onSelect(tab.id)
-                    }
+        return TabCard(
+            tab: tab, snapshot: tab.snapshot ?? snapshots[tab.id], namespace: namespace
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(tab.id == currentID ? "tabs.card.current" : "tabs.card.neighbour")
+        .frame(width: frame.width, height: frame.height)
+        .position(x: frame.midX + neighbourOffset(from: index - current, stride: stride), y: frame.midY + lift)
+        .zIndex(Double(100 - abs(index - current)))
+        .onTapGesture {
+            guard flyingID == nil else { return }
+            if tab.id == currentID {
+                onOpen(tab.id)
+            } else {
+                withAnimation(reduceMotion ? StackMetrics.crossfade : Springs.settle.animation) {
+                    onSelect(tab.id)
                 }
             }
+        }
     }
 
     /// How far out a card sits while the neighbours have yet to slide in.
