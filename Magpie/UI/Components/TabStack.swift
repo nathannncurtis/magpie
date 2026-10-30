@@ -22,14 +22,19 @@ private enum StackMetrics {
     /// A label rides 12 pt above its card, in a 22 pt slot.
     static let labelGap: CGFloat = 12
     static let labelSlotHeight: CGFloat = 22
+    /// A label starts this far in from its card's leading edge and stops this far
+    /// short of the next card.
+    static let labelInset: CGFloat = 6
+    /// Where a clipped label may sit from the screen's left and right edges.
+    static let leadingClamp: CGFloat = 14
+    static let trailingBound: CGFloat = 16
+    static let labelMinWidth: CGFloat = 20
     /// A card flies this many card-heights up when it closes.
     static let flyDistance: CGFloat = 1.6
     /// The drag travel that locks the gesture to one axis.
     static let axisLock: CGFloat = 12
     /// The share of a stride a sideways drag must cover to move the stack by one tab.
     static let swipeFraction: CGFloat = 0.25
-    /// Where a clamped label sits from the screen's side.
-    static let edgeInset: CGFloat = 14
     /// Cards up to this far from the current one are drawn.
     static let visibleNeighbours = 2
     /// How long a closed card takes to leave, and the crossfade under Reduce Motion.
@@ -40,8 +45,9 @@ private enum StackMetrics {
 }
 
 /// The tab cards side by side: the current one centred, its neighbours peeking in from
-/// the edges, labels riding above. Swipe sideways to move through the stack, fling a card
-/// up to close it, tap to open it.
+/// the edges, labels riding above. Swipe sideways to move through the stack, fling the
+/// centred card up to close it, tap a peeking neighbour to centre it, tap the centred
+/// card to open it.
 struct TabStack: View {
     let tabs: [Tab]
     let currentID: Tab.ID?
@@ -112,35 +118,44 @@ struct TabStack: View {
             .position(x: x, y: size.height / 2 + lift)
             .zIndex(Double(100 - abs(index - current)))
             .onTapGesture {
-                if flyingID == nil { onOpen(tab.id) }
+                guard flyingID == nil else { return }
+                if tab.id == currentID {
+                    onOpen(tab.id)
+                } else {
+                    withAnimation(reduceMotion ? StackMetrics.crossfade : Springs.settle.animation) {
+                        onSelect(tab.id)
+                    }
+                }
             }
     }
 
-    /// The label sits above its card, clamped to the screen's edges when the card peeks.
+    /// A label rides above its own card, aligned to its leading edge and clipped by the
+    /// screen with it when it peeks; it never spills onto the current card's label.
     @ViewBuilder
     private func label(
         _ tab: Tab, index: Int, current: Int, size: CGSize, stride: CGFloat
     ) -> some View {
         if abs(index - current) <= 1 {
-            let centre = size.width / 2 + CGFloat(index - current) * stride + horizontalDrag
+            let cardWidth = size.width * StackMetrics.cardScale
+            let cardLeading =
+                size.width / 2 + CGFloat(index - current) * stride + horizontalDrag - cardWidth / 2
+            let leading = max(cardLeading + StackMetrics.labelInset, StackMetrics.leadingClamp)
+            let trailing = min(
+                cardLeading + cardWidth,
+                cardLeading + stride - StackMetrics.labelInset,
+                size.width - StackMetrics.trailingBound
+            )
+            let width = max(trailing - leading, StackMetrics.labelMinWidth)
             let cardTop = size.height / 2 - size.height * StackMetrics.cardScale / 2
             TabLabel(title: tab.displayTitle, host: tab.host, faviconData: tab.faviconData)
-                .frame(maxWidth: size.width - StackMetrics.edgeInset * 2)
-                .frame(height: StackMetrics.labelSlotHeight, alignment: .bottom)
-                .padding(.horizontal, StackMetrics.edgeInset)
-                .frame(width: size.width, alignment: alignment(forCardCentre: centre, in: size.width))
+                .frame(width: width, alignment: .leading)
+                .frame(height: StackMetrics.labelSlotHeight, alignment: .bottomLeading)
                 .position(
-                    x: size.width / 2,
+                    x: leading + width / 2,
                     y: cardTop - StackMetrics.labelGap - StackMetrics.labelSlotHeight / 2
                 )
                 .zIndex(200)
         }
-    }
-
-    private func alignment(forCardCentre centre: CGFloat, in width: CGFloat) -> Alignment {
-        if centre <= StackMetrics.edgeInset { return .leading }
-        if centre >= width - StackMetrics.edgeInset { return .trailing }
-        return .center
     }
 
     // MARK: Gestures
@@ -162,7 +177,9 @@ struct TabStack: View {
                 lockedAxis = .horizontal
             } else if abs(value.translation.height) >= StackMetrics.axisLock {
                 lockedAxis = .vertical
-                dragCardID = cardID(at: value.startLocation.x, size: size, stride: stride)
+                if let hit = cardID(at: value.startLocation.x, size: size, stride: stride), hit == currentID {
+                    dragCardID = hit
+                }
             }
         }
         switch lockedAxis {

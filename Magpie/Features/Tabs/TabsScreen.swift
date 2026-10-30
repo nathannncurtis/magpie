@@ -12,6 +12,10 @@ struct TabsScreen: View {
     /// Wired to the reading screen's half of the page ↔ card transition.
     var transitionNamespace: Namespace.ID? = nil
 
+    /// The bottom inset, read before the layout goes full-bleed: a GeometryReader
+    /// swallows the safe area for everything inside it, so it cannot be read there.
+    @State private var bottomInset: CGFloat = 0
+
     private enum ScreenMetrics {
         /// The bottom row's inset from the sides.
         static let rowInset: CGFloat = 16
@@ -22,37 +26,38 @@ struct TabsScreen: View {
     }
 
     var body: some View {
-        GeometryReader { geo in
-            ZStack {
+        ZStack(alignment: .bottom) {
+            GeometryReader { geo in
                 MistBackground()
                 TabStack(
                     tabs: store.tabs,
                     currentID: store.currentTabID,
-                    onSelect: { store.select($0, now: Date.now) },
+                    onSelect: { store.select($0) },
                     onOpen: open,
                     onClose: { store.close($0) },
                     snapshotLoader: { await store.loadSnapshot(for: $0) },
                     namespace: transitionNamespace
                 )
-                .frame(
-                    width: geo.size.width + geo.safeAreaInsets.leading + geo.safeAreaInsets.trailing,
-                    height: geo.size.height + geo.safeAreaInsets.top + geo.safeAreaInsets.bottom)
+                .frame(width: geo.size.width, height: geo.size.height)
             }
-            .ignoresSafeArea()
-            .overlay(alignment: .bottom) {
-                bottomRow
-                    .padding(
-                        .bottom,
-                        max(
-                            ScreenMetrics.bottomEdge,
-                            geo.safeAreaInsets.bottom - ScreenMetrics.aboveHomeIndicator))
-            }
+            bottomRow
+                .padding(
+                    .bottom,
+                    max(
+                        ScreenMetrics.bottomEdge,
+                        bottomInset - ScreenMetrics.aboveHomeIndicator))
         }
+        .onGeometryChange(for: CGFloat.self) {
+            $0.safeAreaInsets.bottom
+        } action: {
+            bottomInset = $0
+        }
+        .ignoresSafeArea()
     }
 
-    /// Opening a card makes its tab current before the reading screen takes over.
+    /// Opening a card makes its tab current and active before the reading screen takes over.
     private func open(_ id: Tab.ID) {
-        store.select(id, now: Date.now)
+        store.activate(id, now: Date.now)
         onOpen(id)
     }
 
