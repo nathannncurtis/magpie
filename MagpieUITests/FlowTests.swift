@@ -70,7 +70,8 @@ final class FlowTests: XCTestCase {
 
         // 06 · the tab count: the stack, with one open.
         app.buttons["bar.tabs"].tap()
-        let openCount = app.staticTexts["tabs.openCount"]
+        let openCount = app.descendants(matching: .any)
+            .matching(identifier: "tabs.openCount").firstMatch
         land("tabs-one") { openCount.waitForLabel("1 open", timeout: 10) }
         shots.snap(app, "tabs-one")
 
