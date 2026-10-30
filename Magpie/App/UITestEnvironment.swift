@@ -80,6 +80,20 @@ enum UITestEnvironment {
         ProcessInfo.processInfo.arguments.contains("-uiTestingHoldInstallCheck")
     }
 
+    /// Whether the UI tests force Reduce Motion on (`-uiTestingReduceMotion`), injected
+    /// where `accessibilityReduceMotion` is read; nil outside the UI tests.
+    static var reduceMotionOverride: Bool? {
+        guard isUITesting else { return nil }
+        return ProcessInfo.processInfo.arguments.contains("-uiTestingReduceMotion")
+    }
+
+    /// Whether the launch intro's phases hold past their beats, so the UI tests' shots
+    /// can catch each one whatever the runner's latency; the released app plays them
+    /// on time.
+    static var holdsLaunchIntro: Bool {
+        ProcessInfo.processInfo.arguments.contains("-uiTestingHoldIntro")
+    }
+
     /// The appearance the tests ask for by launch argument (`-AppleInterfaceStyle Dark`),
     /// applied by the app itself so every run lands in the scheme it asked for. Nil when
     /// the tests set no preference, and always nil outside the UI tests.

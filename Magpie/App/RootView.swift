@@ -20,18 +20,23 @@ struct RootView: View {
             ZStack {
                 switch model.surface {
                 case .launchSearch:
-                    LaunchScreen(
-                        engine: model.engine,
-                        skimEnabled: model.offersSkim,
-                        suggestionsEnabled: model.suggestionsEnabled,
-                        focusSuspended: coversOverLaunch,
-                        suggestions: model.suggestions,
-                        recents: model.recents,
-                        initialText: model.searchPrefill ?? "",
-                        onSkim: { model.startSkim(query: $0) },
-                        onOpen: { model.openFromLaunch($0) },
-                        onDismiss: { model.dismissLaunchSearch() }
-                    )
+                    LaunchIntro(
+                        plays: model.playsLaunchIntro,
+                        onFinished: { model.launchIntroDone() }
+                    ) {
+                        LaunchScreen(
+                            engine: model.engine,
+                            skimEnabled: model.offersSkim,
+                            suggestionsEnabled: model.suggestionsEnabled,
+                            focusSuspended: coversOverLaunch,
+                            suggestions: model.suggestions,
+                            recents: model.recents,
+                            initialText: model.searchPrefill ?? "",
+                            onSkim: { model.startSkim(query: $0) },
+                            onOpen: { model.openFromLaunch($0) },
+                            onDismiss: { model.dismissLaunchSearch() }
+                        )
+                    }
                 case .reading(let searchOpen):
                     ReadingScreen(
                         session: model.currentSession,

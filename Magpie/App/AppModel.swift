@@ -141,6 +141,7 @@ final class AppModel {
     /// the blocking on the pages' shared configuration, and lands on the surface to open on.
     func start(now: Date = .now) async {
         await store.loadIndex()
+        armLaunchIntro()
         await bookmarks.loadIndex()
         refreshArchive(now: now)
         await blocker.attach(modInjector.contentController)
@@ -159,6 +160,35 @@ final class AppModel {
         }
         _ = ensureSession(for: tab)
         surface = .reading(searchOpen: false)
+    }
+
+    /// Whether this cold start plays the launch intro (05 · 07). Decided the moment the
+    /// saved tabs are in — and the launch search lands early when it plays, so the intro
+    /// runs while the rest of the start work still does. Cleared once the intro has had
+    /// its moment, so no later return to the launch search draws the mark again.
+    private(set) var playsLaunchIntro = false
+
+    /// The intro's trigger, on its own: a cold start with no tab to restore and onboarding
+    /// already done. A restored tab, the first-launch flow, the + on the tabs screen —
+    /// none of them play it.
+    static func shouldPlayLaunchIntro(hasTabsToRestore: Bool, onboardingDone: Bool) -> Bool {
+        !hasTabsToRestore && onboardingDone
+    }
+
+    /// Decides the intro from the loaded tabs, landing the launch search early when it
+    /// plays. A restored launch is never held for it.
+    private func armLaunchIntro() {
+        playsLaunchIntro = Self.shouldPlayLaunchIntro(
+            hasTabsToRestore: store.currentTab != nil,
+            onboardingDone: !needsOnboarding)
+        if playsLaunchIntro {
+            surface = .launchSearch
+        }
+    }
+
+    /// The intro's own call once it has played, been skipped, or left the screen.
+    func launchIntroDone() {
+        playsLaunchIntro = false
     }
 
     /// Auto-archive, on every launch and every return to the foreground.
