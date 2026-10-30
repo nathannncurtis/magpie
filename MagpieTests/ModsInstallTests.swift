@@ -174,9 +174,10 @@ struct ModsInstallTests {
         #expect(id == ModLinkInstaller.linkID(for: again))
         #expect(id != ModLinkInstaller.linkID(for: other))
         #expect(id.hasPrefix("link-"))
-        #expect(id.dropFirst("link-".count).count == 12)
-        // The digits of a digest are hex.
-        #expect(id.allSatisfy { $0.isHexDigit || $0 == "-" })
+        let digits = id.dropFirst("link-".count)
+        #expect(digits.count == 12)
+        // The id's digits are the hex of a digest.
+        #expect(digits.allSatisfy { $0.isHexDigit })
     }
 
     @Test("what a link is called when nothing better is known")

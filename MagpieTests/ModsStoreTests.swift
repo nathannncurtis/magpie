@@ -150,7 +150,9 @@ struct ModsStoreTests {
         let updated = await store.update(id: "a-mod", directory: directory)
         #expect(updated)
         #expect(store.mod(id: "a-mod")?.version == "2.0")
-        #expect(io.loadBody(for: "a-mod") == body)
+        // The store keeps the script's code, not its metadata block.
+        let parsed = try #require(Userscript.parse(body))
+        #expect(io.loadBody(for: "a-mod") == parsed.body)
     }
 
     @Test("a changed file does not update the mod")
