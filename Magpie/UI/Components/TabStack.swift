@@ -1,0 +1,261 @@
+import SwiftUI
+
+/// Whether a vertical fling carries a card off, as pure arithmetic: past 30% of the
+/// card's height, or faster than 500 pt/s. Up is negative for both measures.
+enum FlingToClose {
+    /// The share of the card's height a drag must pass.
+    static let distanceFraction: CGFloat = 0.3
+    /// The closing speed, in points per second.
+    static let velocityThreshold: CGFloat = 500
+
+    static func closes(translationY: CGFloat, velocityY: CGFloat, cardHeight: CGFloat) -> Bool {
+        translationY < -(distanceFraction * cardHeight) || velocityY < -velocityThreshold
+    }
+}
+
+/// The stack's fixed measurements, in points.
+private enum StackMetrics {
+    /// The card is the page at 62% of the container's scale.
+    static let cardScale: CGFloat = 0.62
+    /// Cards sit 14 pt apart.
+    static let cardGap: CGFloat = 14
+    /// A label rides 12 pt above its card, in a 22 pt slot.
+    static let labelGap: CGFloat = 12
+    static let labelSlotHeight: CGFloat = 22
+    /// A card flies this many card-heights up when it closes.
+    static let flyDistance: CGFloat = 1.6
+    /// The drag travel that locks the gesture to one axis.
+    static let axisLock: CGFloat = 12
+    /// The share of a stride a sideways drag must cover to move the stack by one tab.
+    static let swipeFraction: CGFloat = 0.25
+    /// Where a clamped label sits from the screen's side.
+    static let edgeInset: CGFloat = 14
+    /// Cards up to this far from the current one are drawn.
+    static let visibleNeighbours = 2
+    /// How long a closed card takes to leave, and the crossfade under Reduce Motion.
+    static let flightDuration: TimeInterval = 0.35
+    static let crossfadeDuration: TimeInterval = 0.2
+
+    static var crossfade: Animation { .easeInOut(duration: crossfadeDuration) }
+}
+
+/// The tab cards side by side: the current one centred, its neighbours peeking in from
+/// the edges, labels riding above. Swipe sideways to move through the stack, fling a card
+/// up to close it, tap to open it.
+struct TabStack: View {
+    let tabs: [Tab]
+    let currentID: Tab.ID?
+    var onSelect: (Tab.ID) -> Void
+    var onOpen: (Tab.ID) -> Void
+    var onClose: (Tab.ID) -> Void
+    var snapshotLoader: (Tab.ID) async -> Data?
+    var namespace: Namespace.ID? = nil
+
+    @State private var horizontalDrag: CGFloat = 0
+    @State private var verticalDrag: CGFloat = 0
+    @State private var dragCardID: Tab.ID?
+    @State private var lockedAxis: Axis?
+    @State private var flyingID: Tab.ID?
+    @State private var flyOffset: CGFloat = 0
+    @State private var snapshots: [Tab.ID: Data] = [:]
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        GeometryReader { geo in
+            let size = geo.size
+            let stride = size.width * StackMetrics.cardScale + StackMetrics.cardGap
+            let current = currentIndex
+            let stack = ZStack {
+                ForEach(tabs) { tab in
+                    if let index = tabs.firstIndex(where: { $0.id == tab.id }),
+                        abs(index - current) <= StackMetrics.visibleNeighbours
+                    {
+                        card(tab, index: index, current: current, size: size, stride: stride)
+                            .transition(.opacity)
+                            .task(id: tab.id) { await loadSnapshot(for: tab.id) }
+                        label(tab, index: index, current: current, size: size, stride: stride)
+                    }
+                }
+            }
+            .contentShape(Rectangle())
+            .gesture(dragGesture(size: size, stride: stride))
+
+            // Reduce Motion: the stack crossfades between its states instead of sliding.
+            if reduceMotion {
+                stack.id(currentID).transition(.opacity)
+            } else {
+                stack
+            }
+        }
+    }
+
+    // MARK: Cards and labels
+
+    private func card(
+        _ tab: Tab, index: Int, current: Int, size: CGSize, stride: CGFloat
+    ) -> some View {
+        let x = size.width / 2 + CGFloat(index - current) * stride + horizontalDrag
+        let lift: CGFloat
+        if flyingID == tab.id {
+            lift = flyOffset
+        } else if dragCardID == tab.id {
+            lift = verticalDrag
+        } else {
+            lift = 0
+        }
+        return TabCard(tab: tab, snapshot: snapshots[tab.id], namespace: namespace)
+            .frame(
+                width: size.width * StackMetrics.cardScale,
+                height: size.height * StackMetrics.cardScale
+            )
+            .position(x: x, y: size.height / 2 + lift)
+            .zIndex(Double(100 - abs(index - current)))
+            .onTapGesture {
+                if flyingID == nil { onOpen(tab.id) }
+            }
+    }
+
+    /// The label sits above its card, clamped to the screen's edges when the card peeks.
+    @ViewBuilder
+    private func label(
+        _ tab: Tab, index: Int, current: Int, size: CGSize, stride: CGFloat
+    ) -> some View {
+        if abs(index - current) <= 1 {
+            let centre = size.width / 2 + CGFloat(index - current) * stride + horizontalDrag
+            let cardTop = size.height / 2 - size.height * StackMetrics.cardScale / 2
+            TabLabel(title: tab.displayTitle, host: tab.host, faviconData: tab.faviconData)
+                .frame(maxWidth: size.width - StackMetrics.edgeInset * 2)
+                .frame(height: StackMetrics.labelSlotHeight, alignment: .bottom)
+                .padding(.horizontal, StackMetrics.edgeInset)
+                .frame(width: size.width, alignment: alignment(forCardCentre: centre, in: size.width))
+                .position(
+                    x: size.width / 2,
+                    y: cardTop - StackMetrics.labelGap - StackMetrics.labelSlotHeight / 2
+                )
+                .zIndex(200)
+        }
+    }
+
+    private func alignment(forCardCentre centre: CGFloat, in width: CGFloat) -> Alignment {
+        if centre <= StackMetrics.edgeInset { return .leading }
+        if centre >= width - StackMetrics.edgeInset { return .trailing }
+        return .center
+    }
+
+    // MARK: Gestures
+
+    private func dragGesture(size: CGSize, stride: CGFloat) -> some Gesture {
+        DragGesture(minimumDistance: StackMetrics.axisLock)
+            .onChanged { value in
+                dragChanged(value, size: size, stride: stride)
+            }
+            .onEnded { value in
+                dragEnded(value, size: size, stride: stride)
+            }
+    }
+
+    private func dragChanged(_ value: DragGesture.Value, size: CGSize, stride: CGFloat) {
+        guard flyingID == nil, !tabs.isEmpty else { return }
+        if lockedAxis == nil {
+            if abs(value.translation.width) >= StackMetrics.axisLock {
+                lockedAxis = .horizontal
+            } else if abs(value.translation.height) >= StackMetrics.axisLock {
+                lockedAxis = .vertical
+                dragCardID = cardID(at: value.startLocation.x, size: size, stride: stride)
+            }
+        }
+        switch lockedAxis {
+        case .horizontal:
+            horizontalDrag = value.translation.width
+        case .vertical:
+            if dragCardID != nil { verticalDrag = value.translation.height }
+        case nil:
+            break
+        }
+    }
+
+    private func dragEnded(_ value: DragGesture.Value, size: CGSize, stride: CGFloat) {
+        switch lockedAxis {
+        case .horizontal:
+            let step = swipeStep(
+                translation: value.translation.width,
+                predicted: value.predictedEndTranslation.width,
+                stride: stride)
+            let target = min(max(currentIndex + step, 0), tabs.count - 1)
+            withAnimation(reduceMotion ? StackMetrics.crossfade : Springs.settle.animation) {
+                if step != 0, tabs.indices.contains(target) {
+                    let id = tabs[target].id
+                    if id != currentID { onSelect(id) }
+                }
+                horizontalDrag = 0
+            }
+        case .vertical:
+            endVerticalDrag(value, size: size)
+        case nil:
+            break
+        }
+        lockedAxis = nil
+        dragCardID = nil
+    }
+
+    private func endVerticalDrag(_ value: DragGesture.Value, size: CGSize) {
+        guard let id = dragCardID else { return }
+        let cardHeight = size.height * StackMetrics.cardScale
+        if FlingToClose.closes(
+            translationY: verticalDrag, velocityY: value.velocity.height, cardHeight: cardHeight)
+        {
+            close(id, cardHeight: cardHeight)
+        } else {
+            withAnimation(reduceMotion ? nil : Springs.settle.animation) {
+                verticalDrag = 0
+            }
+        }
+    }
+
+    /// The card follows the finger, then flies off; the next card slides over with settle.
+    private func close(_ id: Tab.ID, cardHeight: CGFloat) {
+        if reduceMotion {
+            withAnimation(StackMetrics.crossfade) { onClose(id) }
+            verticalDrag = 0
+            return
+        }
+        flyOffset = verticalDrag
+        flyingID = id
+        withAnimation(Springs.chrome.animation) {
+            flyOffset = -(cardHeight * StackMetrics.flyDistance)
+        }
+        Task {
+            try? await Task.sleep(for: .seconds(StackMetrics.flightDuration))
+            withAnimation(Springs.settle.animation) { onClose(id) }
+            flyingID = nil
+            flyOffset = 0
+        }
+    }
+
+    private func swipeStep(translation: CGFloat, predicted: CGFloat, stride: CGFloat) -> Int {
+        let threshold = stride * StackMetrics.swipeFraction
+        if translation <= -threshold || predicted <= -threshold { return 1 }
+        if translation >= threshold || predicted >= threshold { return -1 }
+        return 0
+    }
+
+    private func cardID(at x: CGFloat, size: CGSize, stride: CGFloat) -> Tab.ID? {
+        let index = currentIndex + Int(((x - size.width / 2) / stride).rounded())
+        return tabs.indices.contains(index) ? tabs[index].id : nil
+    }
+
+    private var currentIndex: Int {
+        if let currentID, let index = tabs.firstIndex(where: { $0.id == currentID }) {
+            return index
+        }
+        return 0
+    }
+
+    // MARK: Snapshots
+
+    private func loadSnapshot(for id: Tab.ID) async {
+        guard snapshots[id] == nil, let data = await snapshotLoader(id) else { return }
+        snapshots[id] = data
+    }
+}
