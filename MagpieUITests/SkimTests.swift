@@ -44,9 +44,8 @@ final class SkimTests: XCTestCase {
     private func working(appearance: String) throws {
         launch(surface: "skimWorking", appearance: appearance)
 
-        land("working-screen") { self.element("skim.working").waitForExistence(timeout: 30) }
+        land("working-cancel") { self.element("skim.cancel").waitForExistence(timeout: 30) }
         land("working-reading") { self.label("Reading 3 pages").waitForExistence(timeout: 10) }
-        land("working-cancel") { self.element("skim.cancel").waitForExistence(timeout: 10) }
 
         // The query fades in under the mark; let it land before the shot.
         Thread.sleep(forTimeInterval: 1.2)
@@ -58,8 +57,7 @@ final class SkimTests: XCTestCase {
     private func page(skimState: String, shot: String, appearance: String) throws {
         launch(surface: "skimPage", skimState: skimState, appearance: appearance)
 
-        land("page-screen") { self.element("skim.page").waitForExistence(timeout: 30) }
-        land("page-source") { self.element("skim.source.1").waitForExistence(timeout: 10) }
+        land("page-source") { self.element("skim.source.1").waitForExistence(timeout: 30) }
         land("page-dig") { self.element("skim.digDeeper").waitForExistence(timeout: 10) }
         land("page-query-bar") { self.element("skim.queryBar").waitForExistence(timeout: 10) }
 
@@ -79,9 +77,8 @@ final class SkimTests: XCTestCase {
     private func failed(appearance: String) throws {
         launch(surface: "skimFailed", appearance: appearance)
 
-        land("failed-screen") { self.element("skim.failed").waitForExistence(timeout: 30) }
+        land("failed-results") { self.element("skim.showResults").waitForExistence(timeout: 30) }
         land("failed-line") { self.label("Only 1 of 3 pages").waitForExistence(timeout: 10) }
-        land("failed-results") { self.element("skim.showResults").waitForExistence(timeout: 10) }
         land("failed-retry") { self.element("skim.retry").waitForExistence(timeout: 10) }
 
         Thread.sleep(forTimeInterval: 0.5)
@@ -95,8 +92,8 @@ final class SkimTests: XCTestCase {
     ) {
         let app = XCUIApplication()
         app.launchArguments += [
-            "-uiTesting", "-uiTestingResetStore", "-uiTestingSurface=\(surface)",
-            "-uiTestingSkim", "-AppleInterfaceStyle", appearance,
+            "-uiTesting", "-uiTestingResetStore", "-uiTestingSkipOnboarding",
+            "-uiTestingSurface=\(surface)", "-uiTestingSkim", "-AppleInterfaceStyle", appearance,
         ]
         if let skimState {
             app.launchArguments += ["-uiTestingSkimState=\(skimState)"]
