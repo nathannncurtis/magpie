@@ -44,12 +44,17 @@ enum UITestEnvironment {
         isUITesting ? AppModel.forUITesting(resetting: resetsStore) : AppModel.live()
     }
 
-    /// Opens the UI tests' chosen screen once the saved state has landed.
+    /// Seeds the chosen list and opens its screen, once the saved state has landed:
+    /// seeding before the loads would let a half-written index file overwrite it.
     @MainActor
     static func applySurfaceOverride(to model: AppModel) {
         switch surface {
-        case .archive: model.showArchive()
-        case .bookmarks: model.showBookmarks()
+        case .archive:
+            AppModel.seedLists(on: model, empty: listsEmpty)
+            model.showArchive()
+        case .bookmarks:
+            AppModel.seedLists(on: model, empty: listsEmpty)
+            model.showBookmarks()
         case nil: break
         }
     }
@@ -58,7 +63,7 @@ enum UITestEnvironment {
 extension AppModel {
 
     /// The app as the UI tests drive it: a scratch store, a search engine pointed at the
-    /// app's own local page server, fixed suggestion rows, and the seeded lists.
+    /// app's own local page server, and fixed suggestion rows.
     static func forUITesting(resetting: Bool) -> AppModel {
         let scratch = URL(
             fileURLWithPath: NSTemporaryDirectory(), isDirectory: true
@@ -80,12 +85,12 @@ extension AppModel {
             suggestions: StubSuggestionProvider(
                 rowsByPrefix: ["magpie test", "magpie test page", "magpie test search"]),
             recents: RecentSearches())
-        seedLists(on: model, empty: UITestEnvironment.listsEmpty)
         return model
     }
 
-    /// The seeded archive and bookmarks, fixed content with no network.
-    private static func seedLists(on model: AppModel, empty: Bool) {
+    /// The seeded archive and bookmarks, fixed content with no network, once the saved
+    /// state has loaded.
+    fileprivate static func seedLists(on model: AppModel, empty: Bool) {
         guard !empty, let surface = UITestEnvironment.surface else { return }
         switch surface {
         case .archive: seedArchive(in: model.store, now: .now)
