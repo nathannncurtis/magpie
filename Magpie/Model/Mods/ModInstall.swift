@@ -176,9 +176,10 @@ enum ModLinkInstaller {
     }
 
     /// What a link is called when nothing better is known: its file name, else its host.
+    /// A bare address has no file name — its path is just "/".
     static func name(from url: URL) -> String {
         let last = url.lastPathComponent
-        if !last.isEmpty {
+        if !last.isEmpty, last != "/" {
             return String(last.prefix(40))
         }
         return url.host() ?? url.absoluteString
