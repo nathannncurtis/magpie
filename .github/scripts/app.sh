@@ -9,10 +9,11 @@ xcodegen generate
 
 xcrun swift-format lint --strict --recursive --parallel Magpie $(ls -d MagpieTests MagpieUITests Packages 2>/dev/null)
 
-# SIM_UDID picks a device (parallel local runs each use their own); otherwise the newest iPhone
-# simulator this Xcode ships, so the job doesn't break when device names change.
+# SIM_UDID picks a device (parallel local runs each use their own); otherwise the newest standard iPhone Pro
+# this Xcode ships (by name pattern, so the job doesn't break when device names change; the foldable gets its
+# own run once it has a layout).
 udid=${SIM_UDID:-$(xcrun simctl list devices available -j |
-  jq -r '[.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.name | startswith("iPhone"))] | last | .udid')}
+  jq -r '[.devices | to_entries | map(select(.key | contains("iOS"))) | sort_by(.key | [scan("[0-9]+") | tonumber]) | .[] | .value[] | select(.name | test("^iPhone [0-9]+ Pro$"))] | last | .udid')}
 test -n "$udid" && test "$udid" != null
 
 set +e
