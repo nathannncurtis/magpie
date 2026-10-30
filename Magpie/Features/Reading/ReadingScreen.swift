@@ -109,12 +109,17 @@ struct ReadingScreen: View {
                     PageLoadFailureView(failure: failure) { session.retry() }
                         .ignoresSafeArea()
                 } else {
-                    WebView(session.page)
-                        .ignoresSafeArea()
-                        .webViewOnScrollGeometryChange(
-                            for: ScrollSnapshot.self,
-                            of: ScrollSnapshot.init,
-                            action: { _, new in scrollDidChange(new) })
+                    ZStack {
+                        WebView(session.page)
+                            .ignoresSafeArea()
+                            .webViewOnScrollGeometryChange(
+                                for: ScrollSnapshot.self,
+                                of: ScrollSnapshot.init,
+                                action: { _, new in scrollDidChange(new) })
+                        WebViewProbe(session: session)
+                            .frame(width: 0, height: 0)
+                            .allowsHitTesting(false)
+                    }
                 }
             }
             .modifier(CardMatch(namespace: cardNamespace, id: tabID))
@@ -208,6 +213,65 @@ private struct ScrollSnapshot: Hashable {
         offsetY = geometry.contentOffset.y
         let scrollable = geometry.contentSize.height > geometry.containerSize.height + 1
         atEnd = !scrollable || geometry.visibleRect.maxY >= geometry.contentSize.height - 1
+    }
+}
+
+/// Keeps the session's hold of the web view SwiftUI builds for its page: the snapshot
+/// path needs the view, and the page carries none of its own. A zero-size probe lands
+/// in the hierarchy beside it and names the nearest web view up its own branch — no
+/// window walk, and no URL match to break on a redirect.
+private struct WebViewProbe: UIViewRepresentable {
+    let session: ReadingSession
+
+    func makeUIView(context: Context) -> ProbeView {
+        ProbeView(session: session)
+    }
+
+    func updateUIView(_ view: ProbeView, context: Context) {
+        view.remember()
+    }
+
+    /// Tries again on every look: the web view can be built after the probe moves in,
+    /// and swapped for a new one later.
+    final class ProbeView: UIView {
+        weak var session: ReadingSession?
+
+        init(session: ReadingSession) {
+            self.session = session
+            super.init(frame: .zero)
+        }
+
+        required init?(coder: NSCoder) {
+            super.init(coder: coder)
+        }
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            remember()
+        }
+
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            remember()
+        }
+
+        func remember() {
+            guard window != nil, let session, session.webView?.window == nil else { return }
+            session.webViewLookup = { [weak self] in self?.nearestWebView() }
+            session.webView = nearestWebView()
+        }
+
+        /// The nearest web view in the probe's own branch of the hierarchy.
+        private func nearestWebView() -> WKWebView? {
+            var ancestor = superview
+            while let current = ancestor {
+                if let found = current.firstSubview(of: WKWebView.self) {
+                    return found
+                }
+                ancestor = current.superview
+            }
+            return nil
+        }
     }
 }
 

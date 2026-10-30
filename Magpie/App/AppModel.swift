@@ -144,17 +144,18 @@ final class AppModel {
     /// settle that lands while one is still in flight replaces it.
     private func pageSettled(for id: Tab.ID) {
         syncTab(for: id)
-        captureSnapshot(for: id)
+        captureSnapshot(for: id, trigger: "settle")
     }
 
     /// The page's picture onto its tab, whenever it answers.
-    private func captureSnapshot(for id: Tab.ID, viewport: CGSize? = nil) {
+    private func captureSnapshot(for id: Tab.ID, viewport: CGSize? = nil, trigger: String) {
         guard let session = sessions[id] else { return }
         snapshotTasks[id]?.cancel()
         snapshotTasks[id] = Task { @MainActor in
-            let data = await session.snapshot(viewport: viewport)
+            let data = await session.snapshot(viewport: viewport, trigger: trigger)
             guard !Task.isCancelled, let data else { return }
             store.setSnapshot(data, for: id)
+            SnapshotLog.event("\(trigger) stored \(data.count)B tab=\(id.uuidString.prefix(4))")
         }
     }
 
@@ -192,8 +193,10 @@ final class AppModel {
     func openTabs(viewport: CGSize) {
         if let tab = store.currentTab, let session = sessions[tab.id], tab.snapshot == nil {
             Task { @MainActor in
-                guard let data = await session.snapshot(viewport: viewport) else { return }
+                guard let data = await session.snapshot(viewport: viewport, trigger: "leave")
+                else { return }
                 store.setSnapshot(data, for: tab.id)
+                SnapshotLog.event("leave stored \(data.count)B tab=\(tab.id.uuidString.prefix(4))")
             }
         }
         surface = .tabs

@@ -63,6 +63,13 @@ final class ReadingSession {
     /// The viewport the page is shown at, kept by the reading screen for captures.
     var viewportSize: CGSize?
 
+    /// The web view SwiftUI built for this page, kept by the reading screen's probe.
+    /// Weak, because the hierarchy owns the view.
+    @ObservationIgnored var webView: WKWebView?
+    /// The probe's own walk to that view, retried at capture time — the view can be
+    /// built after the probe first looks, and swapped for a new one later.
+    @ObservationIgnored var webViewLookup: (@MainActor () -> WKWebView?)?
+
     private let initialURL: URL
     /// The URL the session last asked to load. Its host is what a failure names, so a
     /// failure always has one even when the page never got far enough to have a URL.
@@ -260,32 +267,74 @@ final class ReadingSession {
     }
 
     /// The page as an image: what the tab's card shows while the page itself is away. The
-    /// page's own export is preferred; a renderer that never answers falls back to the web
-    /// view in the window, when this page is the one on screen. Both are capped: a page
-    /// that misses both windows reads as nil, and a late answer is dropped.
-    func snapshot(viewport: CGSize? = nil) async -> Data? {
-        guard failure == nil, page.url != nil else { return nil }
-        guard let size = viewport ?? viewportSize else { return nil }
+    /// page's own export is preferred; a renderer that never answers falls back to the
+    /// web view, through the handle the reading screen's probe keeps. Both are capped: a
+    /// page that misses both windows reads as nil, and a late answer is dropped. Every
+    /// step is logged, because the captures are being diagnosed on the simulator.
+    func snapshot(viewport: CGSize? = nil, trigger: String) async -> Data? {
+        let start = ContinuousClock.now
+        guard failure == nil, page.url != nil else {
+            SnapshotLog.event(
+                "\(trigger) skip failure=\(failure != nil) url=\(page.url?.absoluteString ?? "nil")")
+            return nil
+        }
+        guard let size = viewport ?? viewportSize else {
+            SnapshotLog.event("\(trigger) skip viewport=nil")
+            return nil
+        }
         let region = WebPage.ExportedContentConfiguration.Region.rect(
             CGRect(origin: .zero, size: size))
+        let exportThrown = ErrorBox()
         if let data = await capped(
             Self.captureCap,
             {
-                try? await self.page.exported(
-                    as: .image(region: region, allowTransparentBackground: false))
+                do {
+                    return try await self.page.exported(
+                        as: .image(region: region, allowTransparentBackground: false))
+                } catch {
+                    exportThrown.error = error
+                    return nil
+                }
             })
         {
+            SnapshotLog.event("\(trigger) export \(data.count)B \(Self.ms(since: start))ms")
             return data
         }
-        guard let view = onScreenWebView() else { return nil }
-        let config = WKSnapshotConfiguration()
-        config.rect = CGRect(origin: .zero, size: size)
-        return await capped(
+        if let error = exportThrown.error {
+            SnapshotLog.event(
+                "\(trigger) export nil \(Self.ms(since: start))ms error=\(Self.describe(error))")
+        } else {
+            SnapshotLog.event("\(trigger) export nil \(Self.ms(since: start))ms")
+        }
+        guard let found = onScreenWebView() else {
+            SnapshotLog.event(
+                "\(trigger) view none handle=\(webView != nil) probe=\(webViewLookup != nil)")
+            return nil
+        }
+        let viewStart = ContinuousClock.now
+        let viewThrown = ErrorBox()
+        let data = await capped(
             Self.captureCap,
             {
-                guard let image = try? await Self.viewSnapshot(view, config) else { return nil }
-                return image.pngData()
+                do {
+                    return try await Self.viewSnapshot(found.view, Self.snapshotConfig(size))
+                        .pngData()
+                } catch {
+                    viewThrown.error = error
+                    return nil
+                }
             })
+        let outcome: String
+        if let data {
+            outcome = "\(data.count)B"
+        } else if let error = viewThrown.error {
+            outcome = "nil error=\(Self.describe(error))"
+        } else {
+            outcome = "nil"
+        }
+        SnapshotLog.event(
+            "\(trigger) view[\(found.source)] \(outcome) \(Self.ms(since: viewStart))ms")
+        return data
     }
 
     /// The web view's own snapshot, through its completion-based API.
@@ -305,25 +354,41 @@ final class ReadingSession {
         }
     }
 
-    /// The web view showing this page, when it is the one on screen. The page carries no
-    /// view of its own, so the window is walked and the URL settles whose view it is.
-    private func onScreenWebView() -> WKWebView? {
-        let windows = UIApplication.shared.connectedScenes.compactMap {
-            ($0 as? UIWindowScene)?.keyWindow
+    private static func snapshotConfig(_ size: CGSize) -> WKSnapshotConfiguration {
+        let config = WKSnapshotConfiguration()
+        config.rect = CGRect(origin: .zero, size: size)
+        return config
+    }
+
+    /// The web view SwiftUI built for this page: the probe's handle when it still holds,
+    /// the probe's own walk otherwise. The page carries no view of its own.
+    private func onScreenWebView() -> (view: WKWebView, source: String)? {
+        if let view = webView, view.window != nil {
+            return (view, "handle")
         }
-        for window in windows {
-            if let view = window.firstSubview(of: WKWebView.self), view.url == page.url {
-                return view
-            }
-        }
-        return nil
+        guard let view = webViewLookup?(), view.window != nil else { return nil }
+        webView = view
+        return (view, "probe")
+    }
+
+    /// An error, trimmed to sit on one log line.
+    private static func describe(_ error: Error) -> String {
+        let text = String(describing: error)
+        return text.count <= 160 ? text : String(text.prefix(160)) + "…"
+    }
+
+    /// Milliseconds since the instant, for the log line.
+    private static func ms(since start: ContinuousClock.Instant) -> Int {
+        let parts = (ContinuousClock.now - start).components
+        return Int(parts.seconds) * 1_000
+            + Int(parts.attoseconds / 1_000_000_000_000_000)
     }
 
     /// How long either capture path may take before the next one is tried.
     private static let captureCap: Duration = .milliseconds(400)
 }
 
-private extension UIView {
+extension UIView {
 
     /// The first subview of the given kind, depth first.
     func firstSubview<T: UIView>(of kind: T.Type) -> T? {
@@ -333,6 +398,12 @@ private extension UIView {
         }
         return nil
     }
+}
+
+/// Carries the error a capped-out capture threw, out to the log line.
+@MainActor
+private final class ErrorBox {
+    var error: Error?
 }
 
 /// The web view answered with neither an image nor an error.
