@@ -78,8 +78,8 @@ Web pages render in their own fonts. The "reading" board text (Georgia) is page 
 
 The base unit is 4 pt.
 
-- **Screen side inset:** 14 pt for floating controls (bars, pills, sheets' inner groups); 16 pt for list content; 20–22 pt for running text (Skim, onboarding).
-- **Bottom controls:** the bar's bottom edge sits 26 pt above the screen bottom; this already accounts for the home indicator. In SwiftUI, use `safeAreaInset(edge: .bottom)` plus 8 pt of padding.
+- **Screen side inset:** 14 pt for floating controls (pills, sheets' inner groups, the list search bars); the ReadingBar alone sits at 12, so the page's main control reads a touch wider; 16 pt for list content; 20–22 pt for running text (Skim, onboarding).
+- **Bottom controls:** the bar's bottom edge sits 26 pt above the screen bottom; measured from the physical edge, not the safe area. In SwiftUI, lay the bar out in an overlay that ignores the bottom safe area and pad it by `max(26, safeAreaInsets.bottom - 8)`; on home-indicator phones that is 26.
 - **Rows:** suggestion row 46, menu/settings row 50 (46 in Settings), list row 44–48 (favicon 26 + 8 vertical padding).
 - **Gaps:** card grid 10, tile grid 8–10, section header above a group 16 top / 7 bottom.
 
