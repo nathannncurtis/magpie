@@ -16,15 +16,24 @@ enum AnchorScan {
         #/(?i)([a-z-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s]+))/#
 
     static func anchors(inHTML html: String) -> [RawAnchor] {
+        anchorsWithRanges(inHTML: html).map(\.anchor)
+    }
+
+    /// Each anchor with where it sat in the page, for the filters that work by
+    /// position.
+    static func anchorsWithRanges(inHTML html: String) -> [(anchor: RawAnchor, range: Range<String.Index>)] {
         html.matches(of: anchorPattern).map { match in
             let tag = String(match.1)
-            return RawAnchor(
-                href: attribute("href", inTag: tag) ?? "",
-                className: attribute("class", inTag: tag) ?? "")
+            return (
+                anchor: RawAnchor(
+                    href: attribute("href", inTag: tag) ?? "",
+                    className: attribute("class", inTag: tag) ?? ""),
+                range: match.range
+            )
         }
     }
 
-    private static func attribute(_ name: String, inTag tag: String) -> String? {
+    static func attribute(_ name: String, inTag tag: String) -> String? {
         for match in tag.matches(of: attributePattern) {
             guard match.1.lowercased() == name else { continue }
             for value in [match.2, match.3, match.4] {
@@ -32,6 +41,44 @@ enum AnchorScan {
             }
         }
         return nil
+    }
+}
+
+/// The spans of a results page an ad block covers: a container the engine marks
+/// as paid, whose anchors are ads even when the anchors carry no marker of
+/// their own.
+enum AdBlocks {
+
+    // Regex is deeply immutable but not marked Sendable in this toolchain.
+    nonisolated(unsafe) private static let tagPattern =
+        #/<(\/?)(div|article|section|aside|li|ul)\b([^>]*)>/#
+
+    static func ranges(inHTML html: String) -> [Range<String.Index>] {
+        var stack: [(name: Substring, ad: Bool, start: String.Index)] = []
+        var out: [Range<String.Index>] = []
+        for match in html.matches(of: tagPattern) {
+            guard match.1.isEmpty else {
+                if let index = stack.lastIndex(where: { $0.name == match.2 }) {
+                    let opened = stack.remove(at: index)
+                    if opened.ad {
+                        out.append(opened.start..<match.range.upperBound)
+                    }
+                }
+                continue
+            }
+            let tag = String(match.3)
+            let className = AnchorScan.attribute("class", inTag: tag) ?? ""
+            stack.append(
+                (
+                    name: match.2,
+                    ad: OrganicLinkFilter.isAdClassed(className),
+                    start: match.range.lowerBound
+                ))
+        }
+        for opened in stack where opened.ad {
+            out.append(opened.start..<html.endIndex)
+        }
+        return out
     }
 }
 
@@ -44,6 +91,16 @@ enum OrganicLinkFilter {
         "ad", "ads", "advert", "adverts", "advertisement", "advertisements",
         "sponsored", "paid", "promoted", "result--ad", "result--paid",
     ]
+
+    /// The organic links straight off a results page: anchors outside every ad
+    /// block, in page order.
+    static func links(inHTML html: String, base: URL, engineHosts: Set<String>) -> [URL] {
+        let ads = AdBlocks.ranges(inHTML: html)
+        let anchors = AnchorScan.anchorsWithRanges(inHTML: html).compactMap { anchor, range in
+            ads.contains(where: { $0.contains(range.lowerBound) }) ? nil : anchor
+        }
+        return links(from: anchors, base: base, engineHosts: engineHosts)
+    }
 
     static func links(from anchors: [RawAnchor], base: URL, engineHosts: Set<String>) -> [URL] {
         var seen = Set<String>()
@@ -150,8 +207,7 @@ struct ResultFinder: ResultFinding {
             let html = await OffscreenPage.load(
                 url: url, timeout: timeout, script: Self.htmlScript)
         else { return nil }
-        return OrganicLinkFilter.links(
-            from: AnchorScan.anchors(inHTML: html), base: url, engineHosts: Self.engineHosts)
+        return OrganicLinkFilter.links(inHTML: html, base: url, engineHosts: Self.engineHosts)
     }
 
     static let htmlScript = "document.body ? document.body.innerHTML : \"\""
