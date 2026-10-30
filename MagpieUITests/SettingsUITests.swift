@@ -33,6 +33,7 @@ final class SettingsUITests: XCTestCase {
         XCTAssertTrue(
             app.descendants(matching: .any)["settings.defaultBrowser"].firstMatch.exists,
             "the default browser card")
+        waitForNoKeyboard(app)
         ShotWriter(test: self, prefix: "settings-home").snap(app, mode)
 
         // The engine list, pushed.
@@ -72,5 +73,13 @@ final class SettingsUITests: XCTestCase {
         let back = app.descendants(matching: .any)["settings.back"].firstMatch
         XCTAssertTrue(back.waitForExistence(timeout: 10), "the back button")
         back.tap()
+    }
+
+    /// The launch sheet's keyboard drops once Settings covers it; shots wait for it to go.
+    private func waitForNoKeyboard(_ app: XCUIApplication) {
+        let deadline = Date().addingTimeInterval(5)
+        while app.keyboards.element.exists && Date() < deadline {
+            Thread.sleep(forTimeInterval: 0.1)
+        }
     }
 }

@@ -25,9 +25,11 @@ final class OnboardingUITests: XCTestCase {
         app.launch()
         let mode = appearance.lowercased()
 
-        // 07a · Welcome: the mark, the name, one button.
+        // 07a · Welcome: the mark, the name, one button. Onboarding comes before the launch
+        // sheet ever focuses, so no keyboard is up under it.
         let start = app.descendants(matching: .any)["welcome.start"].firstMatch
         XCTAssertTrue(start.waitForExistence(timeout: 20), "Welcome")
+        XCTAssertFalse(app.keyboards.element.waitForExistence(timeout: 2), "no keyboard under Welcome")
         ShotWriter(test: self, prefix: "onboarding-welcome").snap(app, mode)
 
         // 07b · the picker, nothing picked yet.
