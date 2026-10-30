@@ -1,9 +1,9 @@
 import SwiftUI
 
 /// The pieces Settings and its pages are built from (03 · Settings): the grouped box,
-/// its rows, the icon square, and the toggle as the boards draw it.
-///
-/// These stay private to the Settings folder; the menu's groups are the menu's own.
+/// its rows, the icon square, and the toggle as the boards draw it. The icon square,
+/// the toggle and the chevron are the menu's too; the menu's groups and rows are its
+/// own.
 struct SettingsGroup<Content: View>: View {
     @ViewBuilder var content: () -> Content
 

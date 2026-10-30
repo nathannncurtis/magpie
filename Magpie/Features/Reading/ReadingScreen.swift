@@ -32,6 +32,7 @@ struct ReadingScreen: View {
     @Environment(\.colorScheme) private var colorScheme
     @State private var collapse: CGFloat = 0
     @State private var chrome = ChromeCollapse()
+    @State private var isMenuOpen = false
     @State private var snapTask: Task<Void, Never>?
     @State private var tintRetryTask: Task<Void, Never>?
 
@@ -50,11 +51,15 @@ struct ReadingScreen: View {
             let bottomEdge =
                 Metrics.Spacing.barBottomEdge(safeAreaBottom: geo.safeAreaInsets.bottom)
                 - Self.slimBottomDrop * collapse
+            let menuBottomEdge = Metrics.Spacing.barBottomEdge(
+                safeAreaBottom: geo.safeAreaInsets.bottom)
             ZStack(alignment: .bottom) {
                 pageArea
                 GlassEffectContainer {
                     if isSearchOpen {
                         searchSheet
+                    } else if isMenuOpen {
+                        menuSheet(bottomEdge: menuBottomEdge)
                     } else {
                         bar
                             .padding(.bottom, bottomEdge)
@@ -68,6 +73,26 @@ struct ReadingScreen: View {
             snapTask?.cancel()
             tintRetryTask?.cancel()
         }
+    }
+
+    /// The menu (05): the bar's glass grows up into it, the bar row pinned in place.
+    private func menuSheet(bottomEdge: CGFloat) -> some View {
+        MenuSheet(
+            host: session?.failure?.host ?? HostFormatter.host(for: session?.page.url),
+            tabCount: tabCount,
+            canGoBack: session?.canGoBack ?? false,
+            skimOffered: skimEnabled,
+            barBottomEdge: bottomEdge,
+            morphNamespace: chromeNamespace,
+            onBack: { session?.goBack() },
+            onAddressTap: {
+                closeMenu()
+                expandBar()
+                onAddressTap()
+            },
+            onTabsTap: onTabsTap,
+            onMenuTap: closeMenu,
+            onDismiss: closeMenu)
     }
 
     /// The search sheet over the page, prefilled with the page's address.
@@ -102,7 +127,10 @@ struct ReadingScreen: View {
                 onAddressTap()
             },
             onTabsTap: onTabsTap,
-            onMenuTap: {})
+            onMenuTap: {
+                expandBar()
+                openMenu()
+            })
     }
 
     /// The page, or Magpie's own page when it can't load — one view with its tab card.
@@ -152,6 +180,20 @@ struct ReadingScreen: View {
     /// Expands the bar: the slim pill's tap, and search opening from it.
     private func expandBar() {
         apply(chrome.expand())
+    }
+
+    /// Opens the menu on the same spring the glass grows on.
+    private func openMenu() {
+        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
+            isMenuOpen = true
+        }
+    }
+
+    /// Folds the menu back into the bar.
+    private func closeMenu() {
+        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
+            isMenuOpen = false
+        }
     }
 
     private func apply(_ step: ChromeCollapse.Step) {

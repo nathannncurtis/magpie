@@ -180,6 +180,23 @@ enum Palette {
     static let skimSourceShadow = dynamic(
         light: 0x101115, lightOpacity: 0.30, dark: 0x000000, darkOpacity: 0.35)
 
+    // MARK: Menu
+
+    /// The open menu's fill, near solid once the bar has grown into it.
+    static let menuSheetFill = dynamic(
+        light: 0xF8F7F4, lightOpacity: 0.9, dark: 0x1A1B1F, darkOpacity: 0.92)
+    /// A menu tile's fill.
+    static let menuTile = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.5, dark: 0xFFFFFF, darkOpacity: 0.06)
+    /// A menu group's fill.
+    static let menuGroup = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.55, dark: 0xFFFFFF, darkOpacity: 0.06)
+    /// The inner hairline on a menu tile and a menu group.
+    static let menuHairline = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.6, dark: 0xFFFFFF, darkOpacity: 0.08)
+    /// A menu tile's icon and label.
+    static let menuTileLabel = dynamic(light: 0x2B2D33, dark: 0xF2F2EE)
+
     // MARK: Tab cards
 
     /// The white ring around a tab card's snapshot.

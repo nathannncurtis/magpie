@@ -98,4 +98,33 @@ enum Metrics {
         /// The height over which the mist fades into the page on the no-photo tier.
         static let fadeHeight: CGFloat = 520
     }
+
+    /// The menu sheet.
+    enum Menu {
+        /// The sheet's padding above the grabber.
+        static let topPadding: CGFloat = 10
+        /// The grabber's width and height.
+        static let grabberWidth: CGFloat = 38
+        static let grabberHeight: CGFloat = 5
+        /// The grabber's gap to the tiles.
+        static let grabberGap: CGFloat = 8
+        /// A quick-action tile.
+        static let tileHeight: CGFloat = 64
+        /// A tile's icon.
+        static let tileIconSize: CGFloat = 20
+        /// A tile's icon-to-label gap.
+        static let tileIconGap: CGFloat = 5
+        /// The tile row's padding above and below.
+        static let tileRowTopPadding: CGFloat = 4
+        static let tileRowBottomPadding: CGFloat = 12
+        /// The gap between groups.
+        static let groupGap: CGFloat = 10
+        /// Between the last group and the bar row.
+        static let barGap: CGFloat = 14
+        /// The bar row's height, and its padding above.
+        static let barRowHeight: CGFloat = 48
+        static let barRowTopPadding: CGFloat = 6
+        /// The bar row's side inset, where its hairline starts.
+        static let barRowSideInset: CGFloat = 16
+    }
 }

@@ -133,6 +133,18 @@
         }
       }
     },
+    "After %@" : {
+      "comment" : "Menu archive row's value, %@ being like 1 day",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After %@"
+          }
+        }
+      }
+    },
     "Also grants" : {
       "comment" : "Install sheet: grants the shim cannot honour",
       "extractionState" : "manual",
@@ -165,6 +177,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Archive"
+          }
+        }
+      }
+    },
+    "Archive inactive tabs" : {
+      "comment" : "Menu row: how long a tab sits untouched before it archives",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archive inactive tabs"
           }
         }
       }
@@ -213,6 +237,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Back"
+          }
+        }
+      }
+    },
+    "Block ads & trackers" : {
+      "comment" : "Menu toggle row",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Block ads & trackers"
+          }
+        }
+      }
+    },
+    "Block cookie banners" : {
+      "comment" : "Menu toggle row",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Block cookie banners"
+          }
+        }
+      }
+    },
+    "Bookmark" : {
+      "comment" : "Menu tile: saves the page the tab shows; VoiceOver label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bookmark"
           }
         }
       }
@@ -1117,6 +1177,18 @@
         }
       }
     },
+    "Saved" : {
+      "comment" : "The Bookmark tile's state, for VoiceOver",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved"
+          }
+        }
+      }
+    },
     "Script · by %@ · v%@" : {
       "comment" : "Install sheet preview: the script's author and version",
       "extractionState" : "manual",
@@ -1197,6 +1269,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Settings"
+          }
+        }
+      }
+    },
+    "Share" : {
+      "comment" : "Menu tile: the system share sheet on the page's address",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share"
           }
         }
       }

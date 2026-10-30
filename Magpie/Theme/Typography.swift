@@ -107,6 +107,8 @@ enum Typography {
     static let buttonBar = Font.body.weight(.semibold)
     /// Pill buttons.
     static let buttonPill = Font.subheadline.weight(.semibold)
+    /// A menu tile's label.
+    static let tileLabel = Font.caption.weight(.semibold)
 
     // MARK: Tracking and line spacing
 

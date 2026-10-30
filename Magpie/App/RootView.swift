@@ -110,7 +110,7 @@ struct RootView: View {
             OnboardingFlow(preferences: model.preferences)
         }
         .fullScreenCover(isPresented: settingsBinding) {
-            SettingsScreen()
+            SettingsScreen(opening: model.settingsPage)
         }
     }
 
@@ -129,7 +129,7 @@ struct RootView: View {
     private var settingsBinding: Binding<Bool> {
         Binding(
             get: { model.showsSettings },
-            set: { if !$0 { model.showsSettings = false } })
+            set: { if !$0 { model.closeSettings() } })
     }
 
     private var transition: Animation? {

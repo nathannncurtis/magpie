@@ -5,7 +5,12 @@ import SwiftUI
 /// push inside it with the bar hidden and a back button of their own.
 struct SettingsScreen: View {
     @Environment(AppModel.self) private var model
-    @State private var path: [SettingsPage] = []
+    @State private var path: [Page]
+
+    /// Opens on the page given, when a row elsewhere sent the user straight into one.
+    init(opening page: Page? = nil) {
+        _path = State(initialValue: page.map { [$0] } ?? [])
+    }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -83,7 +88,7 @@ struct SettingsScreen: View {
                     .accessibilityIdentifier("settings.about")
                 }
             }
-            .navigationDestination(for: SettingsPage.self) { page in
+            .navigationDestination(for: Page.self) { page in
                 switch page {
                 case .engineList:
                     EngineListPage(preferences: model.preferences)
@@ -99,7 +104,7 @@ struct SettingsScreen: View {
     }
 
     /// The pages Settings pushes.
-    enum SettingsPage: Hashable {
+    enum Page: Hashable {
         case engineList
         case filterLists
         case archivePicker
@@ -133,7 +138,7 @@ struct SettingsScreen: View {
     }
 
     private var done: some View {
-        Button("Done") { model.showsSettings = false }
+        Button("Done") { model.closeSettings() }
             .font(.system(size: 15.5, weight: .semibold))
             .foregroundStyle(Palette.textPrimary)
             .accessibilityIdentifier("settings.done")

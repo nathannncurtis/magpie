@@ -75,6 +75,9 @@ final class AppModel {
 
     /// Settings, once the menu exists; the UI tests open it directly meanwhile.
     var showsSettings = false
+    /// The page Settings opens on: the engine list, when the menu's Search engine row
+    /// sent it there.
+    var settingsPage: SettingsScreen.Page?
 
     /// The live page sessions, by tab.
     private(set) var sessions: [Tab.ID: ReadingSession] = [:]
@@ -174,7 +177,20 @@ final class AppModel {
 
     /// Opens Settings; the menu lands later, so the UI tests reach it directly meanwhile.
     func showSettings() {
+        settingsPage = nil
         showsSettings = true
+    }
+
+    /// The menu's Search engine row: Settings, straight onto its engine list.
+    func showEngineList() {
+        settingsPage = .engineList
+        showsSettings = true
+    }
+
+    /// Settings' Done, or the cover going away: back to whatever lay beneath.
+    func closeSettings() {
+        showsSettings = false
+        settingsPage = nil
     }
 
     /// The last step of the first-launch flow: the choices are saved and the app appears.
@@ -509,6 +525,26 @@ final class AppModel {
             faviconURL: tab.faviconURL,
             folder: nil,
             now: now)
+    }
+
+    /// Whether the page the current tab shows sits in Bookmarks already: the Bookmark
+    /// tile's state.
+    var currentPageIsBookmarked: Bool {
+        guard let url = store.currentTab?.url else { return false }
+        return bookmarks.bookmarks.contains { $0.url == url }
+    }
+
+    /// The Bookmark tile's tap: saved already, this tap takes the page back out.
+    /// Returns whether the page is saved after the tap.
+    @discardableResult
+    func toggleCurrentPageBookmark(now: Date = .now) -> Bool {
+        guard let tab = store.currentTab, let url = tab.url else { return false }
+        if let saved = bookmarks.bookmarks.first(where: { $0.url == url }) {
+            bookmarks.remove(saved.id)
+            return false
+        }
+        _ = bookmarkCurrentPage(now: now)
+        return true
     }
 }
 
