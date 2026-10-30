@@ -94,7 +94,9 @@ struct SearchEngine: Equatable, Identifiable, Sendable {
 
     /// The query a results URL holds, when the URL is this engine's results page: the
     /// text between the template's parts around `%s`, decoded. The encoded query can
-    /// never hold the URL's own separators, so the split point is fixed.
+    /// never hold the URL's own separators, so the split point is fixed. The text must
+    /// be fully percent-escaped — a stray `%` is the template's own placeholder, not a
+    /// query.
     func resultsQuery(for url: URL) -> String? {
         guard let placeholder = searchTemplate.range(of: "%s") else { return nil }
         let address = url.absoluteString
@@ -106,9 +108,22 @@ struct SearchEngine: Equatable, Identifiable, Sendable {
             address.count >= prefix.count + suffix.count
         else { return nil }
         let encoded = String(address.dropFirst(prefix.count).dropLast(suffix.count))
-        guard let query = encoded.removingPercentEncoding else { return nil }
+        guard Self.escapesWellFormed(encoded), let query = encoded.removingPercentEncoding
+        else { return nil }
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
+    }
+
+    /// Whether every `%` in the text starts a two-digit hex escape.
+    private static func escapesWellFormed(_ text: String) -> Bool {
+        var characters = text.makeIterator()
+        while let character = characters.next() {
+            guard character == "%" else { continue }
+            guard let high = characters.next(), high.isHexDigit,
+                let low = characters.next(), low.isHexDigit
+            else { return false }
+        }
+        return true
     }
 
     /// Substitutes the encoded query for `%s` in a URL template.
