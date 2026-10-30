@@ -16,8 +16,7 @@ struct SkimResultFinderTests {
     }
 
     private func links(_ html: String) -> [URL] {
-        OrganicLinkFilter.links(
-            from: AnchorScan.anchors(inHTML: html), base: base, engineHosts: engineHosts)
+        OrganicLinkFilter.links(inHTML: html, base: base, engineHosts: engineHosts)
     }
 
     // MARK: Anchor scan
@@ -163,6 +162,31 @@ struct SkimResultFinderTests {
                 url("https://kitchen.example/seasoning"),
                 url("https://pans.example/mineral-b"),
             ])
+    }
+
+    @Test("an ad marked on its block, not its link, is still an ad")
+    func adBlocksCoverTheirLinks() {
+        let html = #"""
+            <div class="results">
+              <div class="result result--ad">
+                <div class="snippet"><a class="result__a" href="https://ads.example/1">Ad one</a></div>
+              </div>
+              <div class="result"><a class="result__a" href="https://pans.example/mineral-b">Real</a></div>
+            </div>
+            """#
+
+        #expect(links(html) == [url("https://pans.example/mineral-b")])
+    }
+
+    @Test("an ad block the page never closed runs to the end")
+    func unclosedAdBlock() {
+        let html = #"""
+            <div class="result result--ad"><a href="https://ads.example/1">Ad one</a>
+            <div><a href="https://ads.example/2">Ad two</a></div>
+            <a href="https://kitchen.example/late">Real, but inside</a>
+            """#
+
+        #expect(links(html) == [])
     }
 
     // MARK: Pieces
