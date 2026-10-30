@@ -159,6 +159,7 @@ Photos come only from the source pages' `og:image` or largest article image. The
 **BottomSearchPill**
 - Glass capsule, 54 tall, inset 14 from the sides and 26 above the bottom (see 01 Spacing).
 - Contents: a search icon and the placeholder in `row` `textOnMistSecondary`.
+- Focused, it lifts itself clear of the keyboard, keeping its 26 pt foot clearance above the keys.
 - The list behind it uses the soft scroll-edge effect.
 
 ## Mods
