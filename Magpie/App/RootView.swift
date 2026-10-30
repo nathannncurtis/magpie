@@ -99,10 +99,12 @@ struct RootView: View {
                         .accessibilityElement(children: .contain)
                         .accessibilityIdentifier("skim.screen")
                 case nil:
-                    // Nothing has started yet: the mist, while the saved tabs load.
-                    MistBackground()
+                    // Nothing has started yet: paper, while the saved tabs load. The cold
+                    // start's first frame matches it, so the intro's mist fading up is the
+                    // first change on screen; a restore simply lands the reading screen.
+                    Palette.paper
                         .ignoresSafeArea()
-                        .accessibilityIdentifier("boot.mist")
+                        .accessibilityIdentifier("boot.paper")
                 }
             }
             .animation(movesWithChrome ? transition : nil, value: model.surface)
