@@ -67,6 +67,7 @@ struct BookmarksScreen: View {
                 )
                 .padding(.horizontal, Metrics.Spacing.insetFloating)
                 .padding(.bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset))
+                .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("bookmarks.search")
             }
         }
@@ -141,6 +142,7 @@ struct BookmarksScreen: View {
         .scrollContentBackground(.hidden)
         .contentMargins(.bottom, ScreenMetrics.listBottomClearance, for: .scrollContent)
         .scrollEdgeEffectStyle(.soft, for: .bottom)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("bookmarks.list")
     }
 
@@ -266,6 +268,7 @@ struct BookmarksScreen: View {
                     .bottom, ScreenMetrics.listBottomClearance, for: .scrollContent
                 )
                 .scrollEdgeEffectStyle(.soft, for: .bottom)
+                .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("bookmarks.folder.list")
             }
         }

@@ -61,12 +61,14 @@ struct RootView: View {
                         onRestore: { model.restoreArchivedTab($0) },
                         onDone: { model.doneWithArchive() }
                     )
+                    .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("archive.screen")
                 case .bookmarks:
                     BookmarksScreen(
                         store: model.bookmarks,
                         onOpen: { model.openBookmark($0) }
                     )
+                    .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("bookmarks.screen")
                 case nil:
                     // Nothing has started yet: the mist, while the saved tabs load.
