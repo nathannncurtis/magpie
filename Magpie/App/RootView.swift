@@ -55,6 +55,13 @@ struct RootView: View {
                         transitionNamespace: cards
                     )
                     .accessibilityIdentifier("tabs.screen")
+                case .mods:
+                    ModsScreen(
+                        directory: model.modDirectory,
+                        store: model.modStore,
+                        onDone: { model.closeMods() }
+                    )
+                    .accessibilityIdentifier("mods.screen")
                 case nil:
                     // Nothing has started yet: the mist, while the saved tabs load.
                     MistBackground()

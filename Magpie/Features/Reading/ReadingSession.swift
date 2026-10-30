@@ -54,7 +54,9 @@ final class ReadingSession {
     /// Whether the network path is up.
     private(set) var isOnline = true
 
-    let page = WebPage()
+    /// The page this session reads. It carries the shared content configuration, so every
+    /// page runs the mods' scripts under the same rules.
+    let page: WebPage
 
     /// Called whenever the page settles or moves, so the tab can take what it now shows.
     var onPageSettled: (@MainActor () -> Void)?
@@ -93,9 +95,10 @@ final class ReadingSession {
         return m ? m[1] + "," + m[2] + "," + m[3] : "";
         """#
 
-    init(url: URL) {
+    init(url: URL, pageConfiguration: WebPage.Configuration? = nil) {
         initialURL = url
         requestedURL = url
+        page = pageConfiguration.map { WebPage(configuration: $0) } ?? WebPage()
         monitor.pathUpdateHandler = { [weak self] path in
             let online = path.status == .satisfied
             Task { @MainActor in

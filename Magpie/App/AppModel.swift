@@ -10,6 +10,8 @@ enum Surface: Equatable {
     case reading(searchOpen: Bool)
     /// The tab stack.
     case tabs
+    /// The mods screen.
+    case mods
 }
 
 /// The app's own state: the tabs, the engine, the recents, and which surface is up.
@@ -32,10 +34,22 @@ final class AppModel {
     let suggestions: any SuggestionProviding
     /// Recent searches.
     let recents: any RecentSearchStoring
+    /// The mod directory (04 · 06).
+    let modDirectory: ModDirectory
+    /// The installed mods.
+    let modStore: ModStore
+    /// Adds the enabled userscript mods to every page.
+    let modInjector: ModInjector
+    /// Content blocking, including the lists filter-list mods install.
+    let blocker: ContentBlocker
 
     /// Nil until `start` has loaded the saved tabs: the app shows the mist while that
     /// happens, and the restored surface lands with nothing animating.
     private(set) var surface: Surface?
+
+    /// The surface to open on instead, once `start` has run: how a UI test enters the app
+    /// somewhere other than a cold start.
+    var launchSurfaceOverride: Surface?
 
     /// The live page sessions, by tab.
     private(set) var sessions: [Tab.ID: ReadingSession] = [:]
@@ -45,12 +59,25 @@ final class AppModel {
         store: TabStore = TabStore(),
         engine: SearchEngine = .default,
         suggestions: any SuggestionProviding = SuggestionService(),
-        recents: any RecentSearchStoring = RecentSearches()
+        recents: any RecentSearchStoring = RecentSearches(),
+        blocker: ContentBlocker? = nil,
+        modStore: ModStore? = nil,
+        modDirectory: ModDirectory? = nil
     ) {
         self.store = store
         self.engine = engine
         self.suggestions = suggestions
         self.recents = recents
+        let blocker = blocker ?? ContentBlocker(store: FilterListStore())
+        self.blocker = blocker
+        let mods = modStore ?? ModStore(listSink: blocker)
+        self.modStore = mods
+        self.modDirectory = modDirectory ?? ModDirectory()
+        let injector = ModInjector(values: mods)
+        self.modInjector = injector
+        mods.onUserscriptsChanged = { [weak injector] userscripts in
+            injector?.apply(userscripts)
+        }
     }
 
     /// The app as it runs on a device: the JSON index in Application Support.
@@ -60,11 +87,19 @@ final class AppModel {
 
     // MARK: Lifecycle
 
-    /// Loads the saved tabs, archives what went stale, and lands on the surface to open on.
+    /// Loads the saved tabs, archives what went stale, arms the mods and the blocking on
+    /// the pages' shared configuration, and lands on the surface to open on.
     func start(now: Date = .now) async {
         await store.loadIndex()
         refreshArchive(now: now)
+        await blocker.apply(to: modInjector.contentController)
+        modInjector.apply(modStore.enabledUserscripts)
+        await blocker.refresh()
+        await modDirectory.refresh()
         coldStart()
+        if let launchSurfaceOverride {
+            surface = launchSurfaceOverride
+        }
     }
 
     /// A cold start: restore the last tab, with nothing animating, or open on the launch
@@ -92,10 +127,13 @@ final class AppModel {
         store.currentTab.flatMap { sessions[$0.id] }
     }
 
-    /// The tab's page session, made on demand and kept in step with the tab.
+    /// The tab's page session, made on demand and kept in step with the tab. Every page
+    /// carries the mods' configuration, so the installed scripts run on each.
     func ensureSession(for tab: Tab) -> ReadingSession {
         if let session = sessions[tab.id] { return session }
-        let session = ReadingSession(url: tab.url ?? Self.blankPage)
+        let session = ReadingSession(
+            url: tab.url ?? Self.blankPage,
+            pageConfiguration: modInjector.pageConfiguration())
         sessions[tab.id] = session
         sessionTasks[tab.id] = Task { await session.run() }
         session.onPageSettled = { [weak self] in self?.syncTab(for: tab.id) }
@@ -179,6 +217,24 @@ final class AppModel {
     /// The tabs screen.
     func showTabs() {
         surface = .tabs
+    }
+
+    // MARK: Mods
+
+    /// Where Done on the mods screen returns to.
+    private var surfaceBeforeMods: Surface?
+
+    /// The mods screen (04 · 06). No menu yet; the app model's callers open it.
+    func showMods() {
+        guard surface != .mods else { return }
+        surfaceBeforeMods = surface
+        surface = .mods
+    }
+
+    /// Done: back to whatever was up before the mods screen.
+    func closeMods() {
+        surface = surfaceBeforeMods ?? .launchSearch
+        surfaceBeforeMods = nil
     }
 
     /// A tapped card: its tab becomes current and opens.
