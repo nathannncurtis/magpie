@@ -245,6 +245,12 @@ final class AppModel {
             retryAttempts[id] = 0
             store.setSnapshot(data, for: id)
             SnapshotLog.event("\(trigger) stored \(data.count)B tab=\(id.uuidString.prefix(4))")
+            // The page's own colour is sampled only now that a picture exists: at commit
+            // time the page has not painted yet, and script there has been seen to stall
+            // the load.
+            if session.pageBackground == nil {
+                await session.refreshPageBackground()
+            }
         }
     }
 

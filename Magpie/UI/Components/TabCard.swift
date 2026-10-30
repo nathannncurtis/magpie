@@ -65,9 +65,28 @@ struct TabCard: View {
                     .accessibilityElement(children: .ignore)
                     .accessibilityIdentifier("tabs.card.snapshot")
             }
+            .onAppear { Self.logFit(tab: tab, image: image, card: size) }
         } else {
             placeholder
         }
+    }
+
+    /// The cards whose picture numbers have been logged, once each.
+    @MainActor private static var loggedFits: Set<Tab.ID> = []
+
+    /// The picture's numbers against the card's, once per card — the width-fit is being
+    /// diagnosed on the simulator.
+    @MainActor private static func logFit(tab: Tab, image: UIImage, card: CGSize) {
+        guard !loggedFits.contains(tab.id) else { return }
+        loggedFits.insert(tab.id)
+        let frame = CGSize(
+            width: card.width,
+            height: card.width * image.size.height / image.size.width)
+        SnapshotLog.event(
+            "card tab=\(tab.id.uuidString.prefix(4))"
+                + " image=\(Int(image.size.width))x\(Int(image.size.height))@\(image.scale)"
+                + " card=\(Int(card.width))x\(Int(card.height))"
+                + " frame=\(Int(frame.width))x\(Int(frame.height))")
     }
 
     /// What the card shows where the picture stops: the page's sampled colour, else the

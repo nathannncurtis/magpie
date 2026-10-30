@@ -77,13 +77,11 @@ final class ReadingSession {
     /// viewport arriving, the screen's session changing, or the page's URL committing.
     /// The load event's own settle is not relied on for the picture; it has not been seen
     /// to arrive on the simulator. This counts as a settle. The page's own colour is
-    /// sampled first, so a short page's card can run on in it.
+    /// sampled only once a picture has been stored, never here: running page JavaScript
+    /// at commit time sits before the first paint and has been seen to stall the load.
     func captureOpportunity() {
         guard viewportSize != nil, failure == nil, page.url != nil else { return }
-        Task { [weak self] in
-            await self?.refreshPageBackground()
-            self?.settleWithLateBeat()
-        }
+        settleWithLateBeat()
     }
 
     /// The page's title landed.
@@ -168,6 +166,8 @@ final class ReadingSession {
         while !Task.isCancelled {
             do {
                 for try await event in page.navigations {
+                    SnapshotLog.event(
+                        "nav \(Self.describe(event)) url=\(page.url?.absoluteString ?? "nil")")
                     if event == .committed {
                         failure = nil
                     }
@@ -177,10 +177,12 @@ final class ReadingSession {
                         settle()
                     }
                 }
+                SnapshotLog.event("nav sequence ended")
                 return
             } catch is CancellationError {
                 return
             } catch {
+                SnapshotLog.event("nav threw \(Self.describe(error))")
                 // A single load's failure also lands here; the load's own sequence
                 // records it, so keep listening for the rest of the session.
                 if case WebPage.NavigationError.failedProvisionalNavigation = error { continue }
@@ -315,6 +317,20 @@ final class ReadingSession {
             SnapshotLog.event("\(trigger) skip viewport=nil")
             return nil
         }
+        // The region is the remembered viewport; the view's bounds and its scroll view's
+        // content size are what the page actually laid out at — logged together so a
+        // picture that crops says which two disagreed.
+        if let found = onScreenWebView() {
+            let scroll = found.view.scrollView
+            SnapshotLog.event(
+                "\(trigger) capture region=\(Int(size.width))x\(Int(size.height)) view="
+                    + "\(Int(found.view.bounds.width))x\(Int(found.view.bounds.height))"
+                    + " content=\(Int(scroll.contentSize.width))x\(Int(scroll.contentSize.height))"
+            )
+        } else {
+            SnapshotLog.event(
+                "\(trigger) capture region=\(Int(size.width))x\(Int(size.height)) view=none")
+        }
         let region = WebPage.ExportedContentConfiguration.Region.rect(
             CGRect(origin: .zero, size: size))
         let exportThrown = ErrorBox()
@@ -408,6 +424,14 @@ final class ReadingSession {
     private static func describe(_ error: Error) -> String {
         let text = String(describing: error)
         return text.count <= 160 ? text : String(text.prefix(160)) + "…"
+    }
+
+    /// A navigation event, named for the log — a page that never paints says which
+    /// moments it reached.
+    private static func describe(_ event: WebPage.NavigationEvent) -> String {
+        if event == .committed { return "committed" }
+        if event == .finished { return "finished" }
+        return String(describing: event)
     }
 
     /// Milliseconds since the instant, for the log line.
