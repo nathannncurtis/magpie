@@ -19,6 +19,7 @@ struct ReadingScreen: View {
     var cardNamespace: Namespace.ID? = nil
     var onSearchSubmit: (URL) -> Void
     var onSearchDismiss: () -> Void
+    var onAddressTap: () -> Void = {}
     var onTabsTap: () -> Void = {}
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -86,7 +87,10 @@ struct ReadingScreen: View {
             showsLock: session?.failure != nil,
             tint: barTint,
             onBack: { session?.goBack() },
-            onAddressTap: { expandBar() },
+            onAddressTap: {
+                expandBar()
+                onAddressTap()
+            },
             onTabsTap: onTabsTap,
             onMenuTap: {})
     }

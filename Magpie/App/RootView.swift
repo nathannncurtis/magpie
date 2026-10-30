@@ -41,6 +41,7 @@ struct RootView: View {
                         cardNamespace: cards,
                         onSearchSubmit: { model.navigateCurrent($0) },
                         onSearchDismiss: { model.closeSearchOverPage() },
+                        onAddressTap: { model.openSearchOverPage() },
                         onTabsTap: { openTabs(viewport: geo.size) }
                     )
                     .accessibilityIdentifier("reading.screen")
