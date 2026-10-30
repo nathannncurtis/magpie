@@ -143,18 +143,27 @@ struct PhotoHeader: View {
 
     var body: some View {
         GeometryReader { geo in
-            let large = (geo.size.width - Layout.gap) * Layout.largeShare
-            HStack(spacing: Layout.gap) {
-                SkimPhoto(url: photos[0], revealed: revealed > 0)
-                    .frame(width: large)
-                VStack(spacing: Layout.gap) {
-                    SkimPhoto(url: photos[1], revealed: revealed > 1)
-                    SkimPhoto(url: photos[2], revealed: revealed > 2)
-                }
+            if photos.count >= 3 {
+                mosaic(width: geo.size.width)
+            } else if let hero = photos.first {
+                SkimPhoto(url: hero, revealed: revealed > 0)
             }
         }
         .frame(height: Layout.height)
         .accessibilityHidden(true)
+    }
+
+    /// Three or more photos: one large tile beside two stacked.
+    private func mosaic(width: CGFloat) -> some View {
+        let large = (width - Layout.gap) * Layout.largeShare
+        return HStack(spacing: Layout.gap) {
+            SkimPhoto(url: photos[0], revealed: revealed > 0)
+                .frame(width: large)
+            VStack(spacing: Layout.gap) {
+                SkimPhoto(url: photos[1], revealed: revealed > 1)
+                SkimPhoto(url: photos[2], revealed: revealed > 2)
+            }
+        }
     }
 }
 
