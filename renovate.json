@@ -1,0 +1,100 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Every pinned version in this repo stays current: one grouped PR a week per ecosystem, majors on their own. Nothing merges itself and nobody is tagged.",
+  "extends": [
+    "config:best-practices",
+    ":disableDependencyDashboard",
+    ":semanticCommitsDisabled"
+  ],
+  "ignorePresets": [
+    ":pinDevDependencies"
+  ],
+  "rangeStrategy": "auto",
+  "schedule": [
+    "* 0-6 * * 1"
+  ],
+  "timezone": "America/Los_Angeles",
+  "prConcurrentLimit": 6,
+  "automerge": false,
+  "assignees": [],
+  "reviewers": [],
+  "labels": [
+    "dependencies"
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "schedule": [
+      "at any time"
+    ],
+    "labels": [
+      "security"
+    ]
+  },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": [
+      "* 0-6 1 * *"
+    ]
+  },
+  "packageRules": [
+    {
+      "description": "Majors come one per PR, since they may need code changes.",
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "groupName": null
+    },
+    {
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest",
+        "pin",
+        "pinDigest"
+      ],
+      "groupName": "actions"
+    },
+    {
+      "matchManagers": [
+        "swift"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest",
+        "pin",
+        "pinDigest"
+      ],
+      "groupName": "swift"
+    },
+    {
+      "matchManagers": [
+        "custom.regex"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest",
+        "pin",
+        "pinDigest"
+      ],
+      "groupName": "ci tools"
+    }
+  ],
+  "customManagers": [
+    {
+      "description": "Tools CI downloads from GitHub releases: a `tag=` line, then the URL, then its sha256.",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.+\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "tag=(?<currentValue>v[0-9][^;\\s]*);[^\\n]*\\s+curl [^\\n]*https://github\\.com/(?<depName>[^/]+/[^/]+)/releases/download/[^\\n]*\\n\\s*echo \"(?<currentDigest>[a-f0-9]{64}) "
+      ],
+      "datasourceTemplate": "github-release-attachments"
+    }
+  ]
+}
