@@ -65,8 +65,16 @@ final class SkimTests: XCTestCase {
         Thread.sleep(forTimeInterval: 2)
         shots.snap(app, shot)
 
-        // A citation chip scrolls to its source card.
-        app.buttons["Source 3"].firstMatch.tap()
+        // An inline citation taps by its label, then its card lands on screen.
+        let citation = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label == %@", "Source 3")).firstMatch
+        land("page-citation-tap") {
+            let tappable = NSPredicate(format: "hittable == true")
+            return XCTWaiter().wait(
+                for: [XCTNSPredicateExpectation(predicate: tappable, object: citation)], timeout: 10
+            ) == .completed
+        }
+        citation.tap()
         let third = element("skim.source.3")
         land("page-third-source") {
             let landed = NSPredicate(format: "hittable == true")

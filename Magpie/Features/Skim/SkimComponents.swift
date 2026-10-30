@@ -265,12 +265,12 @@ struct SkimHeader: View {
 
 // MARK: - Section
 
-/// One point of a Skim page (03 · Skim): an emoji tile, then the term, a dash,
-/// the claim, and the citation dots that stand behind it.
+/// One point of a Skim page (03 · Skim): an emoji tile, then the claim as one
+/// run of text — term, dash, claim — with its citations inline at its end,
+/// each a circled digit on the sheen that taps to its source.
 struct SkimSectionRow: View {
 
     let section: SkimSection
-    let sources: [SkimSourceRef]
     let onCitation: (Int) -> Void
 
     private enum Layout {
@@ -278,8 +278,12 @@ struct SkimSectionRow: View {
         static let radius: CGFloat = 9
         static let emojiSize: CGFloat = 16
         static let gap: CGFloat = 10
-        static let dotGap: CGFloat = 3
-        static let dotRowGap: CGFloat = 6
+        /// The citation dot that sits inline at the claim's end.
+        static let dotSize: CGFloat = 17
+        static let dotLift: CGFloat = 2
+        /// The clear, near-invisible link run beside each dot, carrying the
+        /// "Source N" tap target and reading it aloud.
+        static let linkRunSize: CGFloat = 6
     }
 
     var body: some View {
@@ -290,26 +294,50 @@ struct SkimSectionRow: View {
                 .overlay(
                     Text(section.emoji)
                         .font(.system(size: Layout.emojiSize)))
-            VStack(alignment: .leading, spacing: Layout.dotRowGap) {
-                Text("\(Text(section.term).fontWeight(.semibold)) — \(section.claim)")
-                    .font(Typography.body)
-                    .lineSpacing(Typography.bodyLineSpacing)
-                HStack(spacing: Layout.dotGap) {
-                    ForEach(section.citations, id: \.self) { citation in
-                        CitationDot(
-                            number: citation,
-                            previewURL: sources.indices.contains(citation - 1)
-                                ? sources[citation - 1].url : nil
-                        ) {
-                            onCitation(citation)
-                        }
-                    }
-                }
-            }
+            claim
+                .lineSpacing(Typography.bodyLineSpacing)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, 14)
-        .accessibilityElement(children: .combine)
+        .environment(
+            \.openURL,
+            OpenURLAction { url in
+                guard let citation = Self.citation(from: url) else { return .systemAction }
+                onCitation(citation)
+                return .handled
+            })
+    }
+
+    /// The claim with its citations inline: per citation, a clear link run —
+    /// the tap target, carrying the "Source N" label — with the circled digit
+    /// the reader sees rendered right behind it.
+    private var claim: Text {
+        let base = Text("\(Text(section.term).fontWeight(.semibold)) — \(section.claim)")
+            .font(Typography.body)
+        var segments = [base]
+        for citation in section.citations {
+            var run = AttributedString("Source \(citation)")
+            run.foregroundColor = .clear
+            run.font = .system(size: Layout.linkRunSize)
+            run.link = URL(string: "magpie-cite://\(citation)")
+            segments.append(Text(run))
+            segments.append(
+                Text(Image(systemName: "\(citation).circle.fill"))
+                    .font(.system(size: Layout.dotSize, weight: .semibold))
+                    .foregroundStyle(Palette.sheen)
+                    .baselineOffset(Layout.dotLift))
+        }
+        return segments.dropFirst().reduce(base) { combined, segment in
+            Text("\(combined)\(segment)")
+        }
+    }
+
+    /// The citation a link run points at, when it is one of ours.
+    private static func citation(from url: URL) -> Int? {
+        guard url.scheme == "magpie-cite", let host = url.host(), let number = Int(host) else {
+            return nil
+        }
+        return number
     }
 }
 

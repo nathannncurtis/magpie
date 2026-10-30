@@ -81,7 +81,7 @@ struct SkimPageScreen: View {
                 VStack(spacing: 0) {
                     header
                     ForEach(Array(page.sections.enumerated()), id: \.element.id) { index, section in
-                        SkimSectionRow(section: section, sources: page.sources) { citation in
+                        SkimSectionRow(section: section) { citation in
                             withAnimation(Springs.settle.animation) {
                                 proxy.scrollTo(Self.sourcesAnchor, anchor: .center)
                                 proxy.scrollTo(Self.sourceAnchor(citation), anchor: .center)
