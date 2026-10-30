@@ -184,11 +184,7 @@ struct ModsScreen: View {
             authorLine: ModsCopy.authorLine(
                 kind: mod.kind, author: mod.author, fromLink: mod.source.isLink),
             notReviewed: mod.source.isLink,
-            trailing: .toggle(
-                isOn: Binding(
-                    get: { mod.enabled },
-                    set: { store.setEnabled($0, id: mod.id) }
-                )),
+            trailing: installedTrailing(for: mod, landed: landed),
             onRemove: {
                 withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.settle.animation) {
                     store.remove(id: mod.id)
@@ -196,6 +192,17 @@ struct ModsScreen: View {
             }
         )
         .transition(landed ? landingTransition : .opacity)
+    }
+
+    /// An installed row carries its switch; the one that has just landed carries the
+    /// popping check until the confirmation settles (05 · 06).
+    private func installedTrailing(for mod: InstalledMod, landed: Bool) -> ModRow.Trailing {
+        if landed { return .installed(pops: true) }
+        return .toggle(
+            isOn: Binding(
+                get: { mod.enabled },
+                set: { store.setEnabled($0, id: mod.id) }
+            ))
     }
 
     /// The confirmation row's arrival: it rises 8 pt and fades in. Reduce Motion: a plain
@@ -256,7 +263,8 @@ struct ModsScreen: View {
             landedModID = id
         }
         Task { @MainActor in
-            try? await Task.sleep(for: .seconds(1.2))
+            // The check holds behind the dropping sheet long enough to be seen.
+            try? await Task.sleep(for: .seconds(2))
             if landedModID == id {
                 withAnimation(.easeInOut(duration: 0.2)) {
                     landedModID = nil
