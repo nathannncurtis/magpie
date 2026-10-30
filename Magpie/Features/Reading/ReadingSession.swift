@@ -2,6 +2,7 @@ import Foundation
 import Network
 import Observation
 import SwiftUI
+import UIKit
 import WebKit
 
 /// What the can't-load page says (04 · 15; copy in 06 · Edge states).
@@ -60,6 +61,16 @@ final class ReadingSession {
 
     /// Called whenever the page settles or moves, so the tab can take what it now shows.
     var onPageSettled: (@MainActor () -> Void)?
+
+    /// The viewport the page is shown at, kept by the reading screen for captures.
+    var viewportSize: CGSize?
+
+    /// The web view SwiftUI built for this page, kept by the reading screen's probe.
+    /// Weak, because the hierarchy owns the view.
+    @ObservationIgnored var webView: WKWebView?
+    /// The probe's own walk to that view, retried at capture time — the view can be
+    /// built after the probe first looks, and swapped for a new one later.
+    @ObservationIgnored var webViewLookup: (@MainActor () -> WKWebView?)?
 
     private let initialURL: URL
     /// The URL the session last asked to load. Its host is what a failure names, so a
@@ -258,12 +269,179 @@ final class ReadingSession {
         pageIconURL = url
     }
 
-    /// The page as an image: what the tab's card shows while the page itself is away.
-    func snapshot(viewport: CGSize) async -> Data? {
-        guard failure == nil, page.url != nil else { return nil }
+    /// The page as an image: what the tab's card shows while the page itself is away. The
+    /// page's own export is preferred; a renderer that never answers falls back to the
+    /// web view, through the handle the reading screen's probe keeps. Both are capped: a
+    /// page that misses both windows reads as nil, and a late answer is dropped. Every
+    /// step is logged, because the captures are being diagnosed on the simulator.
+    func snapshot(viewport: CGSize? = nil, trigger: String) async -> Data? {
+        let start = ContinuousClock.now
+        guard failure == nil, page.url != nil else {
+            SnapshotLog.event(
+                "\(trigger) skip failure=\(failure != nil) url=\(page.url?.absoluteString ?? "nil")")
+            return nil
+        }
+        guard let size = viewport ?? viewportSize else {
+            SnapshotLog.event("\(trigger) skip viewport=nil")
+            return nil
+        }
         let region = WebPage.ExportedContentConfiguration.Region.rect(
-            CGRect(origin: .zero, size: viewport))
-        return try? await page.exported(
-            as: .image(region: region, allowTransparentBackground: false))
+            CGRect(origin: .zero, size: size))
+        let exportThrown = ErrorBox()
+        if let data = await capped(
+            Self.captureCap,
+            {
+                do {
+                    return try await self.page.exported(
+                        as: .image(region: region, allowTransparentBackground: false))
+                } catch {
+                    exportThrown.error = error
+                    return nil
+                }
+            })
+        {
+            SnapshotLog.event("\(trigger) export \(data.count)B \(Self.ms(since: start))ms")
+            return data
+        }
+        if let error = exportThrown.error {
+            SnapshotLog.event(
+                "\(trigger) export nil \(Self.ms(since: start))ms error=\(Self.describe(error))")
+        } else {
+            SnapshotLog.event("\(trigger) export nil \(Self.ms(since: start))ms")
+        }
+        guard let found = onScreenWebView() else {
+            SnapshotLog.event(
+                "\(trigger) view none handle=\(webView != nil) probe=\(webViewLookup != nil)")
+            return nil
+        }
+        let viewStart = ContinuousClock.now
+        let viewThrown = ErrorBox()
+        let data = await capped(
+            Self.captureCap,
+            {
+                do {
+                    return try await Self.viewSnapshot(found.view, Self.snapshotConfig(size))
+                        .pngData()
+                } catch {
+                    viewThrown.error = error
+                    return nil
+                }
+            })
+        let outcome: String
+        if let data {
+            outcome = "\(data.count)B"
+        } else if let error = viewThrown.error {
+            outcome = "nil error=\(Self.describe(error))"
+        } else {
+            outcome = "nil"
+        }
+        SnapshotLog.event(
+            "\(trigger) view[\(found.source)] \(outcome) \(Self.ms(since: viewStart))ms")
+        return data
+    }
+
+    /// The web view's own snapshot, through its completion-based API.
+    private static func viewSnapshot(
+        _ view: WKWebView, _ config: WKSnapshotConfiguration
+    ) async throws -> UIImage {
+        try await withCheckedThrowingContinuation { continuation in
+            view.takeSnapshot(with: config) { image, error in
+                if let image {
+                    continuation.resume(returning: image)
+                } else if let error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(throwing: SnapshotUnavailable())
+                }
+            }
+        }
+    }
+
+    private static func snapshotConfig(_ size: CGSize) -> WKSnapshotConfiguration {
+        let config = WKSnapshotConfiguration()
+        config.rect = CGRect(origin: .zero, size: size)
+        return config
+    }
+
+    /// The web view SwiftUI built for this page: the probe's handle when it still holds,
+    /// the probe's own walk otherwise. The page carries no view of its own.
+    private func onScreenWebView() -> (view: WKWebView, source: String)? {
+        if let view = webView, view.window != nil {
+            return (view, "handle")
+        }
+        guard let view = webViewLookup?(), view.window != nil else { return nil }
+        webView = view
+        return (view, "probe")
+    }
+
+    /// An error, trimmed to sit on one log line.
+    private static func describe(_ error: Error) -> String {
+        let text = String(describing: error)
+        return text.count <= 160 ? text : String(text.prefix(160)) + "…"
+    }
+
+    /// Milliseconds since the instant, for the log line.
+    private static func ms(since start: ContinuousClock.Instant) -> Int {
+        let parts = (ContinuousClock.now - start).components
+        return Int(parts.seconds) * 1_000
+            + Int(parts.attoseconds / 1_000_000_000_000_000)
+    }
+
+    /// How long either capture path may take before the next one is tried.
+    private static let captureCap: Duration = .milliseconds(400)
+}
+
+extension UIView {
+
+    /// The first subview of the given kind, depth first.
+    func firstSubview<T: UIView>(of kind: T.Type) -> T? {
+        if let found = self as? T { return found }
+        for subview in subviews {
+            if let found = subview.firstSubview(of: kind) { return found }
+        }
+        return nil
+    }
+}
+
+/// Carries the error a capped-out capture threw, out to the log line.
+@MainActor
+private final class ErrorBox {
+    var error: Error?
+}
+
+/// The web view answered with neither an image nor an error.
+private struct SnapshotUnavailable: Error {}
+
+/// Runs a capture under a cap: one that does not answer in time reads as nil. All on the
+/// main actor, where the page lives.
+@MainActor
+private func capped(
+    _ cap: Duration, _ capture: @escaping @MainActor () async -> Data?
+) async -> Data? {
+    await withCheckedContinuation { continuation in
+        let gate = ResumeGate(continuation)
+        Task { gate.resume(await capture()) }
+        Task {
+            try? await Task.sleep(for: cap)
+            gate.resume(nil)
+        }
+    }
+}
+
+/// Hands the value to the first of many finishers; the rest are dropped.
+@MainActor
+private final class ResumeGate {
+    private var continuation: CheckedContinuation<Data?, Never>?
+    private var resumed = false
+
+    init(_ continuation: CheckedContinuation<Data?, Never>) {
+        self.continuation = continuation
+    }
+
+    func resume(_ value: Data?) {
+        guard !resumed else { return }
+        resumed = true
+        continuation?.resume(returning: value)
+        continuation = nil
     }
 }
