@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// The launch and in-page search sheet: the field, up to three suggestion rows, and the
 /// keyboard, reading as one piece.
@@ -161,6 +162,18 @@ struct SearchSheet: View {
         .onAppear {
             focused = true
             arrive()
+            selectCarriedText()
+        }
+    }
+
+    /// The address a page's sheet opens with arrives selected (04 · 02), so typing replaces
+    /// it outright.
+    private func selectCarriedText() {
+        guard !text.isEmpty else { return }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(150))
+            UIApplication.shared.sendAction(
+                #selector(UIResponder.selectAll(_:)), to: nil, from: nil, for: nil)
         }
     }
 
