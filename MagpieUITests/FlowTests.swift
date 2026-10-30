@@ -111,6 +111,10 @@ final class FlowTests: XCTestCase {
         app.launchArguments = ["-uiTesting", "-AppleInterfaceStyle", appearance]
         app.launch()
         land("relaunch-restore") { address.waitForExistence(timeout: 20) }
+        // The restored page itself, drawn: its heading carries the route.
+        let restored = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label CONTAINS %@", "/search")).firstMatch
+        land("relaunch-painted") { restored.waitForExistence(timeout: 45) }
         shots.snap(app, "relaunch-restore")
     }
 
@@ -127,9 +131,9 @@ final class FlowTests: XCTestCase {
         let card = app.descendants(matching: .any)["tabs.card.current"].firstMatch
         let picture = card.descendants(matching: .any)
             .matching(identifier: "tabs.card.snapshot").firstMatch
-        if !picture.waitForExistence(timeout: 10) {
-            print("=== the current card was still pictureless after 10 s; shooting anyway ===")
-        }
+        // A cold simulator's first pages can take many seconds to answer; a card that
+        // never gets its picture is a failure, not a shot taken anyway.
+        land("card-picture") { picture.waitForExistence(timeout: 45) }
     }
 
     /// A step of the flow: when it does not land, the run stops with a shot of what was on

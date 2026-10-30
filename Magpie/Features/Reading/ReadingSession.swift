@@ -644,7 +644,7 @@ final class ReadingSession {
     /// the limit.
     private static let loadWatchStart: Duration = .milliseconds(250)
     private static let loadWatchInterval: Duration = .milliseconds(200)
-    private static let loadWatchLimit: Duration = .seconds(20)
+    private static let loadWatchLimit: Duration = .seconds(90)
 }
 
 extension ReadingSession: Hashable {
