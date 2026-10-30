@@ -33,6 +33,8 @@ enum Palette {
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
+    /// The sheen's middle stop, for the fills that must be one solid colour.
+    static let sheenMid = Color(hex: 0x10B981)
     /// Text accents: "Get", "Done" on paper screens, the swipe-to-restore background.
     static let teal = dynamic(light: 0x0D7F74, dark: 0x5EEAD4)
 

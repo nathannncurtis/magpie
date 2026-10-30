@@ -281,9 +281,6 @@ struct SkimSectionRow: View {
         /// The citation dot that sits inline at the claim's end.
         static let dotSize: CGFloat = 17
         static let dotLift: CGFloat = 2
-        /// The clear, near-invisible link run beside each dot, carrying the
-        /// "Source N" tap target and reading it aloud.
-        static let linkRunSize: CGFloat = 6
     }
 
     var body: some View {
@@ -308,29 +305,42 @@ struct SkimSectionRow: View {
             })
     }
 
-    /// The claim with its citations inline: per citation, a clear link run —
-    /// the tap target, carrying the "Source N" label — with the circled digit
-    /// the reader sees rendered right behind it.
+    /// The claim with its citations inline: per citation, one thin space then
+    /// a circled digit in the sheen's solid mid tone — itself the link that
+    /// taps to its source.
     private var claim: Text {
-        let base = Text("\(Text(section.term).fontWeight(.semibold)) — \(section.claim)")
-            .font(Typography.body)
-        var segments = [base]
+        var text = AttributedString()
+        var term = AttributedString(section.term)
+        term.font = Typography.body.weight(.semibold)
+        text += term
+        var rest = AttributedString(" — \(section.claim)")
+        rest.font = Typography.body
+        text += rest
         for citation in section.citations {
-            var run = AttributedString("Source \(citation)")
-            run.foregroundColor = .clear
-            run.font = .system(size: Layout.linkRunSize)
-            run.link = URL(string: "magpie-cite://\(citation)")
-            segments.append(Text(run))
-            segments.append(
-                Text(Image(systemName: "\(citation).circle.fill"))
-                    .font(.system(size: Layout.dotSize, weight: .semibold))
-                    .foregroundStyle(Palette.sheen)
-                    .baselineOffset(Layout.dotLift))
+            var space = AttributedString(Self.thinSpace)
+            space.font = .system(size: Layout.dotSize)
+            text += space
+            var dot = AttributedString(Self.dotGlyph(for: citation))
+            dot.font = .system(size: Layout.dotSize)
+            dot.foregroundColor = Palette.sheenMid
+            dot.baselineOffset = Layout.dotLift
+            dot.link = URL(string: "magpie-cite://\(citation)")
+            text += dot
         }
-        return segments.dropFirst().reduce(base) { combined, segment in
-            Text("\(combined)\(segment)")
-        }
+        return Text(text)
     }
+
+    /// The circled-digit characters citations 1-10 show inline.
+    private static let dotGlyphs = [
+        "\u{2776}", "\u{2777}", "\u{2778}", "\u{2779}", "\u{277A}",
+        "\u{277B}", "\u{277C}", "\u{277D}", "\u{277E}", "\u{277F}",
+    ]
+
+    private static func dotGlyph(for citation: Int) -> String {
+        (1...10).contains(citation) ? dotGlyphs[citation - 1] : "(\(citation))"
+    }
+
+    private static let thinSpace = "\u{2009}"
 
     /// The citation a link run points at, when it is one of ours.
     private static func citation(from url: URL) -> Int? {
