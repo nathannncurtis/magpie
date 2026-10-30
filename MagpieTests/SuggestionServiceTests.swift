@@ -4,7 +4,7 @@ import Testing
 @testable import Magpie
 
 /// Serves canned suggest responses and records what was asked.
-final class CannedSuggestProtocol: URLProtocol, @unchecked Sendable {
+final class CannedSuggestProtocol: URLProtocol {
 
     private struct Store {
         var bodies: [String: Result<Data, URLError>] = [:]
