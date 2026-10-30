@@ -22,11 +22,13 @@ struct RootView: View {
                 case .launchSearch:
                     LaunchScreen(
                         engine: model.engine,
-                        skimEnabled: model.skimEnabled,
+                        skimEnabled: model.offersSkim,
                         suggestionsEnabled: model.suggestionsEnabled,
                         focusSuspended: coversOverLaunch,
                         suggestions: model.suggestions,
                         recents: model.recents,
+                        initialText: model.searchPrefill ?? "",
+                        onSkim: { model.startSkim(query: $0) },
                         onOpen: { model.openFromLaunch($0) },
                         onDismiss: { model.dismissLaunchSearch() }
                     )
@@ -37,11 +39,12 @@ struct RootView: View {
                         tabCount: model.store.tabs.count,
                         isSearchOpen: searchOpen,
                         engine: model.engine,
-                        skimEnabled: model.skimEnabled,
+                        skimEnabled: model.offersSkim,
                         suggestionsEnabled: model.suggestionsEnabled,
                         focusSuspended: coversOverLaunch,
                         suggestions: model.suggestions,
                         recents: model.recents,
+                        onSkim: { model.startSkim(query: $0) },
                         chromeNamespace: chrome,
                         cardNamespace: cards,
                         onSearchSubmit: { model.navigateCurrent($0) },
@@ -85,6 +88,10 @@ struct RootView: View {
                     )
                     .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("mods.screen")
+                case .skim:
+                    SkimFlowScreen()
+                        .accessibilityElement(children: .contain)
+                        .accessibilityIdentifier("skim.screen")
                 case nil:
                     // Nothing has started yet: the mist, while the saved tabs load.
                     MistBackground()

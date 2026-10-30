@@ -6,12 +6,16 @@ import SwiftUI
 /// stack when there are tabs to return to.
 struct LaunchScreen: View {
     let engine: SearchEngine
+    /// Whether the search sheet shows its Skim pill.
     var skimEnabled: Bool = true
     var suggestionsEnabled: Bool = true
     /// While a full screen (Settings, onboarding) covers the launch sheet.
     var focusSuspended: Bool = false
     let suggestions: any SuggestionProviding
     let recents: any RecentSearchStoring
+    /// Text the field opens with: the Skim query bar's edit.
+    var initialText: String = ""
+    var onSkim: (String) -> Void = { _ in }
     let onOpen: (URL) -> Void
     let onDismiss: () -> Void
 
@@ -30,9 +34,11 @@ struct LaunchScreen: View {
                 skimEnabled: skimEnabled,
                 suggestionsEnabled: suggestionsEnabled,
                 focusSuspended: focusSuspended,
+                initialText: initialText,
                 suggestions: suggestions,
                 recents: recents,
                 onOpen: onOpen,
+                onSkim: onSkim,
                 onDismiss: onDismiss
             )
             .offset(y: arrived ? 0 : Self.riseDistance)

@@ -337,6 +337,18 @@
         }
       }
     },
+    "Dig deeper · up to 10" : {
+      "comment" : "The Skim control bar's way to read more sources, up to ten in all",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dig deeper · up to 10"
+          }
+        }
+      }
+    },
     "Directory" : {
       "comment" : "The mods screen's directory segment",
       "extractionState" : "manual",
@@ -469,6 +481,30 @@
         }
       }
     },
+    "From %lld pages · read on this phone" : {
+      "comment" : "Under a Skim page's title: how many sources it was read from, and where",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "From %lld page · read on this phone"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "From %lld pages · read on this phone"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Get" : {
       "comment" : "Installs a directory mod",
       "extractionState" : "manual",
@@ -573,6 +609,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Installing"
+          }
+        }
+      }
+    },
+    "It couldn't be put together from those pages. Try again in a moment." : {
+      "comment" : "Skim couldn't finish: the pages wouldn't compose. COPY: review",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It couldn't be put together from those pages. Try again in a moment."
           }
         }
       }
@@ -853,6 +901,18 @@
         }
       }
     },
+    "Only %lld of %lld pages could be read. That's not enough to Skim." : {
+      "comment" : "Skim couldn't finish: too few of the source pages could be read",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only %lld of %lld pages could be read. That's not enough to Skim."
+          }
+        }
+      }
+    },
     "Other" : {
       "comment" : "The engine picker's last tile, and the engine list's last row",
       "extractionState" : "manual",
@@ -957,6 +1017,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Read and change pages on that site"
+          }
+        }
+      }
+    },
+    "Reading %lld pages" : {
+      "comment" : "The Skim working screen's status line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Reading %lld page"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Reading %lld pages"
+                }
+              }
+            }
           }
         }
       }
@@ -1117,6 +1201,18 @@
         }
       }
     },
+    "Show search results" : {
+      "comment" : "Skim couldn't finish: open the query on the search engine instead",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show search results"
+          }
+        }
+      }
+    },
     "Skim" : {
       "comment" : "The Skim pill at the trailing end of a suggestion row",
       "extractionState" : "manual",
@@ -1165,6 +1261,42 @@
         }
       }
     },
+    "Skim · %lld pages" : {
+      "comment" : "Kicker above a Skim page's title on the no-photo tier; shown uppercased",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Skim · %lld page"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Skim · %lld pages"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Source %lld" : {
+      "comment" : "A citation dot's accessibility label: the source's number",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source %lld"
+          }
+        }
+      }
+    },
     "Source code" : {
       "comment" : "About row: where the source lives",
       "extractionState" : "manual",
@@ -1173,6 +1305,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Source code"
+          }
+        }
+      }
+    },
+    "Sources" : {
+      "comment" : "Heading over a Skim page's source cards",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sources"
           }
         }
       }
@@ -1249,6 +1393,18 @@
         }
       }
     },
+    "That didn't work. Try again in a moment." : {
+      "comment" : "Skim couldn't finish: the page wouldn't compose. COPY: review",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That didn't work. Try again in a moment."
+          }
+        }
+      }
+    },
     "That script runs nowhere." : {
       "comment" : "Install failed: no @match or @include",
       "extractionState" : "manual",
@@ -1297,6 +1453,18 @@
         }
       }
     },
+    "The search results didn't come back. Check the connection and try again." : {
+      "comment" : "Skim couldn't finish: the engine's results page wouldn't load. COPY: review",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The search results didn't come back. Check the connection and try again."
+          }
+        }
+      }
+    },
     "The usual" : {
       "comment" : "Note on the Google tile",
       "extractionState" : "manual",
@@ -1305,6 +1473,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "The usual"
+          }
+        }
+      }
+    },
+    "Those pages are too long to read together. Try a narrower search." : {
+      "comment" : "Skim couldn't finish: the sources were too large to compose from. COPY: review",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Those pages are too long to read together. Try a narrower search."
           }
         }
       }

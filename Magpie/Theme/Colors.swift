@@ -158,6 +158,28 @@ enum Palette {
     static let skimPillHighlight = dynamic(
         light: 0xFFFFFF, lightOpacity: 0.90, dark: 0xFFFFFF, darkOpacity: 0)
 
+    // MARK: Skim page
+
+    /// Skim section text.
+    static let skimBody = dynamic(light: 0x2B2D33, dark: 0xC4C6CB)
+    /// The query in the Skim query bar.
+    static let skimQueryText = dynamic(light: 0x3A3C44, dark: 0xD6D7DB)
+    /// A source card's title.
+    static let skimSourceTitle = dynamic(light: 0x1B1C21, dark: 0xE6E6E2)
+    /// A source card's site line.
+    static let skimSourceSite = dynamic(light: 0x5B5D64, dark: 0x8E9097)
+    /// The working line on the mist, and the from-line on the no-photo tier.
+    static let skimStatus = dynamic(light: 0x2F4F4A, dark: 0xA9C9C3)
+    /// The divider inside the Skim control bar.
+    static let skimControlDivider = dynamic(
+        light: 0x101115, lightOpacity: 0.14, dark: 0xFFFFFF, darkOpacity: 0.16)
+    /// The ring around a Skim source card.
+    static let skimSourceRing = dynamic(
+        light: 0x101115, lightOpacity: 0.05, dark: 0xFFFFFF, darkOpacity: 0.06)
+    /// The shadow under a Skim source card.
+    static let skimSourceShadow = dynamic(
+        light: 0x101115, lightOpacity: 0.30, dark: 0x000000, darkOpacity: 0.35)
+
     // MARK: Tab cards
 
     /// The white ring around a tab card's snapshot.

@@ -29,11 +29,14 @@ enum UITestEnvironment {
     }
 
     /// A screen the UI tests open directly while no flow reaches it: the archive, the
-    /// bookmarks or the mods, through `-uiTestingSurface=<name>`.
+    /// bookmarks, the mods, or one of the Skim screens, through `-uiTestingSurface=<name>`.
     enum Surface: String {
         case archive
         case bookmarks
         case mods
+        case skimWorking
+        case skimPage
+        case skimFailed
     }
 
     /// The screen the UI tests asked for, if any.
@@ -53,6 +56,25 @@ enum UITestEnvironment {
     /// Whether this run starts with mods installed, for the installed screens.
     static var seedsMods: Bool {
         ProcessInfo.processInfo.arguments.contains("-uiTestingModsInstalled")
+    }
+
+    /// Whether the UI tests force Skim on, with the fixture page behind it.
+    static var skimFaked: Bool {
+        ProcessInfo.processInfo.arguments.contains("-uiTestingSkim")
+    }
+
+    /// How many photos the seeded Skim page carries (`-uiTestingSkimState=`):
+    /// photos3, photo1, none.
+    static var skimPhotoCount: Int {
+        let prefix = "-uiTestingSkimState="
+        for argument in ProcessInfo.processInfo.arguments where argument.hasPrefix(prefix) {
+            switch String(argument.dropFirst(prefix.count)) {
+            case "photo1": return 1
+            case "none": return 0
+            default: return 3
+            }
+        }
+        return 3
     }
 
     /// The appearance the tests ask for by launch argument (`-AppleInterfaceStyle Dark`),
@@ -84,8 +106,35 @@ enum UITestEnvironment {
             model.showBookmarks()
         case .mods:
             model.showMods()
+        case .skimWorking:
+            model.showSkimRun(seededSkimRun(on: model, state: seededWorking))
+        case .skimPage:
+            model.showSkimRun(
+                seededSkimRun(on: model, state: .finished(SkimFixture.page(photoCount: skimPhotoCount))))
+        case .skimFailed:
+            model.showSkimRun(
+                seededSkimRun(
+                    on: model,
+                    state: .failed(SkimFailure(line: SkimFailureLines.tooFew(read: 1, attempted: 3)))))
         case nil: break
         }
+    }
+
+    /// The seeded working state: two of three pages read.
+    @MainActor
+    private static var seededWorking: SkimRunState {
+        .working(
+            SkimProgress(plannedHosts: SkimFixture.hosts, readCount: 2, plannedCount: 3))
+    }
+
+    /// A run landed on a fixed state, with nothing running behind it.
+    @MainActor
+    private static func seededSkimRun(on model: AppModel, state: SkimRunState) -> SkimRun {
+        let run = SkimRun(
+            query: SkimFixture.query, engine: model.engine,
+            dependencies: model.skimDependencies)
+        run.land(state)
+        return run
     }
 }
 
@@ -139,7 +188,8 @@ extension AppModel {
                 rowsByPrefix: ["magpie test", "magpie test page", "magpie test search"]),
             recents: RecentSearches(),
             modStore: modStore,
-            modDirectory: fixtureDirectory())
+            modDirectory: fixtureDirectory(),
+            skimAvailable: UITestEnvironment.skimFaked)
     }
 
     /// The directory over the bundled fixture index, cached warm so nothing fetches.
@@ -206,7 +256,7 @@ extension AppModel {
         switch surface {
         case .archive: seedArchive(in: model.store, now: .now)
         case .bookmarks: seedBookmarks(in: model.bookmarks, now: .now)
-        case .mods: break
+        case .mods, .skimWorking, .skimPage, .skimFailed: break
         }
     }
 

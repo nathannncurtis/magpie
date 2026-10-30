@@ -7,6 +7,9 @@ import SwiftUI
 struct FaviconStack: View {
     let hosts: [String]
     var size: CGFloat = 18
+    /// The ring around each tile, in the colour behind the stack; the mist's
+    /// ring when none is given.
+    var ring: Color? = nil
 
     private enum StackMetrics {
         static let overlap: CGFloat = 5
@@ -22,7 +25,7 @@ struct FaviconStack: View {
                             cornerRadius: ListFavicon.faviconRadius(size) + StackMetrics.ring / 2,
                             style: .continuous
                         )
-                        .stroke(Palette.faviconRingOnMist, lineWidth: StackMetrics.ring)
+                        .stroke(ring ?? Palette.faviconRingOnMist, lineWidth: StackMetrics.ring)
                     )
             }
         }

@@ -13,12 +13,14 @@ struct ReadingScreen: View {
     var tabCount: Int
     var isSearchOpen: Bool
     var engine: SearchEngine
+    /// Whether the search sheet over the page shows its Skim pill.
     var skimEnabled: Bool = true
     var suggestionsEnabled: Bool = true
     /// While a full screen (Settings) covers the sheet over the page.
     var focusSuspended: Bool = false
     var suggestions: any SuggestionProviding
     var recents: any RecentSearchStoring
+    var onSkim: (String) -> Void = { _ in }
     var chromeNamespace: Namespace.ID? = nil
     var cardNamespace: Namespace.ID? = nil
     var onSearchSubmit: (URL) -> Void
@@ -81,6 +83,7 @@ struct ReadingScreen: View {
             suggestions: suggestions,
             recents: recents,
             onOpen: onSearchSubmit,
+            onSkim: onSkim,
             onDismiss: onSearchDismiss)
     }
 
