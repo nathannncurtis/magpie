@@ -82,7 +82,6 @@ struct ModsScreen: View {
                 store.install(draft)
                 land(draft.id)
             }
-            .presentationDetents([.large])
             .presentationDragIndicator(.hidden)
             .presentationBackgroundInteraction(.disabled)
         }
