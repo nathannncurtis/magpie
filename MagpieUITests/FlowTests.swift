@@ -21,7 +21,8 @@ final class FlowTests: XCTestCase {
     private func flow(appearance: String) throws {
         let app = XCUIApplication()
         app.launchArguments += [
-            "-uiTesting", "-uiTestingResetStore", "-AppleInterfaceStyle", appearance,
+            "-uiTesting", "-uiTestingResetStore", "-uiTestingSkipOnboarding",
+            "-AppleInterfaceStyle", appearance,
         ]
         let shots = ShotWriter(test: self, prefix: appearance.lowercased())
         app.launch()
@@ -94,7 +95,7 @@ final class FlowTests: XCTestCase {
 
         // 10 · a relaunch restores the last tab.
         app.terminate()
-        app.launchArguments = ["-uiTesting", "-AppleInterfaceStyle", appearance]
+        app.launchArguments = ["-uiTesting", "-uiTestingSkipOnboarding", "-AppleInterfaceStyle", appearance]
         app.launch()
         XCTAssertTrue(address.waitForExistence(timeout: 20), "the restored tab, on reading")
         shots.snap(app, "relaunch-restore")
