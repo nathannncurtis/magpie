@@ -211,7 +211,7 @@ struct ModsGuardTests {
     func runOnly() {
         let expression = ModInjector.guardExpression(
             run: ["^https?://example\\.com/.*$"], barring: [])
-        #expect(expression == "!(/^https?:\\/\\/example\\\\.com\\/.*$/i.test(__href))")
+        #expect(expression == "!(/^https?:\\/\\/example\\.com\\/.*$/i.test(__href))")
     }
 
     @Test("two run rules join with ||")
