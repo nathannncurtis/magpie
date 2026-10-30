@@ -155,19 +155,33 @@ struct MenuSheet: View {
     }
 
     /// The Bookmark tile: a tap saves the page, a second tap takes it back out, and a
-    /// long press opens Bookmarks.
+    /// long press opens Bookmarks. One gesture: the press wins over the tap, never both.
     private var bookmarkTile: some View {
         MenuTileFace(title: "Bookmark") {
             Image(systemName: model.currentPageIsBookmarked ? "bookmark.fill" : "bookmark")
                 .font(.system(size: Metrics.Menu.tileIconSize, weight: .medium))
                 .imageScale(.medium)
         }
-        .onTapGesture(perform: toggleBookmark)
-        .onLongPressGesture(minimumDuration: 0.5, perform: model.showBookmarks)
+        .gesture(
+            LongPressGesture(minimumDuration: 0.5)
+                .exclusively(before: TapGesture())
+                .onEnded { press in
+                    switch press {
+                    case .first: openBookmarks()
+                    case .second: toggleBookmark()
+                    }
+                }
+        )
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel(Text("Bookmark"))
         .accessibilityValue(
             model.currentPageIsBookmarked ? Text(String(localized: "Saved")) : Text(""))
+    }
+
+    /// The long press on the Bookmark tile: Bookmarks over the page, the menu folded.
+    private func openBookmarks() {
+        model.showBookmarks()
+        onDismiss()
     }
 
     /// The Share tile: the system share sheet on the page's address.
