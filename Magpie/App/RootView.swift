@@ -78,6 +78,7 @@ struct RootView: View {
                     .accessibilityIdentifier("bookmarks.screen")
                 case .skim:
                     SkimFlowScreen()
+                        .accessibilityElement(children: .contain)
                         .accessibilityIdentifier("skim.screen")
                 case nil:
                     // Nothing has started yet: the mist, while the saved tabs load.

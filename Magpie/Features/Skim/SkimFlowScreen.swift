@@ -56,6 +56,7 @@ struct SkimFlowScreen: View {
                 beginHandoff()
             }
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("skim.flow")
     }
 

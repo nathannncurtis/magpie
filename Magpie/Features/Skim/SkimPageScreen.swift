@@ -69,6 +69,7 @@ struct SkimPageScreen: View {
         .task(id: page) {
             shareURL = Self.shareFile(for: page)
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("skim.page")
     }
 
