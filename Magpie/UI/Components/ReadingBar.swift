@@ -56,6 +56,8 @@ struct ReadingBar: View {
     var collapse: CGFloat?
     /// Whether the menu is open: the ••• state.
     var isMenuOpen = false
+    /// Whether the page failed to load: the URL pill's error lock.
+    var showsLock = false
     /// The page tint the glass takes.
     var tint = Palette.pageTintGlass
     /// Names the bar's glass shape so a later pass can morph it into the search sheet
@@ -111,7 +113,7 @@ struct ReadingBar: View {
                     .disabled(!canGoBack)
                     .accessibilityLabel(Text("Back"))
             }
-            URLPill(host: host, collapse: progress, action: onAddressTap)
+            URLPill(host: host, collapse: progress, showsLock: showsLock, action: onAddressTap)
             side {
                 CircleButton(action: onTabsTap) { TabCount(count: tabCount) }
                     .accessibilityLabel(Text("Tabs"))

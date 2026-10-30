@@ -19,8 +19,8 @@ struct PageLoadFailure {
         if isOffline {
             return "You're offline. It'll load when you're back."
         }
-        // COPY: review — the non-offline line is a draft; 06 still has it to write.
-        return "The page didn't load. Try again in a moment."
+        // COPY: review — 06 still has this line to write.
+        return "It didn't answer. Try again in a moment."
     }
 }
 
@@ -58,21 +58,27 @@ final class ReadingSession {
     private let monitor = NWPathMonitor()
     private let monitorQueue = DispatchQueue(label: "com.magpiebrowser.reading.path")
 
-    /// Reads the page's effective background colour as "r,g,b", or "" when it sets none.
+    /// Reads the page's effective background colour in the appearance it is currently
+    /// rendered under, as "r,g,b"; "" when none can be read. The nearest opaque
+    /// background on body and its ancestors wins, otherwise the page's canvas colour —
+    /// which follows the page's colour scheme, so the value flips with the appearance.
     private static let pageBackgroundScript = #"""
-        const found = (function() {
-            let el = document.body;
-            while (el) {
-                const m = getComputedStyle(el).backgroundColor
-                    .match(/^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)$/);
-                if (m && (m[4] === undefined || parseFloat(m[4]) !== 0)) {
-                    return m[1] + "," + m[2] + "," + m[3];
-                }
-                el = el.parentElement;
-            }
-            return "";
-        })();
-        return found;
+        const rgb = (s) => {
+            const m = s && s.match(/^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)$/);
+            return (!m || m[4] === undefined || parseFloat(m[4]) !== 0) ? m : null;
+        };
+        let el = document.body;
+        while (el) {
+            const m = rgb(getComputedStyle(el).backgroundColor);
+            if (m) { return m[1] + "," + m[2] + "," + m[3]; }
+            el = el.parentElement;
+        }
+        const probe = document.createElement("div");
+        probe.style.cssText = "position:fixed;left:-9999px;top:0;background-color:Canvas";
+        (document.body || document.documentElement).appendChild(probe);
+        const m = rgb(getComputedStyle(probe).backgroundColor);
+        probe.remove();
+        return m ? m[1] + "," + m[2] + "," + m[3] : "";
         """#
 
     init(url: URL) {
@@ -184,8 +190,9 @@ final class ReadingSession {
     }
 
     /// The under-page background: what the bar tints with when the page declares no
-    /// theme colour of its own.
-    private func refreshPageBackground() async {
+    /// theme colour of its own. Re-run whenever the appearance changes — a page that
+    /// follows the colour scheme renders a different background under each.
+    func refreshPageBackground() async {
         guard page.themeColor == nil, page.url != nil else { return }
         guard
             let result = try? await page.callJavaScript(

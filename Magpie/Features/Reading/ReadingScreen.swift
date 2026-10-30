@@ -12,16 +12,20 @@ struct ReadingScreen: View {
     var onMenuTap: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var colorScheme
     @State private var session: ReadingSession
     @State private var collapse: CGFloat = 0
     @State private var chrome = ChromeCollapse()
     @State private var snapTask: Task<Void, Never>?
+    @State private var tintRetryTask: Task<Void, Never>?
 
     /// How far the slim pill drops below the full bar's bottom edge (05 · Chrome on
     /// scroll): the motion board's 16 against its 26.
     private static let slimBottomDrop: CGFloat = 10
     /// A pause this long below the collapse threshold snaps the bar back to full.
     private static let snapDelay: Duration = .milliseconds(250)
+    /// How long to let the page re-render under a new appearance before re-reading it.
+    private static let tintRetryDelay: Duration = .milliseconds(600)
     /// The opacity page tints take through the glass (02 · Glass).
     private static let pageTintOpacity = 0.55
 
@@ -50,12 +54,13 @@ struct ReadingScreen: View {
                 pageArea
                 GlassEffectContainer {
                     ReadingBar(
-                        host: HostFormatter.host(for: session.page.url),
+                        host: session.failure?.host ?? HostFormatter.host(for: session.page.url),
                         tabCount: tabCount,
                         canGoBack: session.canGoBack,
                         isSlim: collapse >= 1,
                         collapse: collapse,
                         isMenuOpen: false,
+                        showsLock: session.failure != nil,
                         tint: barTint,
                         onBack: {
                             session.goBack()
@@ -73,7 +78,11 @@ struct ReadingScreen: View {
             .ignoresSafeArea(edges: .bottom)
         }
         .task { await session.run() }
-        .onDisappear { snapTask?.cancel() }
+        .onChange(of: colorScheme) { _, _ in rereadPageTint() }
+        .onDisappear {
+            snapTask?.cancel()
+            tintRetryTask?.cancel()
+        }
     }
 
     /// The page, or Magpie's own page when it can't load.
@@ -139,6 +148,18 @@ struct ReadingScreen: View {
             try? await Task.sleep(for: Self.snapDelay)
             guard !Task.isCancelled else { return }
             apply(chrome.snap())
+        }
+    }
+
+    /// Reads the page's background again for the new appearance, once now and once
+    /// after the page has had a moment to re-render under it.
+    private func rereadPageTint() {
+        tintRetryTask?.cancel()
+        tintRetryTask = Task {
+            await session.refreshPageBackground()
+            try? await Task.sleep(for: Self.tintRetryDelay)
+            guard !Task.isCancelled else { return }
+            await session.refreshPageBackground()
         }
     }
 }
