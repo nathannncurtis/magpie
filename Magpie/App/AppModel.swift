@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import WebKit
 
 /// Which surface is up (04 · the navigation map).
 enum Surface: Equatable {
@@ -26,8 +27,10 @@ final class AppModel {
 
     /// The open tabs, the current one, and the archive.
     let store: TabStore
-    /// The engine searches run on. The picker lands later, so it stays the default.
-    private(set) var engine: SearchEngine
+    /// The user's choices: the engine, the search rows, the archive interval.
+    let preferences: Preferences
+    /// Content blocking: the two toggles and the rule lists they apply to every page.
+    let blocker: ContentBlocker
     /// Where the search sheet's suggestion rows come from.
     let suggestions: any SuggestionProviding
     /// Recent searches.
@@ -37,25 +40,44 @@ final class AppModel {
     /// happens, and the restored surface lands with nothing animating.
     private(set) var surface: Surface?
 
+    /// The first-launch flow, until it has run once (04 · 07a, 07b).
+    var needsOnboarding: Bool { !preferences.hasCompletedOnboarding }
+
+    /// Settings, once the menu exists; the UI tests open it directly meanwhile.
+    var showsSettings = false
+
     /// The live page sessions, by tab.
     private(set) var sessions: [Tab.ID: ReadingSession] = [:]
     private var sessionTasks: [Tab.ID: Task<Void, Never>] = [:]
 
     init(
         store: TabStore = TabStore(),
-        engine: SearchEngine = .default,
+        preferences: Preferences? = nil,
+        blocker: ContentBlocker? = nil,
         suggestions: any SuggestionProviding = SuggestionService(),
         recents: any RecentSearchStoring = RecentSearches()
     ) {
         self.store = store
-        self.engine = engine
+        self.preferences = preferences ?? Preferences(defaults: Self.freshDefaults())
+        self.blocker =
+            blocker
+            ?? ContentBlocker(
+                store: NoRuleSets(), defaults: Self.freshDefaults())
         self.suggestions = suggestions
         self.recents = recents
     }
 
     /// The app as it runs on a device: the JSON index in Application Support.
     static func live() -> AppModel {
-        AppModel(store: TabStore(persistence: FileSystemTabPersistence()))
+        AppModel(
+            store: TabStore(persistence: FileSystemTabPersistence()),
+            preferences: Preferences(),
+            blocker: ContentBlocker(store: FilterListStore()))
+    }
+
+    /// A defaults suite nothing else shares, so a default-built model changes nothing.
+    private static func freshDefaults() -> UserDefaults {
+        UserDefaults(suiteName: "magpie-scratch-\(UUID().uuidString)") ?? .standard
     }
 
     // MARK: Lifecycle
@@ -64,6 +86,7 @@ final class AppModel {
     func start(now: Date = .now) async {
         await store.loadIndex()
         refreshArchive(now: now)
+        await refreshBlocking()
         coldStart()
     }
 
@@ -80,10 +103,36 @@ final class AppModel {
 
     /// Auto-archive, on every launch and every return to the foreground.
     func refreshArchive(now: Date = .now) {
-        _ = store.archiveStale(now: now, after: TabStore.autoArchiveDefault)
+        _ = store.archiveStale(now: now, after: preferences.archiveInterval)
         _ = store.purgeArchived(now: now)
         dropSessions(notIn: Set(store.tabs.map(\.id)))
     }
+
+    /// Refreshes the filter lists when stale and re-applies them to the live pages.
+    func refreshBlocking() async {
+        await blocker.refresh()
+    }
+
+    // MARK: Settings and onboarding
+
+    /// Opens Settings; the menu lands later, so the UI tests reach it directly meanwhile.
+    func showSettings() {
+        showsSettings = true
+    }
+
+    /// The last step of the first-launch flow: the choices are saved and the app appears.
+    func completeOnboarding() {
+        preferences.hasCompletedOnboarding = true
+    }
+
+    /// The engine searches run on, from the user's choice.
+    var engine: SearchEngine { preferences.searchEngine }
+
+    /// Whether the search sheet asks the engine for suggestion rows.
+    var suggestionsEnabled: Bool { preferences.suggestionsEnabled }
+
+    /// Whether the Skim pill is offered in the search sheet.
+    var skimEnabled: Bool { preferences.skimEnabled }
 
     // MARK: Sessions
 
@@ -95,9 +144,12 @@ final class AppModel {
     /// The tab's page session, made on demand and kept in step with the tab.
     func ensureSession(for tab: Tab) -> ReadingSession {
         if let session = sessions[tab.id] { return session }
-        let session = ReadingSession(url: tab.url ?? Self.blankPage)
+        let session = ReadingSession(url: tab.url ?? Self.blankPage, contentController: WKUserContentController())
         sessions[tab.id] = session
-        sessionTasks[tab.id] = Task { await session.run() }
+        sessionTasks[tab.id] = Task {
+            await blocker.attach(session.contentController)
+            await session.run()
+        }
         session.onPageSettled = { [weak self] in self?.syncTab(for: tab.id) }
         pruneSessions()
         return session
@@ -122,6 +174,9 @@ final class AppModel {
 
     private func dropSessions(notIn keep: Set<Tab.ID>) {
         for (id, task) in sessionTasks where !keep.contains(id) {
+            if let session = sessions[id] {
+                blocker.detach(session.contentController)
+            }
             task.cancel()
             sessionTasks[id] = nil
             sessions[id] = nil
@@ -202,6 +257,9 @@ final class AppModel {
 
     /// A flung card. Closing the last tab leaves the launch search.
     func closeTab(_ id: Tab.ID) {
+        if let session = sessions[id] {
+            blocker.detach(session.contentController)
+        }
         sessionTasks[id]?.cancel()
         sessionTasks[id] = nil
         sessions[id] = nil
@@ -210,4 +268,14 @@ final class AppModel {
             surface = .launchSearch
         }
     }
+}
+
+/// A blocking source with no lists in it: what a default-built AppModel holds, inert
+/// until the app wires the real filter lists.
+private struct NoRuleSets: RuleSetProviding {
+    func refreshStale() async {}
+    func refreshNow() async {}
+    func ruleLists(for set: FilterRuleSet) async -> [CompiledRuleList] { [] }
+    var overallLastUpdated: Date? { nil }
+    func listUpdates() async -> [FilterListUpdate] { [] }
 }

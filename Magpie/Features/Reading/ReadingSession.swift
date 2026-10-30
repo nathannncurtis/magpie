@@ -54,7 +54,9 @@ final class ReadingSession {
     /// Whether the network path is up.
     private(set) var isOnline = true
 
-    let page = WebPage()
+    /// Where content blocking's compiled rule lists land for this page.
+    let contentController: WKUserContentController
+    let page: WebPage
 
     /// Called whenever the page settles or moves, so the tab can take what it now shows.
     var onPageSettled: (@MainActor () -> Void)?
@@ -93,7 +95,11 @@ final class ReadingSession {
         return m ? m[1] + "," + m[2] + "," + m[3] : "";
         """#
 
-    init(url: URL) {
+    init(url: URL, contentController: WKUserContentController = WKUserContentController()) {
+        self.contentController = contentController
+        var configuration = WebPage.Configuration()
+        configuration.userContentController = contentController
+        page = WebPage(configuration: configuration)
         initialURL = url
         requestedURL = url
         monitor.pathUpdateHandler = { [weak self] path in

@@ -13,9 +13,13 @@ struct MagpieApp: App {
                 .task {
                     if UITestEnvironment.isUITesting { UITestPageServer.shared.start() }
                     await model.start()
+                    if UITestEnvironment.startsAtSettings { model.showSettings() }
                 }
                 .onChange(of: scenePhase) { _, phase in
-                    if phase == .active { model.refreshArchive() }
+                    if phase == .active {
+                        model.refreshArchive()
+                        Task { await model.refreshBlocking() }
+                    }
                 }
         }
     }

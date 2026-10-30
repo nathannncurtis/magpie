@@ -6,6 +6,8 @@ import SwiftUI
 /// stack when there are tabs to return to.
 struct LaunchScreen: View {
     let engine: SearchEngine
+    var skimEnabled: Bool = true
+    var suggestionsEnabled: Bool = true
     let suggestions: any SuggestionProviding
     let recents: any RecentSearchStoring
     let onOpen: (URL) -> Void
@@ -23,6 +25,8 @@ struct LaunchScreen: View {
                 .ignoresSafeArea()
             SearchSheet(
                 engine: engine,
+                skimEnabled: skimEnabled,
+                suggestionsEnabled: suggestionsEnabled,
                 suggestions: suggestions,
                 recents: recents,
                 onOpen: onOpen,

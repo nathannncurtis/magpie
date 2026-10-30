@@ -13,6 +13,8 @@ struct ReadingScreen: View {
     var tabCount: Int
     var isSearchOpen: Bool
     var engine: SearchEngine
+    var skimEnabled: Bool = true
+    var suggestionsEnabled: Bool = true
     var suggestions: any SuggestionProviding
     var recents: any RecentSearchStoring
     var chromeNamespace: Namespace.ID? = nil
@@ -69,6 +71,8 @@ struct ReadingScreen: View {
         SearchSheet(
             engine: engine,
             opensFromPage: true,
+            skimEnabled: skimEnabled,
+            suggestionsEnabled: suggestionsEnabled,
             initialText: session?.page.url?.absoluteString ?? "",
             morphNamespace: chromeNamespace,
             suggestions: suggestions,
