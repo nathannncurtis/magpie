@@ -139,7 +139,7 @@ Every edge state follows one pattern: one plain line saying what happened, and o
 - **Footer:** the `InstallFooter` stays.
 
 ### 14 · Empty list (Archive; same for Bookmarks and Installed)
-- **Layout:** the header stays. A centred block sits on the mist about 300 pt from the top: a 34 pt line icon in `labelOnMist`, a title in 16 pt semibold, and one line in `meta`.
+- **Layout:** the header stays. A centred block sits on the mist with its top at 0.35 of the height on hand (about 300 pt on a standard phone): a 34 pt line icon in `labelOnMist`, a title in 16 pt semibold, and one line in `meta`.
 - **No search pill** when there's nothing to search.
 - **Copy:**
   - Archive: "Nothing archived yet" / "Tabs you leave alone for a day land here, and stay for 30 days."

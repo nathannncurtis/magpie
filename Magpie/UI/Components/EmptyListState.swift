@@ -8,8 +8,9 @@ struct EmptyListState: View {
     let message: String
 
     private enum EmptyMetrics {
-        /// Where the block sits from the top of the screen.
-        static let topOffset: CGFloat = 300
+        /// Where the block's top sits, as a share of the height on hand: about 300 pt
+        /// on a standard phone, holding its place on any height.
+        static let topFraction: CGFloat = 0.35
         static let icon: CGFloat = 34
         static let titleGap: CGFloat = 8
         static let messageGap: CGFloat = 6
@@ -17,23 +18,25 @@ struct EmptyListState: View {
     }
 
     var body: some View {
-        VStack(spacing: EmptyMetrics.messageGap) {
-            Image(systemName: icon)
-                .font(.system(size: EmptyMetrics.icon, weight: .medium))
-                .foregroundStyle(Palette.labelOnMist)
-                .padding(.bottom, EmptyMetrics.titleGap - EmptyMetrics.messageGap)
-            Text(title)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Palette.textPrimary)
-            Text(message)
-                .font(Typography.meta)
-                .foregroundStyle(Palette.textOnMistSecondary)
-                .multilineTextAlignment(.center)
-                .lineSpacing(2)
+        GeometryReader { geo in
+            VStack(spacing: EmptyMetrics.messageGap) {
+                Image(systemName: icon)
+                    .font(.system(size: EmptyMetrics.icon, weight: .medium))
+                    .foregroundStyle(Palette.labelOnMist)
+                    .padding(.bottom, EmptyMetrics.titleGap - EmptyMetrics.messageGap)
+                Text(title)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Palette.textPrimary)
+                Text(message)
+                    .font(Typography.meta)
+                    .foregroundStyle(Palette.textOnMistSecondary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(2)
+            }
+            .padding(.horizontal, EmptyMetrics.sideInset)
+            .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
+            .padding(.top, geo.size.height * EmptyMetrics.topFraction)
         }
-        .padding(.horizontal, EmptyMetrics.sideInset)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .padding(.top, EmptyMetrics.topOffset)
         .accessibilityElement(children: .combine)
     }
 }
