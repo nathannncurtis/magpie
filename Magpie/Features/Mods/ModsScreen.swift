@@ -60,7 +60,6 @@ struct ModsScreen: View {
                 )
                 .padding(.horizontal, Layout.segmentInset)
                 .padding(.bottom, 10)
-                .accessibilityIdentifier("mods.segments")
                 ScrollView {
                     Group {
                         switch segment {
@@ -95,6 +94,7 @@ struct ModsScreen: View {
             Text(ModsCopy.title)
                 .font(Typography.screenTitleSmall)
                 .foregroundStyle(Palette.textPrimary)
+                .accessibilityIdentifier("mods.screen")
             Spacer()
             Button(ModsCopy.done, action: onDone)
                 .font(Typography.rowTitle)
@@ -245,7 +245,6 @@ struct ModsScreen: View {
         .background(Palette.card, in: RoundedRectangle(cornerRadius: Metrics.Radius.card, style: .continuous))
         .clipShape(RoundedRectangle(cornerRadius: Metrics.Radius.card, style: .continuous))
         .shadow(color: Palette.tabCardShadow, radius: 15, y: 14)
-        .accessibilityIdentifier("mods.card")
     }
 
     /// An install from the sheet has landed: the Installed segment takes over, and the

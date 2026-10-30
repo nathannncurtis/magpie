@@ -61,7 +61,6 @@ struct RootView: View {
                         store: model.modStore,
                         onDone: { model.closeMods() }
                     )
-                    .accessibilityIdentifier("mods.screen")
                 case nil:
                     // Nothing has started yet: the mist, while the saved tabs load.
                     MistBackground()

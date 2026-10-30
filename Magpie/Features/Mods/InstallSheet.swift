@@ -70,7 +70,6 @@ struct InstallSheet: View {
         .onChange(of: linkText) { _, text in
             queueRead(of: text)
         }
-        .accessibilityIdentifier("mods.sheet")
     }
 
     // MARK: The field
