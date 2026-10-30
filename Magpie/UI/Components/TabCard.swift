@@ -2,14 +2,16 @@ import SwiftUI
 import UIKit
 
 /// One card in the tab stack: the page snapshot at 62% of the screen's scale, in a
-/// 5 pt white ring with an outer hairline and the soft shadow. The size comes from the
-/// stack; the card only fills what it is given.
+/// 5 pt white ring with an outer hairline and the soft shadow. The stack names the size;
+/// the picture matches its width, aspect kept, from the top — the card is the page
+/// shrunk, so the whole page width shows and only its depth is cropped away.
 ///
 /// A `namespace` wires the card into the page ↔ card transition: both geometry effects
 /// are keyed by the tab id, so the reading screen can match against it.
 struct TabCard: View {
     let tab: Tab
     var snapshot: Data?
+    var size: CGSize
     var namespace: Namespace.ID?
 
     private enum CardMetrics {
@@ -24,6 +26,7 @@ struct TabCard: View {
     var body: some View {
         matched(
             content
+                .frame(width: size.width, height: size.height, alignment: .top)
                 .clipShape(RoundedRectangle(cornerRadius: Metrics.Radius.tabCard, style: .continuous))
                 .shadow(
                     color: shadowColor,
@@ -44,10 +47,17 @@ struct TabCard: View {
 
     @ViewBuilder
     private var content: some View {
-        if let image = snapshot.flatMap(UIImage.init(data:)) {
+        if let image = snapshot.flatMap(UIImage.init(data:)), image.size.width > 0 {
+            // The card is the page shrunk: the picture matches the card's width, aspect
+            // kept, and runs past the bottom — top-aligned, cropped by the card's shape.
             Image(uiImage: image)
                 .resizable()
-                .scaledToFill()
+                .frame(
+                    width: size.width,
+                    height: size.width * image.size.height / image.size.width
+                )
+                .accessibilityElement(children: .ignore)
+                .accessibilityIdentifier("tabs.card.snapshot")
         } else {
             placeholder
         }
@@ -102,15 +112,18 @@ struct TabCard: View {
         UIColor.systemTeal.setFill()
         context.fill(CGRect(origin: .zero, size: CGSize(width: 240, height: 500)))
     }
-    TabCard(tab: Tab(title: "The web, read slowly", lastActive: .now), snapshot: snapshot)
-        .frame(width: 240, height: 500)
-        .padding(40)
+    TabCard(
+        tab: Tab(title: "The web, read slowly", lastActive: .now),
+        snapshot: snapshot,
+        size: CGSize(width: 240, height: 500)
+    )
+    .padding(40)
 }
 
 #Preview("Placeholder") {
     TabCard(
-        tab: Tab(url: URL(string: "https://en.wikipedia.org/wiki/Carbon_steel"), lastActive: .now)
+        tab: Tab(url: URL(string: "https://en.wikipedia.org/wiki/Carbon_steel"), lastActive: .now),
+        size: CGSize(width: 240, height: 500)
     )
-    .frame(width: 240, height: 500)
     .padding(40)
 }

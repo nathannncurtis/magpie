@@ -218,9 +218,13 @@ final class AppModel {
     }
 
     /// The tab's page session, made on demand and kept in step with the tab. Every page
-    /// carries the mods' configuration, so the installed scripts run on each.
+    /// carries the mods' configuration, so the installed scripts run on each; a reused
+    /// session whose page is already loaded settles again, so it still gets its picture.
     func ensureSession(for tab: Tab) -> ReadingSession {
-        if let session = sessions[tab.id] { return session }
+        if let session = sessions[tab.id] {
+            refireSettleIfPictureless(tab, session: session)
+            return session
+        }
         let session = ReadingSession(
             url: tab.url ?? Self.blankPage,
             pageConfiguration: modInjector.pageConfiguration())
@@ -272,16 +276,29 @@ final class AppModel {
     /// A page settled: the tab takes what the page now shows. The capture is debounced — a
     /// settle that lands while one is still in flight replaces it.
     private func pageSettled(for id: Tab.ID) {
+        SnapshotLog.event("settle fired tab=\(id.uuidString.prefix(4))")
         syncTab(for: id)
         captureSnapshot(for: id, trigger: "settle")
     }
 
+    /// A reused session whose page has settled with no picture — a tab switched back to,
+    /// or one restored — settles again, with its viewport already known. Only a page that
+    /// truly settled: one still in flight would write its half-state onto the tab.
+    private func refireSettleIfPictureless(_ tab: Tab, session: ReadingSession) {
+        guard
+            session.hasSettled,
+            session.failure == nil,
+            store.tabs.first(where: { $0.id == tab.id })?.snapshot == nil
+        else { return }
+        pageSettled(for: tab.id)
+    }
+
     /// The page's picture onto its tab, whenever it answers.
-    private func captureSnapshot(for id: Tab.ID, viewport: CGSize? = nil, trigger: String) {
+    private func captureSnapshot(for id: Tab.ID, trigger: String) {
         guard let session = sessions[id] else { return }
         snapshotTasks[id]?.cancel()
         snapshotTasks[id] = Task { @MainActor in
-            let data = await session.snapshot(viewport: viewport, trigger: trigger)
+            let data = await session.snapshot(trigger: trigger)
             guard !Task.isCancelled, let data else { return }
             store.setSnapshot(data, for: id)
             SnapshotLog.event("\(trigger) stored \(data.count)B tab=\(id.uuidString.prefix(4))")
@@ -318,21 +335,9 @@ final class AppModel {
         surface = .reading(searchOpen: false)
     }
 
-    /// The tab count: the page folds into its card. The surface moves at once; a tab that
-    /// still has no picture gets a best-effort one alongside, ungated.
-    func openTabs(viewport: CGSize) {
-        if let tab = store.currentTab, let session = sessions[tab.id], tab.snapshot == nil {
-            Task { @MainActor in
-                guard let data = await session.snapshot(viewport: viewport, trigger: "leave")
-                else { return }
-                store.setSnapshot(data, for: tab.id)
-                SnapshotLog.event("leave stored \(data.count)B tab=\(tab.id.uuidString.prefix(4))")
-            }
-        }
-        surface = .tabs
-    }
-
-    /// The tabs screen.
+    /// The tabs screen. The page folds into its card carrying the picture its settle
+    /// captured; capturing on the way out is worthless — by the time it runs, the page is
+    /// off-window and its renderer never answers.
     func showTabs() {
         surface = .tabs
     }

@@ -51,7 +51,7 @@ struct RootView: View {
                         onSearchSubmit: { model.navigateCurrent($0) },
                         onSearchDismiss: { model.closeSearchOverPage() },
                         onAddressTap: { model.openSearchOverPage() },
-                        onTabsTap: { model.openTabs(viewport: geo.size) }
+                        onTabsTap: { model.showTabs() }
                     )
                     .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("reading.screen")

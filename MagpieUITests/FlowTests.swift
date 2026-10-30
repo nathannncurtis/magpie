@@ -29,7 +29,8 @@ final class FlowTests: XCTestCase {
             "-AppleInterfaceStyle", appearance,
         ]
         // The app's capture log lands beside the shots; it cannot see the runner's own
-        // environment, so the directory is handed over.
+        // environment, so the directory is handed over. The file is never cleared: one
+        // run is one record, its lines named by appearance, launches and all.
         if let shotsDir = ProcessInfo.processInfo.environment["MAGPIE_SHOTS_DIR"] {
             app.launchEnvironment["MAGPIE_SHOTS_DIR"] = shotsDir
         }
@@ -78,6 +79,7 @@ final class FlowTests: XCTestCase {
         let openCount = app.descendants(matching: .any)
             .matching(identifier: "tabs.openCount").firstMatch
         land("tabs-one") { openCount.waitForLabel("1 open", timeout: 10) }
+        waitForCurrentCardPicture()
         shots.snap(app, "tabs-one")
 
         // 07 · the +: the launch search again, this time for an address.
@@ -91,6 +93,7 @@ final class FlowTests: XCTestCase {
         land("reading-two") { address.waitForExistence(timeout: 20) }
         app.buttons["bar.tabs"].tap()
         land("tabs-two") { openCount.waitForLabel("2 open", timeout: 10) }
+        waitForCurrentCardPicture()
         shots.snap(app, "tabs-two")
 
         // 09 · a fling up on the current card closes it.
@@ -101,6 +104,7 @@ final class FlowTests: XCTestCase {
         let release = press.withOffset(CGVector(dx: 0, dy: -360))
         press.press(forDuration: 0.05, thenDragTo: release)
         land("fling-closed") { openCount.waitForLabel("1 open", timeout: 10) }
+        waitForCurrentCardPicture()
         shots.snap(app, "tabs-one-again")
 
         // 10 · a relaunch restores the last tab.
@@ -114,6 +118,19 @@ final class FlowTests: XCTestCase {
     /// The search field, however the hierarchy exposes it.
     private var field: XCUIElement {
         app.descendants(matching: .any).matching(identifier: "search.field").firstMatch
+    }
+
+    /// Gives the current card's settle the seconds it may still need to land its picture,
+    /// then shoots whether or not it did — a pictureless card is a finding, not a stop.
+    /// The wait is scoped inside the current card, so a neighbour's picture cannot
+    /// satisfy it.
+    private func waitForCurrentCardPicture() {
+        let card = app.descendants(matching: .any)["tabs.card.current"].firstMatch
+        let picture = card.descendants(matching: .any)
+            .matching(identifier: "tabs.card.snapshot").firstMatch
+        if !picture.waitForExistence(timeout: 10) {
+            print("=== the current card was still pictureless after 10 s; shooting anyway ===")
+        }
     }
 
     /// A step of the flow: when it does not land, the run stops with a shot of what was on

@@ -65,6 +65,21 @@ final class ReadingSession {
     /// The viewport the page is shown at, kept by the reading screen for captures.
     var viewportSize: CGSize?
 
+    /// Whether the page has settled at least once — through the load event, or a
+    /// committed page settling when its viewport becomes known. The reuse refire waits
+    /// for it, so a load still in flight never writes its half-state onto the tab.
+    private(set) var hasSettled = false
+
+    /// The reading screen has geometry for this session: a page that committed with no
+    /// failure settles now, capture included. The load event's own settle is not relied
+    /// on for the picture — it has not been seen to arrive on the simulator. This counts
+    /// as a settle.
+    func viewportKnown() {
+        guard failure == nil, page.url != nil else { return }
+        hasSettled = true
+        onPageSettled?()
+    }
+
     /// The web view SwiftUI built for this page, kept by the reading screen's probe.
     /// Weak, because the hierarchy owns the view.
     @ObservationIgnored var webView: WKWebView?
@@ -167,6 +182,7 @@ final class ReadingSession {
     /// Tells the owner the page settled. A title can land after the event, so it settles
     /// once more a beat later.
     private func settle() {
+        hasSettled = true
         onPageSettled?()
         Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(800))
@@ -274,14 +290,14 @@ final class ReadingSession {
     /// web view, through the handle the reading screen's probe keeps. Both are capped: a
     /// page that misses both windows reads as nil, and a late answer is dropped. Every
     /// step is logged, because the captures are being diagnosed on the simulator.
-    func snapshot(viewport: CGSize? = nil, trigger: String) async -> Data? {
+    func snapshot(trigger: String) async -> Data? {
         let start = ContinuousClock.now
         guard failure == nil, page.url != nil else {
             SnapshotLog.event(
                 "\(trigger) skip failure=\(failure != nil) url=\(page.url?.absoluteString ?? "nil")")
             return nil
         }
-        guard let size = viewport ?? viewportSize else {
+        guard let size = viewportSize else {
             SnapshotLog.event("\(trigger) skip viewport=nil")
             return nil
         }
