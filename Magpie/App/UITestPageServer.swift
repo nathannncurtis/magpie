@@ -10,22 +10,67 @@ final class UITestPageServer: @unchecked Sendable {
     private let queue = DispatchQueue(label: "com.magpiebrowser.uitest.pageserver")
     private var listener: NWListener?
 
-    /// Starts serving. A second start does nothing; a taken port leaves the flow to fail.
-    func start() {
+    /// Starts serving, and returns once the port is listening or the wait runs out. A
+    /// relaunched app finds the port still held by the last run's closed connections, so
+    /// the address is reused and a failed bind tries again; the first page of a relaunch
+    /// is requested moments after this returns, and must find the server there.
+    func start() async {
         guard listener == nil else { return }
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            let gate = ReadyGate(continuation)
+            queue.async { self.listen(gate: gate, attempt: 0) }
+            queue.asyncAfter(deadline: .now() + Self.readyWait) { gate.open() }
+        }
+    }
+
+    private static let readyWait: TimeInterval = 3
+    private static let rebindDelay: TimeInterval = 0.2
+    private static let rebindAttempts = 15
+
+    private func listen(gate: ReadyGate, attempt: Int) {
         guard let port = NWEndpoint.Port(rawValue: UITestEnvironment.pageServerPort) else {
+            gate.open()
             return
         }
-        do {
-            let listener = try NWListener(using: .tcp, on: port)
-            listener.newConnectionHandler = { connection in
-                connection.start(queue: self.queue)
-                self.serve(connection)
-            }
-            listener.start(queue: queue)
-            self.listener = listener
-        } catch {
+        let parameters = NWParameters.tcp
+        parameters.allowLocalEndpointReuse = true
+        guard let listener = try? NWListener(using: parameters, on: port) else {
+            SnapshotLog.event("server listener attempt=\(attempt) create failed")
+            retry(gate: gate, attempt: attempt)
             return
+        }
+        listener.newConnectionHandler = { connection in
+            SnapshotLog.event("server connection \(connection.endpoint)")
+            connection.stateUpdateHandler = { state in
+                SnapshotLog.event("server connection state \(state)")
+            }
+            connection.start(queue: self.queue)
+            self.serve(connection)
+        }
+        listener.stateUpdateHandler = { state in
+            SnapshotLog.event("server listener attempt=\(attempt) state=\(state)")
+            switch state {
+            case .ready:
+                gate.open()
+            case .failed, .waiting:
+                listener.cancel()
+                if self.listener === listener { self.listener = nil }
+                self.retry(gate: gate, attempt: attempt)
+            default:
+                break
+            }
+        }
+        self.listener = listener
+        listener.start(queue: queue)
+    }
+
+    private func retry(gate: ReadyGate, attempt: Int) {
+        guard attempt < Self.rebindAttempts else {
+            gate.open()
+            return
+        }
+        queue.asyncAfter(deadline: .now() + Self.rebindDelay) {
+            self.listen(gate: gate, attempt: attempt + 1)
         }
     }
 
@@ -41,6 +86,7 @@ final class UITestPageServer: @unchecked Sendable {
         let headEnd = Data("\r\n\r\n".utf8)
         if buffer.range(of: headEnd) != nil || buffer.count > 16 * 1024 {
             let reply = self.reply(to: buffer)
+            SnapshotLog.event("server reply \(Self.route(of: buffer)) \(reply.count)B")
             connection.send(
                 content: reply,
                 completion: .contentProcessed { _ in connection.cancel() })
@@ -52,6 +98,21 @@ final class UITestPageServer: @unchecked Sendable {
                 return
             }
             self.receiveHead(of: connection, buffer: buffer + data)
+        }
+    }
+
+    /// Hands the start its answer once: the port listening, or the wait over.
+    private final class ReadyGate: @unchecked Sendable {
+        private var continuation: CheckedContinuation<Void, Never>?
+
+        init(_ continuation: CheckedContinuation<Void, Never>) {
+            self.continuation = continuation
+        }
+
+        /// Called only on the server's queue.
+        func open() {
+            continuation?.resume()
+            continuation = nil
         }
     }
 
