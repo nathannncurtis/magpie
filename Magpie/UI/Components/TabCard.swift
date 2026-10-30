@@ -3,8 +3,8 @@ import UIKit
 
 /// One card in the tab stack: the page snapshot at 62% of the screen's scale, in a
 /// 5 pt white ring with an outer hairline and the soft shadow. The stack names the size;
-/// the picture matches its width, aspect kept, from the top — the card is the page
-/// shrunk, so the whole page width shows and only its depth is cropped away.
+/// the picture covers it from the top left, aspect kept — width-exact while the page is
+/// tall enough, and only the overflow is cropped away.
 ///
 /// A `namespace` wires the card into the page ↔ card transition: both geometry effects
 /// are keyed by the tab id, so the reading screen can match against it.
@@ -26,7 +26,7 @@ struct TabCard: View {
     var body: some View {
         matched(
             content
-                .frame(width: size.width, height: size.height, alignment: .top)
+                .frame(width: size.width, height: size.height, alignment: .topLeading)
                 .clipShape(RoundedRectangle(cornerRadius: Metrics.Radius.tabCard, style: .continuous))
                 .shadow(
                     color: shadowColor,
@@ -48,19 +48,25 @@ struct TabCard: View {
     @ViewBuilder
     private var content: some View {
         if let image = snapshot.flatMap(UIImage.init(data:)), image.size.width > 0 {
-            // The card is the page shrunk: the picture matches the card's width, aspect
-            // kept, and runs past the bottom — top-aligned, cropped by the card's shape.
+            // The card is the page shrunk: the picture covers it from the top left, aspect
+            // kept — width-exact while the page is tall enough, and a page shorter than
+            // the card's own aspect fills the height and crops past its sides.
+            let covered = Self.coverSize(of: image, in: size)
             Image(uiImage: image)
                 .resizable()
-                .frame(
-                    width: size.width,
-                    height: size.width * image.size.height / image.size.width
-                )
+                .frame(width: covered.width, height: covered.height)
                 .accessibilityElement(children: .ignore)
                 .accessibilityIdentifier("tabs.card.snapshot")
         } else {
             placeholder
         }
+    }
+
+    /// The picture's size in the card: the larger of the two fit scales, so no card
+    /// background shows behind a page shorter than the viewport it was captured at.
+    private static func coverSize(of image: UIImage, in card: CGSize) -> CGSize {
+        let scale = max(card.width / image.size.width, card.height / image.size.height)
+        return CGSize(width: image.size.width * scale, height: image.size.height * scale)
     }
 
     /// What the card shows until the first snapshot lands.
