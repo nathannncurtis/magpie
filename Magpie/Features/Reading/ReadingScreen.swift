@@ -15,6 +15,8 @@ struct ReadingScreen: View {
     var engine: SearchEngine
     var skimEnabled: Bool = true
     var suggestionsEnabled: Bool = true
+    /// While a full screen (Settings) covers the sheet over the page.
+    var focusSuspended: Bool = false
     var suggestions: any SuggestionProviding
     var recents: any RecentSearchStoring
     var chromeNamespace: Namespace.ID? = nil
@@ -73,6 +75,7 @@ struct ReadingScreen: View {
             opensFromPage: true,
             skimEnabled: skimEnabled,
             suggestionsEnabled: suggestionsEnabled,
+            focusSuspended: focusSuspended,
             initialText: session?.page.url?.absoluteString ?? "",
             morphNamespace: chromeNamespace,
             suggestions: suggestions,

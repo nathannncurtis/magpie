@@ -8,6 +8,8 @@ struct LaunchScreen: View {
     let engine: SearchEngine
     var skimEnabled: Bool = true
     var suggestionsEnabled: Bool = true
+    /// While a full screen (Settings, onboarding) covers the launch sheet.
+    var focusSuspended: Bool = false
     let suggestions: any SuggestionProviding
     let recents: any RecentSearchStoring
     let onOpen: (URL) -> Void
@@ -27,6 +29,7 @@ struct LaunchScreen: View {
                 engine: engine,
                 skimEnabled: skimEnabled,
                 suggestionsEnabled: suggestionsEnabled,
+                focusSuspended: focusSuspended,
                 suggestions: suggestions,
                 recents: recents,
                 onOpen: onOpen,

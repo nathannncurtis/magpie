@@ -24,6 +24,7 @@ struct RootView: View {
                         engine: model.engine,
                         skimEnabled: model.skimEnabled,
                         suggestionsEnabled: model.suggestionsEnabled,
+                        focusSuspended: coversOverLaunch,
                         suggestions: model.suggestions,
                         recents: model.recents,
                         onOpen: { model.openFromLaunch($0) },
@@ -38,6 +39,7 @@ struct RootView: View {
                         engine: model.engine,
                         skimEnabled: model.skimEnabled,
                         suggestionsEnabled: model.suggestionsEnabled,
+                        focusSuspended: coversOverLaunch,
                         suggestions: model.suggestions,
                         recents: model.recents,
                         chromeNamespace: chrome,
@@ -86,6 +88,12 @@ struct RootView: View {
         Binding(
             get: { model.needsOnboarding },
             set: { _ in model.completeOnboarding() })
+    }
+
+    /// While a full screen sits over the app, the launch sheet's field stays out of the
+    /// keyboard's way — and onboarding comes before that field ever focuses.
+    private var coversOverLaunch: Bool {
+        model.needsOnboarding || model.showsSettings
     }
 
     private var settingsBinding: Binding<Bool> {

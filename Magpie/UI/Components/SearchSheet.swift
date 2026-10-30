@@ -28,6 +28,9 @@ struct SearchSheet: View {
     let opensFromPage: Bool
     let skimEnabled: Bool
     let suggestionsEnabled: Bool
+    /// True while a full screen covers the sheet (Settings, onboarding): the field gives
+    /// up focus — keyboard away — and takes it back when the cover goes.
+    var focusSuspended: Bool = false
     let morphNamespace: Namespace.ID?
     let suggestions: any SuggestionProviding
     let recents: any RecentSearchStoring
@@ -52,6 +55,7 @@ struct SearchSheet: View {
         opensFromPage: Bool = false,
         skimEnabled: Bool = true,
         suggestionsEnabled: Bool = true,
+        focusSuspended: Bool = false,
         initialText: String = "",
         morphNamespace: Namespace.ID? = nil,
         suggestions: any SuggestionProviding = SuggestionService(),
@@ -64,6 +68,7 @@ struct SearchSheet: View {
         self.opensFromPage = opensFromPage
         self.skimEnabled = skimEnabled
         self.suggestionsEnabled = suggestionsEnabled
+        self.focusSuspended = focusSuspended
         self.morphNamespace = morphNamespace
         self.suggestions = suggestions
         self.recents = recents
@@ -152,8 +157,12 @@ struct SearchSheet: View {
         .offset(y: dragOffset)
         .gesture(dismissDrag)
         .onAppear {
-            focused = true
+            // Under onboarding the sheet arrives already covered; the field waits.
+            if !focusSuspended { focused = true }
             arrive()
+        }
+        .onChange(of: focusSuspended) { _, suspended in
+            focused = !suspended
         }
     }
 
