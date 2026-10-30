@@ -59,6 +59,7 @@ struct RootView: View {
                     // Nothing has started yet: the mist, while the saved tabs load.
                     MistBackground()
                         .ignoresSafeArea()
+                        .accessibilityIdentifier("boot.mist")
                 }
             }
             .animation(movesWithChrome ? transition : nil, value: model.surface)

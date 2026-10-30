@@ -24,7 +24,16 @@ final class ShotWriter {
     /// Takes the app's picture, keeps it with the run's results, and files it on disk as
     /// `NN-<prefix>-<name>.png`.
     func snap(_ app: XCUIApplication, _ name: String) {
-        let image = app.screenshot()
+        keep(app.screenshot(), name)
+    }
+
+    /// The whole screen, not only the app, so a stuck launch or a crash shows too. Filed
+    /// as `NN-<prefix>-fail-<name>.png`.
+    func fail(_ name: String) {
+        keep(XCUIScreen.main.screenshot(), "fail-\(name)")
+    }
+
+    private func keep(_ image: XCUIScreenshot, _ name: String) {
         let attachment = XCTAttachment(screenshot: image)
         attachment.name = name
         attachment.lifetime = .keepAlways
