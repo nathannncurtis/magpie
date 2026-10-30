@@ -10,6 +10,10 @@ enum Surface: Equatable {
     case reading(searchOpen: Bool)
     /// The tab stack.
     case tabs
+    /// The archive, over whatever screen opened it.
+    case archive
+    /// The bookmarks, over whatever screen opened it.
+    case bookmarks
 }
 
 /// The app's own state: the tabs, the engine, the recents, and which surface is up.
@@ -26,6 +30,8 @@ final class AppModel {
 
     /// The open tabs, the current one, and the archive.
     let store: TabStore
+    /// The saved bookmarks and their folders.
+    let bookmarks: BookmarkStore
     /// The engine searches run on. The picker lands later, so it stays the default.
     private(set) var engine: SearchEngine
     /// Where the search sheet's suggestion rows come from.
@@ -43,26 +49,32 @@ final class AppModel {
 
     init(
         store: TabStore = TabStore(),
+        bookmarks: BookmarkStore = BookmarkStore(),
         engine: SearchEngine = .default,
         suggestions: any SuggestionProviding = SuggestionService(),
         recents: any RecentSearchStoring = RecentSearches()
     ) {
         self.store = store
+        self.bookmarks = bookmarks
         self.engine = engine
         self.suggestions = suggestions
         self.recents = recents
     }
 
-    /// The app as it runs on a device: the JSON index in Application Support.
+    /// The app as it runs on a device: the JSON indexes in Application Support.
     static func live() -> AppModel {
-        AppModel(store: TabStore(persistence: FileSystemTabPersistence()))
+        AppModel(
+            store: TabStore(persistence: FileSystemTabPersistence()),
+            bookmarks: BookmarkStore(persistence: FileSystemBookmarkPersistence()))
     }
 
     // MARK: Lifecycle
 
-    /// Loads the saved tabs, archives what went stale, and lands on the surface to open on.
+    /// Loads the saved tabs and bookmarks, archives what went stale, and lands on the
+    /// surface to open on.
     func start(now: Date = .now) async {
         await store.loadIndex()
+        await bookmarks.loadIndex()
         refreshArchive(now: now)
         coldStart()
     }
@@ -209,5 +221,46 @@ final class AppModel {
         if store.tabs.isEmpty {
             surface = .launchSearch
         }
+    }
+
+    // MARK: Archive and bookmarks
+
+    /// The Archived chip on the tabs screen.
+    func showArchive() {
+        surface = .archive
+    }
+
+    /// The archive's Done: back to the stack, or the launch search with no tabs to show.
+    func doneWithArchive() {
+        surface = store.tabs.isEmpty ? .launchSearch : .tabs
+    }
+
+    /// A tapped archive row: the tab comes back and opens.
+    func restoreArchivedTab(_ id: Tab.ID, now: Date = .now) {
+        guard store.restore(id, now: now), let tab = store.currentTab else { return }
+        _ = ensureSession(for: tab)
+        surface = .reading(searchOpen: false)
+    }
+
+    /// The Bookmark tile's long press, and the UI tests' way in.
+    func showBookmarks() {
+        surface = .bookmarks
+    }
+
+    /// A tapped bookmark: a new tab, opened on the spot.
+    func openBookmark(_ url: URL, now: Date = .now) {
+        openFromLaunch(url, now: now)
+    }
+
+    /// The Bookmark tile's tap: the page the current tab shows, saved.
+    @discardableResult
+    func bookmarkCurrentPage(now: Date = .now) -> Bookmark? {
+        guard let tab = store.currentTab, let url = tab.url else { return nil }
+        return bookmarks.add(
+            url: url,
+            title: tab.displayTitle,
+            faviconURL: tab.faviconURL,
+            folder: nil,
+            now: now)
     }
 }

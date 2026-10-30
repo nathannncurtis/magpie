@@ -13,6 +13,7 @@ struct MagpieApp: App {
                 .task {
                     if UITestEnvironment.isUITesting { UITestPageServer.shared.start() }
                     await model.start()
+                    UITestEnvironment.applySurfaceOverride(to: model)
                 }
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .active { model.refreshArchive() }
