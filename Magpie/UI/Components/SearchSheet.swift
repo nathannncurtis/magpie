@@ -300,9 +300,12 @@ struct SearchSheet: View {
         }
     }
 
-    /// A query goes to the engine; a URL goes to the site.
+    /// A query goes to the engine; a URL goes to the site. The keyboard drops first:
+    /// the page it opens on measures itself against what covers it, and a keyboard
+    /// still up squeezes that first measurement.
     private func submit(_ raw: String) {
         guard let resolution = QueryResolver.resolve(raw, engine: engine) else { return }
+        focused = false
         switch resolution {
         case .url(let url):
             onOpen(url)

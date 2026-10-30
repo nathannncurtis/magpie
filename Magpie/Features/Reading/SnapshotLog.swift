@@ -4,8 +4,8 @@ import os
 /// The snapshot pipeline's own record: a line per capture attempt, per path, while the
 /// captures are being diagnosed on the simulator. Under the UI tests the lines also land
 /// beside the run's shots, through the directory the test hands the app — the process's
-/// own stderr never reaches the run's log. The two flows keep separate files, so one
-/// run's lines survive the other's.
+/// own stderr never reaches the run's log. One file for the whole run, each line named
+/// by its appearance; the run is read as one record, launches and all.
 enum SnapshotLog {
 
     private static let logger = Logger(
@@ -16,7 +16,7 @@ enum SnapshotLog {
     /// Where the test run asked for the log; nil outside a run that asked.
     private static let logURL = ProcessInfo.processInfo.environment["MAGPIE_SHOTS_DIR"].map {
         URL(fileURLWithPath: $0, isDirectory: true)
-            .appendingPathComponent("snapshot-\(scheme).log")
+            .appendingPathComponent("snapshot.log")
     }
 
     static func event(_ text: String) {

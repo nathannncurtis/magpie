@@ -96,6 +96,8 @@ struct TabStack: View {
     var onOpen: (Tab.ID) -> Void
     var onClose: (Tab.ID) -> Void
     var snapshotLoader: (Tab.ID) async -> Data?
+    /// The page's own sampled colour, for the space below a short page's picture.
+    var pageBackground: (Tab.ID) -> Color? = { _ in nil }
     var namespace: Namespace.ID? = nil
 
     @State private var horizontalDrag: CGFloat = 0
@@ -165,6 +167,7 @@ struct TabStack: View {
         return TabCard(
             tab: tab,
             snapshot: tab.snapshot ?? snapshots[tab.id],
+            pageBackground: pageBackground(tab.id),
             size: frame.size,
             namespace: namespace
         )
