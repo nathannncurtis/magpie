@@ -9,17 +9,24 @@ enum Metrics {
         static let unit: CGFloat = 4
         /// Floating controls: bars, pills, sheets' inner groups.
         static let insetFloating: CGFloat = 14
+        /// The reading bar's sides.
+        static let insetReadingBar: CGFloat = 12
         /// List content.
         static let insetList: CGFloat = 16
         /// Running text (Skim). The band runs 20-22.
         static let insetText: CGFloat = 22
         /// Running text at the narrow end of the 20-22 band (onboarding).
         static let insetTextNarrow: CGFloat = 20
-        /// Bottom padding inside a bottom safe-area inset; with it the bar's bottom edge lands
-        /// `barBottomEdge` above the screen bottom.
-        static let bottomBarPadding: CGFloat = 8
-        /// Where a bar's bottom edge sits above the screen bottom, home indicator included.
-        static let barBottomEdge: CGFloat = 26
+        /// Where a bar's bottom edge sits above the screen bottom, home indicator included: at
+        /// least `barBottomEdgeMin`, rising with the bottom safe area less
+        /// `bottomSafeAreaAllowance` so the bar keeps clear of it on tall-inset devices.
+        static func barBottomEdge(safeAreaBottom: CGFloat) -> CGFloat {
+            max(barBottomEdgeMin, safeAreaBottom - bottomSafeAreaAllowance)
+        }
+        /// The least a bar's bottom edge sits above the screen bottom.
+        private static let barBottomEdgeMin: CGFloat = 26
+        /// How much of the bottom safe area the bar is allowed to eat into.
+        private static let bottomSafeAreaAllowance: CGFloat = 8
         /// A suggestion row.
         static let rowSuggestion: CGFloat = 46
         /// A menu row.
