@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 /// What the UI tests ask of the app through launch arguments: the same app, pointed at
 /// its own local page server and a scratch tab store.
@@ -15,6 +16,16 @@ enum UITestEnvironment {
     /// Whether this run starts from a clean slate; only the first launch of a flow passes it.
     static var resetsStore: Bool {
         ProcessInfo.processInfo.arguments.contains("-uiTestingResetStore")
+    }
+
+    /// The appearance the tests ask for by launch argument (`-AppleInterfaceStyle Dark`),
+    /// applied by the app itself so every run lands in the scheme it asked for. Nil when
+    /// the tests set no preference, and always nil outside the UI tests.
+    static var colorScheme: ColorScheme? {
+        guard isUITesting,
+            let style = UserDefaults.standard.string(forKey: "AppleInterfaceStyle")
+        else { return nil }
+        return style.lowercased() == "dark" ? .dark : .light
     }
 
     /// The model the app runs with: the live one, or the UI tests' own.
