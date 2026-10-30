@@ -28,14 +28,10 @@ final class FlowTests: XCTestCase {
             "-uiTesting", "-uiTestingResetStore", "-AppleInterfaceStyle", appearance,
         ]
         // The app's capture log lands beside the shots; it cannot see the runner's own
-        // environment, so the directory is handed over. Each appearance keeps its own
-        // file, so one run's lines survive the other's; this flow's file is cleared here —
-        // it appends across launches otherwise, and this flow starts from nothing.
+        // environment, so the directory is handed over. The file is never cleared: one
+        // run is one record, its lines named by appearance, launches and all.
         if let shotsDir = ProcessInfo.processInfo.environment["MAGPIE_SHOTS_DIR"] {
             app.launchEnvironment["MAGPIE_SHOTS_DIR"] = shotsDir
-            try? FileManager.default.removeItem(
-                at: URL(fileURLWithPath: shotsDir, isDirectory: true)
-                    .appendingPathComponent("snapshot-\(appearance.lowercased()).log"))
         }
         shots = ShotWriter(test: self, prefix: appearance.lowercased())
         self.app = app

@@ -63,14 +63,18 @@ final class ReadingSession {
     /// The viewport the page is shown at, kept by the reading screen for captures.
     var viewportSize: CGSize?
 
-    /// Whether the page has settled at least once. The extra settle paths wait for it,
-    /// so a load still in flight never writes its half-state onto the tab.
+    /// Whether the page has settled at least once — through the load event, or a
+    /// committed page settling when its viewport becomes known. The reuse refire waits
+    /// for it, so a load still in flight never writes its half-state onto the tab.
     private(set) var hasSettled = false
 
-    /// The reading screen has geometry for this session: a page that settled with no
-    /// viewport to capture at settles again now, capture included.
+    /// The reading screen has geometry for this session: a page that committed with no
+    /// failure settles now, capture included. The load event's own settle is not relied
+    /// on for the picture — it has not been seen to arrive on the simulator. This counts
+    /// as a settle.
     func viewportKnown() {
-        guard hasSettled else { return }
+        guard failure == nil, page.url != nil else { return }
+        hasSettled = true
         onPageSettled?()
     }
 
