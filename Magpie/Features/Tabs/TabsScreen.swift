@@ -40,6 +40,7 @@ struct TabsScreen: View {
                     namespace: transitionNamespace
                 )
                 .frame(width: geo.size.width, height: geo.size.height)
+                .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("tabs.stack")
             }
             bottomRow

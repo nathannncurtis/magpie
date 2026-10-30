@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// The launch and in-page search sheet: the field, up to three suggestion rows, and the
 /// keyboard, reading as one piece.
@@ -42,6 +43,7 @@ struct SearchSheet: View {
     @State private var fieldArrived = false
     @State private var fillSettled = false
     @State private var dragOffset: CGFloat = 0
+    @State private var bottomInset: CGFloat = 0
     @FocusState private var focused: Bool
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -82,43 +84,60 @@ struct SearchSheet: View {
     }
 
     var body: some View {
-        GeometryReader { geo in
-            let bottomInset = geo.safeAreaInsets.bottom
-            VStack(spacing: 0) {
-                tapAway
-                sheetSurface(bottomInset: bottomInset)
+        VStack(spacing: 0) {
+            tapAway
+            sheetBody
+                .ignoresSafeArea(.keyboard, edges: .bottom)
+        }
+        .background {
+            // Over a page, the whole page dims evenly, edge to edge behind the sheet; the
+            // dim arrives with the solid fill as the bar grows into the sheet.
+            if opensFromPage {
+                Rectangle()
+                    .fill(Palette.scrim)
+                    .ignoresSafeArea()
+                    .opacity(fillSettled ? 1 : 0)
             }
         }
-        .ignoresSafeArea(edges: [.top, .bottom])
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.safeAreaInsets.bottom
+        } action: { inset in
+            bottomInset = inset
+        }
         .task(id: text) {
             await reloadRows()
         }
     }
 
-    /// Everything above the sheet. On the mist it is clear; over a page it is the scrim.
+    /// The area above the sheet: a tap there folds the sheet away.
     private var tapAway: some View {
-        Rectangle()
-            .fill(opensFromPage ? AnyShapeStyle(Palette.scrim) : AnyShapeStyle(.clear))
+        Color.clear
+            .ignoresSafeArea(edges: .top)
             .contentShape(Rectangle())
             .onTapGesture(perform: onDismiss)
             .accessibilityIdentifier("search.scrim")
     }
 
-    /// The sheet rides the keyboard: its content ends where the keyboard begins, while the
-    /// surface runs on behind it to the bottom edge. `bottomInset` is the keyboard's height,
-    /// or the home indicator's distance when the keyboard is away.
-    private func sheetSurface(bottomInset: CGFloat) -> some View {
-        sheetContent
-            .padding(.bottom, bottomInset)
-            .frame(maxWidth: .infinity)
-            .modifier(
-                SheetSurface(
-                    opensFromPage: opensFromPage,
-                    shape: sheetShape,
-                    namespace: morphNamespace,
-                    fillSettled: fillSettled)
-            )
-            .accessibilityIdentifier("search.sheet")
+    /// The sheet hugs its content and rides the keyboard: the tail is exactly the keyboard's
+    /// height (the home indicator's once it is away), so the rows sit on the keys and the
+    /// surface runs on behind them to the bottom edge.
+    @ViewBuilder
+    private var sheetBody: some View {
+        VStack(spacing: 0) {
+            sheetContent
+            Color.clear
+                .frame(height: bottomInset)
+        }
+        .frame(maxWidth: .infinity)
+        .modifier(
+            SheetSurface(
+                opensFromPage: opensFromPage,
+                shape: sheetShape,
+                namespace: morphNamespace,
+                fillSettled: fillSettled)
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("search.sheet")
     }
 
     private var sheetContent: some View {
@@ -143,6 +162,18 @@ struct SearchSheet: View {
         .onAppear {
             focused = true
             arrive()
+            selectCarriedText()
+        }
+    }
+
+    /// The address a page's sheet opens with arrives selected (04 · 02), so typing replaces
+    /// it outright.
+    private func selectCarriedText() {
+        guard !text.isEmpty else { return }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(150))
+            UIApplication.shared.sendAction(
+                #selector(UIResponder.selectAll(_:)), to: nil, from: nil, for: nil)
         }
     }
 
