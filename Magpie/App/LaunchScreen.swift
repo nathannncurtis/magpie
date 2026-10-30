@@ -43,13 +43,20 @@ struct LaunchScreen: View {
             )
             .offset(y: arrived ? 0 : Self.riseDistance)
         }
-        .onAppear {
-            guard !arrived else { return }
-            withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
-                arrived = true
-            }
+        // A full screen over the launch takes it out of the window, and a rise started
+        // there never lands: the sheet rises once nothing covers it.
+        .onAppear { if !focusSuspended { rise() } }
+        .onChange(of: focusSuspended) { _, suspended in
+            if !suspended { rise() }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("launch.screen")
+    }
+
+    private func rise() {
+        guard !arrived else { return }
+        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
+            arrived = true
+        }
     }
 }

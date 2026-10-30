@@ -166,12 +166,16 @@ struct SearchSheet: View {
         .gesture(dismissDrag)
         .onAppear {
             // Under onboarding the sheet arrives already covered; the field waits.
-            if !focusSuspended { focused = true }
-            arrive()
+            if !focusSuspended {
+                focused = true
+                arrive()
+            }
             selectCarriedText()
         }
         .onChange(of: focusSuspended) { _, suspended in
             focused = !suspended
+            // Covered, the sheet is out of the window and its arrival would never land.
+            if !suspended { arrive() }
         }
     }
 
@@ -240,6 +244,7 @@ struct SearchSheet: View {
     /// The field fades in just after the sheet; over a page the solid fill settles behind
     /// it, so the sheet is glass while it grows from the bar and solid once it is there.
     private func arrive() {
+        guard !fieldArrived else { return }
         if reduceMotion {
             withAnimation(.easeInOut(duration: 0.2)) {
                 fieldArrived = true
