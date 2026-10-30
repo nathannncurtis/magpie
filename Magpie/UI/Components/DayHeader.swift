@@ -11,6 +11,7 @@ struct DayHeader: View {
             .textCase(.uppercase)
             .foregroundStyle(Palette.labelOnMist)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.leading, Metrics.Spacing.insetList)
             .padding(.top, Metrics.Spacing.gapSectionTop)
             .padding(.bottom, Metrics.Spacing.gapSectionBottom)
             .accessibilityAddTraits(.isHeader)
