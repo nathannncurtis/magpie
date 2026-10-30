@@ -31,7 +31,7 @@ The sheet's top corners are 38. On the mist it is glass; opened from a page, it 
 
 **SearchField**
 - **Ring:** an outer 1.5 pt `sheen` ring with radius 17.
-- **Inner field:** 48 tall, radius 15.5, filled white at 72% (dark: #1D2023). Padding: 16 leading, 8 trailing.
+- **Inner field:** 48 tall at the default size, growing with Dynamic Type; radius 15.5, filled white at 72% (dark: #1D2023). Padding: 16 leading, 8 trailing.
 - **Contents:**
   - the text field, in `field`, with autocorrect ON
   - an `EngineTag` at the trailing end: the engine name in `tag`, `textSecondary` on the `tag` fill, radius 9, padding 6 × 8
@@ -44,6 +44,7 @@ The sheet's top corners are 38. On the mist it is glass; opened from a page, it 
 
 **SkimPill**
 - Capsule; padding 6 × 11; text `small` semibold reading "Skim", with a 13 pt mark.
+- Its tap target is a 44 pt band centred on the capsule, filling the row's height.
 - **Resting:** white at 45%, a 1 pt `ink` 16% border, and a white inner top highlight. Dark: white at 7% with a white 18% border.
 - **Primed** (the first row, top suggestion only): solid `ink` with `onInk` text.
 - Hidden entirely when Skim is unavailable or turned off.
