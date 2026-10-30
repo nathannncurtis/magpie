@@ -80,6 +80,10 @@ struct ReadingScreen: View {
             .onChange(of: session?.page.url) { _, _ in
                 session?.captureOpportunity()
             }
+            // The title follows the page itself, not the settle moments.
+            .onChange(of: session?.page.title) { _, _ in
+                session?.titleKnown()
+            }
         }
         .onChange(of: colorScheme) { _, _ in rereadPageTint() }
         .onDisappear {

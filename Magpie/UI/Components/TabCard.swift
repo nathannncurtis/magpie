@@ -3,14 +3,17 @@ import UIKit
 
 /// One card in the tab stack: the page snapshot at 62% of the screen's scale, in a
 /// 5 pt white ring with an outer hairline and the soft shadow. The stack names the size;
-/// the picture covers it from the top left, aspect kept — width-exact while the page is
-/// tall enough, and only the overflow is cropped away.
+/// the picture sits at the card's exact width, aspect kept, from the top — the whole
+/// page width shows, its depth crops away, and a page shorter than the card runs on in
+/// its own colour below the picture.
 ///
 /// A `namespace` wires the card into the page ↔ card transition: both geometry effects
 /// are keyed by the tab id, so the reading screen can match against it.
 struct TabCard: View {
     let tab: Tab
     var snapshot: Data?
+    /// The page's own sampled background, for the space below a short page's picture.
+    var pageBackground: Color? = nil
     var size: CGSize
     var namespace: Namespace.ID?
 
@@ -26,7 +29,7 @@ struct TabCard: View {
     var body: some View {
         matched(
             content
-                .frame(width: size.width, height: size.height, alignment: .topLeading)
+                .frame(width: size.width, height: size.height, alignment: .top)
                 .clipShape(RoundedRectangle(cornerRadius: Metrics.Radius.tabCard, style: .continuous))
                 .shadow(
                     color: shadowColor,
@@ -48,25 +51,54 @@ struct TabCard: View {
     @ViewBuilder
     private var content: some View {
         if let image = snapshot.flatMap(UIImage.init(data:)), image.size.width > 0 {
-            // The card is the page shrunk: the picture covers it from the top left, aspect
-            // kept — width-exact while the page is tall enough, and a page shorter than
-            // the card's own aspect fills the height and crops past its sides.
-            let covered = Self.coverSize(of: image, in: size)
-            Image(uiImage: image)
-                .resizable()
-                .frame(width: covered.width, height: covered.height)
-                .accessibilityElement(children: .ignore)
-                .accessibilityIdentifier("tabs.card.snapshot")
+            // The card is the page shrunk: the picture at the card's exact width, aspect
+            // kept, from the top; below it the page's own colour, so a short page reads
+            // as the page continuing rather than a gap.
+            ZStack(alignment: .top) {
+                Rectangle().fill(continuation(of: image))
+                Image(uiImage: image)
+                    .resizable()
+                    .frame(
+                        width: size.width,
+                        height: size.width * image.size.height / image.size.width
+                    )
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityIdentifier("tabs.card.snapshot")
+            }
         } else {
             placeholder
         }
     }
 
-    /// The picture's size in the card: the larger of the two fit scales, so no card
-    /// background shows behind a page shorter than the viewport it was captured at.
-    private static func coverSize(of image: UIImage, in card: CGSize) -> CGSize {
-        let scale = max(card.width / image.size.width, card.height / image.size.height)
-        return CGSize(width: image.size.width * scale, height: image.size.height * scale)
+    /// What the card shows where the picture stops: the page's sampled colour, else the
+    /// snapshot's own last row, else the card colour.
+    private func continuation(of image: UIImage) -> Color {
+        pageBackground ?? Self.lastRowColour(of: image) ?? Palette.card
+    }
+
+    /// The snapshot's own colour at its very bottom, so a short page runs on as itself.
+    private static func lastRowColour(of image: UIImage) -> Color? {
+        guard let cg = image.cgImage else { return nil }
+        let row = CGRect(x: 0, y: cg.height - 1, width: cg.width, height: 1)
+        guard
+            let strip = cg.cropping(to: row),
+            let context = CGContext(
+                data: nil,
+                width: 1,
+                height: 1,
+                bitsPerComponent: 8,
+                bytesPerRow: 4,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        context.draw(strip, in: CGRect(x: 0, y: 0, width: 1, height: 1))
+        guard let data = context.data else { return nil }
+        let pixel = data.assumingMemoryBound(to: UInt8.self)
+        guard pixel[3] > 0 else { return nil }
+        return Color(
+            red: Double(pixel[0]) / 255,
+            green: Double(pixel[1]) / 255,
+            blue: Double(pixel[2]) / 255)
     }
 
     /// What the card shows until the first snapshot lands.
@@ -114,9 +146,10 @@ struct TabCard: View {
 }
 
 #Preview("Snapshot") {
-    let snapshot = UIGraphicsImageRenderer(size: CGSize(width: 240, height: 500)).pngData { context in
+    // A page shorter than its card: the picture, then the page running on below it.
+    let snapshot = UIGraphicsImageRenderer(size: CGSize(width: 240, height: 360)).pngData { context in
         UIColor.systemTeal.setFill()
-        context.fill(CGRect(origin: .zero, size: CGSize(width: 240, height: 500)))
+        context.fill(CGRect(origin: .zero, size: CGSize(width: 240, height: 360)))
     }
     TabCard(
         tab: Tab(title: "The web, read slowly", lastActive: .now),

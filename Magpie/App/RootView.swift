@@ -52,6 +52,7 @@ struct RootView: View {
                         onNewTab: { model.newTabFromTabs() },
                         onClose: { model.closeTab($0) },
                         onShowArchive: {},
+                        pageBackground: { id in model.sessions[id]?.pageBackground },
                         transitionNamespace: cards
                     )
                     .accessibilityElement(children: .contain)

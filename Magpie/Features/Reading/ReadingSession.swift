@@ -60,6 +60,10 @@ final class ReadingSession {
     /// Called whenever the page settles or moves, so the tab can take what it now shows.
     var onPageSettled: (@MainActor () -> Void)?
 
+    /// Called when the page's title lands, so the tab's label follows the page itself —
+    /// the settle moments can stop before a title arrives.
+    var onPageTitled: (@MainActor () -> Void)?
+
     /// The viewport the page is shown at, kept by the reading screen for captures.
     var viewportSize: CGSize?
 
@@ -72,10 +76,19 @@ final class ReadingSession {
     /// the screen's capture opportunities finds the page showing at a known viewport: the
     /// viewport arriving, the screen's session changing, or the page's URL committing.
     /// The load event's own settle is not relied on for the picture; it has not been seen
-    /// to arrive on the simulator. This counts as a settle.
+    /// to arrive on the simulator. This counts as a settle. The page's own colour is
+    /// sampled first, so a short page's card can run on in it.
     func captureOpportunity() {
         guard viewportSize != nil, failure == nil, page.url != nil else { return }
-        settleWithLateBeat()
+        Task { [weak self] in
+            await self?.refreshPageBackground()
+            self?.settleWithLateBeat()
+        }
+    }
+
+    /// The page's title landed.
+    func titleKnown() {
+        onPageTitled?()
     }
 
     /// The web view SwiftUI built for this page, kept by the reading screen's probe.

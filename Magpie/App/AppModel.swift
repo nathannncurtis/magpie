@@ -42,6 +42,8 @@ final class AppModel {
     private var sessionTasks: [Tab.ID: Task<Void, Never>] = [:]
     @ObservationIgnored private var captureGates: [Tab.ID: CaptureGate] = [:]
     @ObservationIgnored private var captureDrains: [Tab.ID: Task<Void, Never>] = [:]
+    @ObservationIgnored private var captureRetries: [Tab.ID: Task<Void, Never>] = [:]
+    @ObservationIgnored private var retryAttempts: [Tab.ID: Int] = [:]
 
     init(
         store: TabStore = TabStore(),
@@ -105,6 +107,7 @@ final class AppModel {
         sessions[tab.id] = session
         sessionTasks[tab.id] = Task { await session.run() }
         session.onPageSettled = { [weak self] in self?.pageSettled(for: tab.id) }
+        session.onPageTitled = { [weak self] in self?.syncTab(for: tab.id) }
         pruneSessions()
         return session
     }
@@ -177,12 +180,25 @@ final class AppModel {
         var rerunTrigger: String?
     }
 
+    /// The nil-capture backoff ladder: a pictureless tab that is still current tries
+    /// again at these delays, then waits for the next real opportunity.
+    private static let captureRetryDelays: [Duration] = [
+        .milliseconds(400), .milliseconds(800), .milliseconds(1_600), .milliseconds(3_200),
+    ]
+
     /// The page's picture onto its tab. Triggers coalesce: they wait out the debounce,
     /// one capture runs at a time, and a trigger that lands while one runs asks for
     /// exactly one rerun after it — the page and its view answer one caller at a time,
     /// and captures left to overlap have been seen to starve each other into nil.
-    /// Nothing is cancelled mid-flight.
+    /// Nothing is cancelled mid-flight. A real trigger resets the retry ladder.
     private func captureSnapshot(for id: Tab.ID, trigger: String) {
+        captureRetries[id]?.cancel()
+        captureRetries[id] = nil
+        retryAttempts[id] = 0
+        enqueueCapture(for: id, trigger: trigger)
+    }
+
+    private func enqueueCapture(for id: Tab.ID, trigger: String) {
         var gate = captureGates[id] ?? CaptureGate()
         if gate.isRunning {
             gate.rerunTrigger = trigger
@@ -218,9 +234,33 @@ final class AppModel {
                 gate.rerunTrigger = nil
             }
             captureGates[id] = gate
-            guard let data else { continue }
+            guard let data else {
+                // Nothing else is waiting: climb the ladder, if the tab still holds the
+                // screen's attention.
+                if captureGates[id]?.pendingTrigger == nil {
+                    scheduleRetry(for: id)
+                }
+                continue
+            }
+            retryAttempts[id] = 0
             store.setSnapshot(data, for: id)
             SnapshotLog.event("\(trigger) stored \(data.count)B tab=\(id.uuidString.prefix(4))")
+        }
+    }
+
+    /// A capture that came back nil on the tab that is still current tries again up the
+    /// ladder; past the top it stops until a real opportunity resets the ladder.
+    private func scheduleRetry(for id: Tab.ID) {
+        guard store.currentTabID == id else { return }
+        let attempt = retryAttempts[id] ?? 0
+        guard attempt < Self.captureRetryDelays.count else { return }
+        retryAttempts[id] = attempt + 1
+        let delay = Self.captureRetryDelays[attempt]
+        captureRetries[id] = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: delay)
+            guard let self, !Task.isCancelled else { return }
+            self.captureRetries[id] = nil
+            self.enqueueCapture(for: id, trigger: "retry")
         }
     }
 
