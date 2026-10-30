@@ -1,0 +1,428 @@
+import SwiftUI
+
+/// The bookmarks: folders, then the recently added pages, as rows on the mist. Edit
+/// brings the folder tools — new, rename, reorder, delete — and the pill at the foot
+/// searches titles and addresses.
+struct BookmarksScreen: View {
+    let store: BookmarkStore
+    var onOpen: (URL) -> Void
+
+    @State private var searchText = ""
+    @State private var editing = false
+    @State private var openFolderID: BookmarkFolder.ID?
+    @State private var renamingFolder: BookmarkFolder?
+    @State private var renamedText = ""
+    @State private var bottomInset: CGFloat = 0
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private enum ScreenMetrics {
+        static let navHeight: CGFloat = 36
+        static let navLeading: CGFloat = 16
+        static let navTrailing: CGFloat = 18
+        static let titleTop: CGFloat = 2
+        static let titleBottom: CGFloat = 10
+        static let listBottomClearance: CGFloat = 100
+        static let backIcon: CGFloat = 20
+        /// The text's leading edge: the row inset, the glyph, and the gap after it.
+        static let separatorInset: CGFloat = Metrics.Spacing.insetList + 26 + 12
+    }
+
+    // MARK: Data
+
+    private var searching: Bool {
+        !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var visibleBookmarks: [Bookmark] {
+        searching
+            ? store.recentlyAdded.filter { BookmarkSearch.matches($0, query: searchText) }
+            : store.recentlyAdded
+    }
+
+    private var openFolder: BookmarkFolder? {
+        store.folders.first { $0.id == openFolderID }
+    }
+
+    // MARK: The screen
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            MistBackground()
+                .ignoresSafeArea()
+            Group {
+                if let folder = openFolder {
+                    folderDetail(folder)
+                        .transition(pushTransition)
+                } else {
+                    mainContent
+                        .transition(popTransition)
+                }
+            }
+            .animation(reduceMotion ? Springs.smooth : Springs.chrome.animation, value: openFolderID)
+            if pillWanted {
+                BottomSearchPill(
+                    placeholder: String(localized: "Search bookmarks"),
+                    text: $searchText
+                )
+                .padding(.horizontal, Metrics.Spacing.insetFloating)
+                .padding(.bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset))
+                .accessibilityIdentifier("bookmarks.search")
+            }
+        }
+        .onGeometryChange(for: CGFloat.self) {
+            $0.safeAreaInsets.bottom
+        } action: {
+            bottomInset = $0
+        }
+        .ignoresSafeArea(edges: .bottom)
+        .environment(\.editMode, .constant(editing ? .active : .inactive))
+    }
+
+    /// No pill when there is nothing to search, and none over a folder's own list.
+    private var pillWanted: Bool {
+        openFolder == nil && !store.bookmarks.isEmpty
+    }
+
+    private var pushTransition: AnyTransition {
+        reduceMotion
+            ? .opacity
+            : .asymmetric(insertion: .move(edge: .trailing), removal: .opacity)
+    }
+
+    private var popTransition: AnyTransition {
+        reduceMotion
+            ? .opacity
+            : .asymmetric(insertion: .move(edge: .leading), removal: .opacity)
+    }
+
+    // MARK: The main list
+
+    private var mainContent: some View {
+        VStack(spacing: 0) {
+            navRow(leading: editButton, title: String(localized: "Bookmarks"))
+            if store.bookmarks.isEmpty && store.folders.isEmpty {
+                // COPY: review — drafted, not on the boards.
+                EmptyListState(
+                    icon: "bookmark",
+                    title: String(localized: "No bookmarks yet"),
+                    message: String(localized: "Tap Bookmark in the menu to keep a page here.")
+                )
+                .ignoresSafeArea(edges: .top)
+                .accessibilityIdentifier("bookmarks.empty")
+            } else {
+                list
+            }
+        }
+        .alert(
+            String(localized: "Rename folder"),
+            isPresented: Binding(
+                get: { renamingFolder != nil },
+                set: { if !$0 { renamingFolder = nil } })
+        ) {
+            TextField(String(localized: "Folder name"), text: $renamedText)
+            Button(String(localized: "Cancel"), role: .cancel) {}
+            Button(String(localized: "Save")) {
+                if let folder = renamingFolder {
+                    store.renameFolder(folder.id, to: renamedText)
+                }
+            }
+        }
+    }
+
+    private var list: some View {
+        List {
+            if !searching {
+                folderRows
+            }
+            bookmarkRows
+        }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .contentMargins(.bottom, ScreenMetrics.listBottomClearance, for: .scrollContent)
+        .scrollEdgeEffectStyle(.soft, for: .bottom)
+        .accessibilityIdentifier("bookmarks.list")
+    }
+
+    @ViewBuilder
+    private var folderRows: some View {
+        if !store.folders.isEmpty || editing {
+            DayHeader(title: String(localized: "Folders"))
+                .listRow()
+        }
+        if editing {
+            newFolderRow
+                .listRow()
+        }
+        ForEach(Array(store.folders.enumerated()), id: \.element.id) { index, folder in
+            Button(action: { folderTapped(folder) }) {
+                FolderRow(
+                    name: folder.name, tint: folder.tint,
+                    count: store.count(inFolder: folder.id)
+                )
+                .overlay(alignment: .top) {
+                    separator(visible: index > 0)
+                }
+                .padding(.horizontal, Metrics.Spacing.insetList)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("bookmarks.folder.\(folder.name)")
+            .listRow()
+            .deleteDisabled(!editing)
+        }
+        .onMove { offsets, destination in
+            store.moveFolders(fromOffsets: offsets, toOffset: destination)
+        }
+        .onDelete { offsets in
+            let folders = store.folders
+            for index in offsets { store.removeFolder(folders[index].id) }
+        }
+    }
+
+    @ViewBuilder
+    private var bookmarkRows: some View {
+        DayHeader(
+            title: searching ? String(localized: "Results") : String(localized: "Recently added")
+        )
+        .listRow()
+        ForEach(Array(visibleBookmarks.enumerated()), id: \.element.id) { index, bookmark in
+            BookmarkRow(
+                bookmark: bookmark,
+                folderName: folderName(of: bookmark),
+                showsSeparator: index > 0,
+                onOpen: { onOpen(bookmark.url) }
+            )
+            .listRow()
+            .moveDisabled(true)
+            .deleteDisabled(editing)
+        }
+        .onDelete { offsets in
+            let bookmarks = visibleBookmarks
+            for index in offsets { store.remove(bookmarks[index].id) }
+        }
+    }
+
+    /// "New folder", at the head of the folders while editing.
+    private var newFolderRow: some View {
+        Button(action: { store.addDefaultFolder() }) {
+            HStack(spacing: 12) {
+                Image(systemName: "plus")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(Palette.teal)
+                Text("New folder")
+                    .font(Typography.rowTitle)
+                    .foregroundStyle(Palette.textPrimary)
+                Spacer()
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, Metrics.Spacing.insetList)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("bookmarks.newFolder")
+    }
+
+    private func folderTapped(_ folder: BookmarkFolder) {
+        if editing {
+            renamedText = folder.name
+            renamingFolder = folder
+        } else {
+            openFolderID = folder.id
+        }
+    }
+
+    // MARK: A folder's list
+
+    private func folderDetail(_ folder: BookmarkFolder) -> some View {
+        VStack(spacing: 0) {
+            navRow(leading: backButton, title: folder.name)
+            let bookmarks = store.bookmarks(inFolder: folder.id)
+            if bookmarks.isEmpty {
+                // COPY: review — drafted, not on the boards.
+                EmptyListState(
+                    icon: "bookmark",
+                    title: String(localized: "Nothing in this folder"),
+                    message: String(localized: "Bookmarks you move here will show up in this list.")
+                )
+                .ignoresSafeArea(edges: .top)
+                .accessibilityIdentifier("bookmarks.folder.empty")
+            } else {
+                List {
+                    ForEach(Array(bookmarks.enumerated()), id: \.element.id) { index, bookmark in
+                        BookmarkRow(
+                            bookmark: bookmark,
+                            folderName: nil,
+                            showsSeparator: index > 0,
+                            onOpen: { onOpen(bookmark.url) }
+                        )
+                        .listRow()
+                    }
+                    .onDelete { offsets in
+                        for index in offsets { store.remove(bookmarks[index].id) }
+                    }
+                }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .contentMargins(
+                    .bottom, ScreenMetrics.listBottomClearance, for: .scrollContent
+                )
+                .scrollEdgeEffectStyle(.soft, for: .bottom)
+                .accessibilityIdentifier("bookmarks.folder.list")
+            }
+        }
+    }
+
+    // MARK: Chrome
+
+    /// The nav row: a button at the top left and the screen title under it.
+    private func navRow(leading: some View, title: String) -> some View {
+        VStack(spacing: 0) {
+            HStack {
+                leading
+                Spacer()
+            }
+            .frame(height: ScreenMetrics.navHeight)
+            .padding(.leading, ScreenMetrics.navLeading)
+            .padding(.trailing, ScreenMetrics.navTrailing)
+            Text(title)
+                .font(Typography.screenTitle)
+                .foregroundStyle(Palette.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, Metrics.Spacing.insetList)
+                .padding(.top, ScreenMetrics.titleTop)
+                .padding(.bottom, ScreenMetrics.titleBottom)
+                .lineLimit(1)
+        }
+    }
+
+    private var editButton: some View {
+        Button(
+            editing ? String(localized: "Done") : String(localized: "Edit"),
+            action: {
+                withAnimation(reduceMotion ? Springs.smooth : Springs.settle.animation) {
+                    editing.toggle()
+                }
+            }
+        )
+        .font(Typography.buttonPill)
+        .foregroundStyle(Palette.textPrimary)
+        .accessibilityIdentifier("bookmarks.edit")
+    }
+
+    private var backButton: some View {
+        Button(action: { openFolderID = nil }) {
+            Image(systemName: "chevron.backward")
+                .font(.system(size: ScreenMetrics.backIcon, weight: .medium))
+                .foregroundStyle(Palette.textPrimary)
+                .frame(width: ScreenMetrics.navHeight, height: ScreenMetrics.navHeight)
+                .accessibilityLabel(Text("Back"))
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("bookmarks.folder.back")
+    }
+
+    private func folderName(of bookmark: Bookmark) -> String? {
+        bookmark.folderID.flatMap { id in store.folders.first { $0.id == id }?.name }
+    }
+
+    private func separator(visible: Bool) -> some View {
+        Group {
+            if visible {
+                Rectangle()
+                    .fill(Palette.separatorOnMist)
+                    .frame(height: 0.5)
+                    .padding(.leading, ScreenMetrics.separatorInset)
+            }
+        }
+    }
+}
+
+/// The plain-list row dressing these lists share: no background, no separators of their
+/// own, no insets.
+private extension View {
+    func listRow() -> some View {
+        self
+            .listRowInsets(EdgeInsets())
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+    }
+}
+
+/// One bookmark as a row: a plain page or a Skim page, each in the list's shape.
+private struct BookmarkRow: View {
+    let bookmark: Bookmark
+    var folderName: String?
+    let showsSeparator: Bool
+    var onOpen: () -> Void
+
+    var body: some View {
+        Button(action: onOpen) {
+            Group {
+                switch bookmark.kind {
+                case .page:
+                    ListRow(
+                        title: bookmark.title,
+                        subtitle: subtitle,
+                        host: bookmark.host
+                    )
+                case .skim(let sourceHosts):
+                    SkimPageRow(
+                        title: bookmark.title,
+                        folderName: folderName,
+                        sourceHosts: sourceHosts)
+                }
+            }
+            .overlay(alignment: .top) {
+                if showsSeparator {
+                    Rectangle()
+                        .fill(Palette.separatorOnMist)
+                        .frame(height: 0.5)
+                        .padding(.leading, SeparatorMetrics.inset)
+                }
+            }
+            .padding(.horizontal, Metrics.Spacing.insetList)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("bookmarks.row.\(bookmark.title)")
+    }
+
+    /// "quietweb.org · Reading", or just the site when the bookmark sits in no folder.
+    private var subtitle: String {
+        guard let folderName, !folderName.isEmpty else { return bookmark.host ?? "" }
+        return "\(bookmark.host ?? "") · \(folderName)"
+    }
+
+    private enum SeparatorMetrics {
+        /// The text's leading edge: the row inset, the favicon, and the gap after it.
+        static let inset: CGFloat = Metrics.Spacing.insetList + 26 + 12
+    }
+}
+
+#Preview {
+    struct BookmarksHost: View {
+        @State private var store = BookmarkStore()
+
+        var body: some View {
+            BookmarksScreen(store: store, onOpen: { _ in })
+                .task {
+                    func url(_ address: String) -> URL {
+                        URL(string: address) ?? URL(fileURLWithPath: "/")
+                    }
+                    let kitchen = store.newFolder(name: "Kitchen", tint: .orange)
+                    let reading = store.newFolder(name: "Reading", tint: .blue)
+                    store.newFolder(name: "Work", tint: .sage)
+                    store.add(
+                        url: url("https://quietweb.org/slow"),
+                        title: "The web, read slowly", folder: reading.id, now: .now - 3_600)
+                    store.add(
+                        url: url("https://magpie.test/skim/seasoning"),
+                        title: "Seasoning carbon steel", folder: kitchen.id,
+                        kind: .skim(sourceHosts: ["seriouseats.com", "debuyer.com", "reddit.com"]),
+                        now: .now - 1_800)
+                    store.add(
+                        url: url("https://seriouseats.com/pan-sauce"),
+                        title: "Pan sauce, any night", folder: kitchen.id, now: .now - 86_400)
+                }
+        }
+    }
+    return BookmarksHost()
+}
