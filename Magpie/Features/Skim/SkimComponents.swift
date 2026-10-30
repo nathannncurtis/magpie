@@ -139,31 +139,56 @@ struct PhotoHeader: View {
         static let gap: CGFloat = 3
         /// The large tile's share of the mosaic's width.
         static let largeShare: CGFloat = 1.55 / 2.55
+        /// Where the block's photos start fading into the paper the title sits on.
+        static let fadeFrom: Double = 0.87
     }
 
     var body: some View {
         GeometryReader { geo in
             if photos.count >= 3 {
-                mosaic(width: geo.size.width)
+                mosaic(size: geo.size)
             } else if let hero = photos.first {
                 SkimPhoto(url: hero, revealed: revealed > 0)
+                    .frame(width: geo.size.width, height: geo.size.height)
             }
         }
         .frame(height: Layout.height)
+        .overlay(Self.paperFade)
         .accessibilityHidden(true)
     }
 
-    /// Three or more photos: one large tile beside two stacked.
-    private func mosaic(width: CGFloat) -> some View {
-        let large = (width - Layout.gap) * Layout.largeShare
-        return HStack(spacing: Layout.gap) {
+    /// Three or more photos: one large tile and two stacked, one flush block —
+    /// shared top and bottom edges, the board's gap between tiles.
+    private func mosaic(size: CGSize) -> some View {
+        let columns = size.width - Layout.gap
+        let large = columns * Layout.largeShare
+        let small = columns - large
+        let stacked = (size.height - Layout.gap) / 2
+        return HStack(alignment: .top, spacing: Layout.gap) {
             SkimPhoto(url: photos[0], revealed: revealed > 0)
-                .frame(width: large)
+                .frame(width: large, height: size.height)
             VStack(spacing: Layout.gap) {
                 SkimPhoto(url: photos[1], revealed: revealed > 1)
+                    .frame(width: small, height: stacked)
                 SkimPhoto(url: photos[2], revealed: revealed > 2)
+                    .frame(width: small, height: stacked)
             }
         }
+        .frame(width: size.width, height: size.height)
+    }
+
+    /// The block's bottom fading into the page's paper, so the title below reads
+    /// on paper, never across a tile edge.
+    private static var paperFade: some View {
+        LinearGradient(
+            stops: [
+                .init(color: Palette.skimBackground.opacity(0), location: Layout.fadeFrom),
+                .init(color: Palette.skimBackground, location: 1),
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .allowsHitTesting(false)
     }
 }
 
@@ -282,6 +307,7 @@ struct SkimSectionRow: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, 14)
         .accessibilityElement(children: .combine)
     }
