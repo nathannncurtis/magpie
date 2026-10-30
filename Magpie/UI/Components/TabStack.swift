@@ -13,6 +13,43 @@ enum FlingToClose {
     }
 }
 
+/// Where every card and label sits, as pure arithmetic on the container's size: the
+/// current card centred at 62% of the container, its neighbours a stride away, peeping
+/// in past the edges.
+enum StackLayout {
+    static func stride(containerWidth: CGFloat) -> CGFloat {
+        containerWidth * StackMetrics.cardScale + StackMetrics.cardGap
+    }
+
+    /// The card's frame for a tab this many strides from the centred one; `drag`
+    /// shifts the whole row sideways.
+    static func cardFrame(offset: Int, container: CGSize, drag: CGFloat = 0) -> CGRect {
+        let cardWidth = container.width * StackMetrics.cardScale
+        let cardHeight = container.height * StackMetrics.cardScale
+        let centreX = container.width / 2 + CGFloat(offset) * stride(containerWidth: container.width) + drag
+        return CGRect(
+            x: centreX - cardWidth / 2,
+            y: container.height / 2 - cardHeight / 2,
+            width: cardWidth,
+            height: cardHeight)
+    }
+
+    /// The window a label occupies: leading-aligned to its card, clipped by the screen
+    /// with it, stopping short of the next card's label.
+    static func labelWindow(card: CGRect, nextCardLeading: CGFloat, containerWidth: CGFloat) -> CGRect {
+        let leading = max(card.minX + StackMetrics.labelInset, StackMetrics.leadingClamp)
+        let trailing = min(
+            card.maxX,
+            nextCardLeading - StackMetrics.labelInset,
+            containerWidth - StackMetrics.trailingBound)
+        return CGRect(
+            x: leading,
+            y: card.minY - StackMetrics.labelGap - StackMetrics.labelSlotHeight,
+            width: max(trailing - leading, StackMetrics.labelMinWidth),
+            height: StackMetrics.labelSlotHeight)
+    }
+}
+
 /// The stack's fixed measurements, in points.
 private enum StackMetrics {
     /// The card is the page at 62% of the container's scale.
@@ -101,7 +138,7 @@ struct TabStack: View {
     private func card(
         _ tab: Tab, index: Int, current: Int, size: CGSize, stride: CGFloat
     ) -> some View {
-        let x = size.width / 2 + CGFloat(index - current) * stride + horizontalDrag
+        let frame = StackLayout.cardFrame(offset: index - current, container: size, drag: horizontalDrag)
         let lift: CGFloat
         if flyingID == tab.id {
             lift = flyOffset
@@ -111,11 +148,8 @@ struct TabStack: View {
             lift = 0
         }
         return TabCard(tab: tab, snapshot: snapshots[tab.id], namespace: namespace)
-            .frame(
-                width: size.width * StackMetrics.cardScale,
-                height: size.height * StackMetrics.cardScale
-            )
-            .position(x: x, y: size.height / 2 + lift)
+            .frame(width: frame.width, height: frame.height)
+            .position(x: frame.midX, y: frame.midY + lift)
             .zIndex(Double(100 - abs(index - current)))
             .onTapGesture {
                 guard flyingID == nil else { return }
@@ -136,24 +170,20 @@ struct TabStack: View {
         _ tab: Tab, index: Int, current: Int, size: CGSize, stride: CGFloat
     ) -> some View {
         if abs(index - current) <= 1 {
-            let cardWidth = size.width * StackMetrics.cardScale
-            let cardLeading =
-                size.width / 2 + CGFloat(index - current) * stride + horizontalDrag - cardWidth / 2
-            let leading = max(cardLeading + StackMetrics.labelInset, StackMetrics.leadingClamp)
-            let trailing = min(
-                cardLeading + cardWidth,
-                cardLeading + stride - StackMetrics.labelInset,
-                size.width - StackMetrics.trailingBound
-            )
-            let width = max(trailing - leading, StackMetrics.labelMinWidth)
-            let cardTop = size.height / 2 - size.height * StackMetrics.cardScale / 2
+            let card = StackLayout.cardFrame(offset: index - current, container: size, drag: horizontalDrag)
+            let nextLeading = StackLayout.cardFrame(
+                offset: index - current + 1, container: size, drag: horizontalDrag
+            ).minX
+            let window = StackLayout.labelWindow(
+                card: card, nextCardLeading: nextLeading, containerWidth: size.width)
+            // Natural width, hard-cut at the window's edge — a peeking label's text runs
+            // off the screen with its card rather than folding into an ellipsis.
             TabLabel(title: tab.displayTitle, host: tab.host, faviconData: tab.faviconData)
-                .frame(width: width, alignment: .leading)
-                .frame(height: StackMetrics.labelSlotHeight, alignment: .bottomLeading)
-                .position(
-                    x: leading + width / 2,
-                    y: cardTop - StackMetrics.labelGap - StackMetrics.labelSlotHeight / 2
-                )
+                .fixedSize(horizontal: true, vertical: false)
+                .frame(width: window.width, alignment: .leading)
+                .clipped()
+                .frame(height: window.height, alignment: .bottomLeading)
+                .position(x: window.midX, y: window.midY)
                 .zIndex(200)
         }
     }
