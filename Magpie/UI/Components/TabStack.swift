@@ -163,6 +163,7 @@ struct TabStack: View {
             lift = 0
         }
         return TabCard(tab: tab, snapshot: snapshots[tab.id], namespace: namespace)
+            .accessibilityElement(children: .contain)
             .accessibilityIdentifier(tab.id == currentID ? "tabs.card.current" : "tabs.card.neighbour")
             .frame(width: frame.width, height: frame.height)
             .position(x: frame.midX + neighbourOffset(from: index - current, stride: stride), y: frame.midY + lift)

@@ -30,7 +30,6 @@ struct RootView: View {
                         onOpen: { model.openFromLaunch($0) },
                         onDismiss: { model.dismissLaunchSearch() }
                     )
-                    .accessibilityIdentifier("launch.screen")
                 case .reading(let searchOpen):
                     ReadingScreen(
                         session: model.currentSession,
@@ -49,6 +48,7 @@ struct RootView: View {
                         onAddressTap: { model.openSearchOverPage() },
                         onTabsTap: { openTabs(viewport: geo.size) }
                     )
+                    .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("reading.screen")
                 case .tabs:
                     TabsScreen(
@@ -59,6 +59,7 @@ struct RootView: View {
                         onShowArchive: { model.showArchive() },
                         transitionNamespace: cards
                     )
+                    .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("tabs.screen")
                 case .archive:
                     ArchiveScreen(
@@ -66,12 +67,14 @@ struct RootView: View {
                         onRestore: { model.restoreArchivedTab($0) },
                         onDone: { model.doneWithArchive() }
                     )
+                    .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("archive.screen")
                 case .bookmarks:
                     BookmarksScreen(
                         store: model.bookmarks,
                         onOpen: { model.openBookmark($0) }
                     )
+                    .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("bookmarks.screen")
                 case .skim:
                     SkimFlowScreen()
@@ -80,6 +83,7 @@ struct RootView: View {
                     // Nothing has started yet: the mist, while the saved tabs load.
                     MistBackground()
                         .ignoresSafeArea()
+                        .accessibilityIdentifier("boot.mist")
                 }
             }
             .animation(movesWithChrome ? transition : nil, value: model.surface)

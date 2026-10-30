@@ -40,7 +40,8 @@ struct SkimPageRow: View {
             FaviconStack(hosts: sourceHosts)
         }
         .padding(.vertical, RowMetrics.verticalPadding)
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(accessibilityText))
     }
 
     /// "Skim page · Kitchen".
@@ -49,6 +50,11 @@ struct SkimPageRow: View {
             return String(localized: "Skim page")
         }
         return String(localized: "Skim page · \(folderName)")
+    }
+
+    /// The row as one line: the title, its kind, and the sources it was read from.
+    private var accessibilityText: String {
+        ([title, subtitle] + sourceHosts).joined(separator: ", ")
     }
 }
 

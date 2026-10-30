@@ -69,6 +69,7 @@ struct ArchiveScreen: View {
                 .padding(
                     .bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset)
                 )
+                .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("archive.search")
             }
         }
@@ -120,6 +121,7 @@ struct ArchiveScreen: View {
         .scrollContentBackground(.hidden)
         .contentMargins(.bottom, ScreenMetrics.listBottomClearance, for: .scrollContent)
         .scrollEdgeEffectStyle(.soft, for: .bottom)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("archive.list")
     }
 }

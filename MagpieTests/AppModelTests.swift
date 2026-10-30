@@ -117,8 +117,9 @@ struct AppModelTests {
     }
 
     @Test("a swipe down on the launch sheet does nothing when there are no tabs")
-    func launchSearchDismissNeedsTabs() {
+    func launchSearchDismissNeedsTabs() async {
         let model = makeModel()
+        await model.start(now: date(0))
 
         model.dismissLaunchSearch()
 
