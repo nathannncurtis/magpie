@@ -3,24 +3,26 @@ import os
 
 /// The snapshot pipeline's own record: a line per capture attempt, per path, while the
 /// captures are being diagnosed on the simulator. Under the UI tests the lines also land
-/// in `snapshot.log` beside the run's shots, through the directory the test hands the
-/// app — the process's own stderr never reaches the run's log.
+/// beside the run's shots, through the directory the test hands the app — the process's
+/// own stderr never reaches the run's log. One file for the whole run, each line named
+/// by its appearance; the run is read as one record, launches and all.
 enum SnapshotLog {
 
     private static let logger = Logger(
         subsystem: "com.magpiebrowser.Magpie", category: "snapshot")
 
+    private static let scheme = UITestEnvironment.colorScheme == .dark ? "dark" : "light"
+
     /// Where the test run asked for the log; nil outside a run that asked.
-    private static let logPath = ProcessInfo.processInfo.environment["MAGPIE_SHOTS_DIR"]
-        .map {
-            URL(fileURLWithPath: $0, isDirectory: true).appendingPathComponent("snapshot.log")
-        }
+    private static let logURL = ProcessInfo.processInfo.environment["MAGPIE_SHOTS_DIR"].map {
+        URL(fileURLWithPath: $0, isDirectory: true)
+            .appendingPathComponent("snapshot.log")
+    }
 
     static func event(_ text: String) {
         logger.notice("\(text, privacy: .public)")
-        guard let path = logPath else { return }
-        let scheme = UITestEnvironment.colorScheme == .dark ? "dark" : "light"
-        append((scheme + " " + text + "\n").data(using: .utf8), to: path)
+        guard let url = logURL else { return }
+        append((scheme + " " + text + "\n").data(using: .utf8), to: url)
     }
 
     /// Appends to the log, making it first if it is not there yet.
