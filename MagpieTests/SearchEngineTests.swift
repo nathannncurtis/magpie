@@ -147,9 +147,11 @@ struct SearchEngineTests {
         }
         #expect(duckduckgo.resultsQuery(for: foreign) == nil)
 
-        // A page carrying the template's own placeholder, which never decodes.
+        // A page carrying the template's own placeholder, raw or encoded.
         #expect(
             duckduckgo.resultsQuery(for: URL(string: "https://duckduckgo.com/?q=%s")!) == nil)
+        #expect(
+            duckduckgo.resultsQuery(for: URL(string: "https://duckduckgo.com/?q=%25s")!) == nil)
         // A query that trims away to nothing.
         guard let blank = duckduckgo.searchURL(for: " ") else {
             Issue.record("no blank url")
