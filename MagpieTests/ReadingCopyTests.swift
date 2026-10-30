@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 
 @testable import Magpie
@@ -21,5 +22,13 @@ struct ReadingCopyTests {
     func otherLine() {
         let failure = PageLoadFailure(host: "quietweb.org", isOffline: false)
         #expect(failure.line == "It didn't answer. Try again in a moment.")
+    }
+
+    @Test("a failure names the host asked for, port stripped")
+    func refusedHost() {
+        let url = URL(string: "http://example.org:81/")
+        let host = HostFormatter.host(for: url)
+        #expect(host == "example.org")
+        #expect(PageLoadFailure(host: host, isOffline: false).title == "Can't reach example.org")
     }
 }
