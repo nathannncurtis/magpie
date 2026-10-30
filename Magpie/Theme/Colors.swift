@@ -68,6 +68,8 @@ enum Palette {
     static let tag = dynamic(light: 0xF1F0EB, dark: 0xFFFFFF, darkOpacity: 0.08)
     /// A toggle in its off state.
     static let toggleOff = dynamic(light: 0xDADAD4, dark: 0xFFFFFF, darkOpacity: 0.16)
+    /// A toggle's knob.
+    static let toggleKnob = dynamic(light: 0xFFFFFF, dark: 0x101115)
     /// The default reading-bar tint when the site gives no colour.
     static let pageTintGlass = dynamic(
         light: 0xFFF6EE, lightOpacity: 0.55, dark: 0x2C241E, darkOpacity: 0.55)
@@ -93,6 +95,33 @@ enum Palette {
     /// The search field's inner fill.
     static let searchFieldFill = dynamic(
         light: 0xFFFFFF, lightOpacity: 0.72, dark: 0x1D2023, darkOpacity: 1)
+
+    // MARK: Settings
+
+    /// The inner hairline on Settings' material groups.
+    static let groupHairline = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.75, dark: 0xFFFFFF, darkOpacity: 0.08)
+
+    // MARK: Onboarding
+
+    /// An engine tile's glass fill.
+    static let engineTile = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.55, dark: 0xFFFFFF, darkOpacity: 0.07)
+    /// An engine tile's fill once picked.
+    static let engineTileSelected = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.88, dark: 0xFFFFFF, darkOpacity: 0.15)
+    /// An engine tile's inner hairline.
+    static let engineTileHairline = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.70, dark: 0xFFFFFF, darkOpacity: 0.14)
+    /// The Other tile's glass fill.
+    static let engineTileOther = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.30, dark: 0xFFFFFF, darkOpacity: 0)
+    /// The Other tile's inset outline.
+    static let engineTileOtherOutline = dynamic(
+        light: 0x101115, lightOpacity: 0.14, dark: 0xFFFFFF, darkOpacity: 0.18)
+    /// The plus-glyph square on the Other tile.
+    static let engineTileOtherGlyph = dynamic(
+        light: 0x101115, lightOpacity: 0.07, dark: 0xFFFFFF, darkOpacity: 0.10)
 
     // MARK: Skim pill
 
