@@ -191,6 +191,12 @@ actor FilterListStore {
         await rebuildSets()
     }
 
+    /// Downloads every list now, stale or not: the Settings page's "Update now".
+    func refreshNow() async {
+        await download(lists, now: clock())
+        await rebuildSets()
+    }
+
     private enum DownloadOutcome: Sendable {
         case updated(Data, etag: String?, lastModified: String?)
         case notModified
@@ -381,6 +387,13 @@ actor FilterListStore {
         state.lists[list.id]?.lastUpdated
     }
 
+    /// Each list with when it last refreshed, for the Settings page.
+    func listUpdates() -> [FilterListUpdate] {
+        lists.map { list in
+            FilterListUpdate(list: list, updated: state.lists[list.id]?.lastUpdated)
+        }
+    }
+
     /// The newest successful refresh across the lists, for the Settings row.
     var overallLastUpdated: Date? {
         state.lists.values.compactMap(\.lastUpdated).max()
@@ -464,6 +477,12 @@ actor FilterListStore {
         if let data = try? encoder.encode(state) {
             write(data, to: directory.appending(component: "state.json"))
         }
+    }
+}
+
+extension FilterListStore: RuleSetProviding {
+    func refreshStale() async {
+        await refreshIfNeeded(now: nil)
     }
 }
 
