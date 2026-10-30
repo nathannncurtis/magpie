@@ -19,13 +19,13 @@ struct EnginePickerScreen: View {
                 .font(Typography.screenTitle)
                 .foregroundStyle(Palette.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 4)
+                .padding(.horizontal, Metrics.Spacing.insetList + 4)
                 .padding(.top, 8)
             Text("Pick one; you can switch any time from the menu.")
                 .font(Typography.row)
                 .foregroundStyle(Palette.textOnMistSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 4)
+                .padding(.horizontal, Metrics.Spacing.insetList + 4)
                 .padding(.top, 8)
                 .padding(.bottom, 16)
 
@@ -37,6 +37,7 @@ struct EnginePickerScreen: View {
                         }
                     }
                 }
+                .padding(.horizontal, Metrics.Spacing.insetList)
                 if picked == .other {
                     otherField
                         .padding(.top, 12)
@@ -118,7 +119,7 @@ struct EnginePickerScreen: View {
                     .foregroundStyle(Palette.textOnMistSecondary)
             }
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, Metrics.Spacing.insetList)
     }
 
     private func save() {
