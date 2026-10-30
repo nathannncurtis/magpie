@@ -37,6 +37,7 @@ struct SearchSheet: View {
 
     @State private var text = ""
     @State private var rows: [String] = []
+    @State private var rowsAreRecents = false
     @State private var visibleRows = 0
     @State private var fieldArrived = false
     @State private var dragOffset: CGFloat = 0
@@ -83,30 +84,33 @@ struct SearchSheet: View {
         VStack(spacing: 0) {
             tapAway
             sheetBody
+                .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .task(id: text) {
             await reloadRows()
         }
     }
 
-    /// Everything above the sheet. On the mist it is clear; over a page it is the scrim.
+    /// Everything above the sheet. On the mist it is clear; over a page it is the scrim,
+    /// which runs on behind the keyboard.
     private var tapAway: some View {
         Rectangle()
             .fill(opensFromPage ? AnyShapeStyle(Palette.scrim) : AnyShapeStyle(.clear))
+            .ignoresSafeArea(.keyboard, edges: .bottom)
             .contentShape(Rectangle())
             .onTapGesture(perform: onDismiss)
     }
 
+    /// The sheet rides the keyboard: its content ends at the keyboard while the surface runs
+    /// on behind it. `Color.clear` fills the space the keyboard covers.
     @ViewBuilder
     private var sheetBody: some View {
-        if opensFromPage {
+        VStack(spacing: 0) {
             sheetContent
-                .background(sheetShape.fill(Palette.sheetSolid))
-        } else {
-            sheetContent
-                .glassEffect(.regular, in: sheetShape)
-                .modifier(MorphTag(namespace: morphNamespace))
+            Color.clear
         }
+        .frame(maxWidth: .infinity)
+        .modifier(SheetSurface(opensFromPage: opensFromPage, shape: sheetShape, namespace: morphNamespace))
     }
 
     private var sheetContent: some View {
@@ -142,7 +146,7 @@ struct SearchSheet: View {
                     if index < visibleRows {
                         SuggestionRow(
                             text: row,
-                            skimState: SkimPill.State.resolve(skimEnabled: skimEnabled, primed: index == 0),
+                            skimState: rowSkimState(at: index),
                             onSearch: { submit(row) },
                             onSkim: { skim(row) }
                         )
@@ -178,6 +182,13 @@ struct SearchSheet: View {
 
     // MARK: Behaviour
 
+    /// Only live suggestions carry the Skim pill; recent searches are the past, not a skim
+    /// waiting to happen.
+    private func rowSkimState(at index: Int) -> SkimPill.State {
+        guard !rowsAreRecents else { return .hidden }
+        return SkimPill.State.resolve(skimEnabled: skimEnabled, primed: index == 0)
+    }
+
     /// The field fades in just after the sheet; suggestions then stagger beneath it.
     private func arrive() {
         if reduceMotion {
@@ -198,9 +209,11 @@ struct SearchSheet: View {
         let loaded: [String]
         if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             loaded = await recents.recent(limit: Layout.rowLimit)
+            rowsAreRecents = true
         } else {
             loaded = await suggestions.suggestions(
                 for: query, engine: engine, enabled: suggestionsEnabled)
+            rowsAreRecents = false
         }
         guard !Task.isCancelled else { return }
         if loaded == rows {
@@ -256,6 +269,23 @@ struct SearchSheet: View {
         let store = recents
         Task {
             await store.record(query)
+        }
+    }
+}
+
+/// The sheet's surface: solid over a page, glass on the mist.
+private struct SheetSurface: ViewModifier {
+    let opensFromPage: Bool
+    let shape: UnevenRoundedRectangle
+    let namespace: Namespace.ID?
+
+    func body(content: Content) -> some View {
+        if opensFromPage {
+            content.background(shape.fill(Palette.sheetSolid))
+        } else {
+            content
+                .glassEffect(.regular, in: shape)
+                .modifier(MorphTag(namespace: namespace))
         }
     }
 }
