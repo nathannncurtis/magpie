@@ -128,6 +128,7 @@ struct SearchSheet: View {
                 namespace: morphNamespace,
                 fillSettled: fillSettled)
         )
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("search.sheet")
     }
 
