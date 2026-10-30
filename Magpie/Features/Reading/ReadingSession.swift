@@ -271,14 +271,14 @@ final class ReadingSession {
     /// web view, through the handle the reading screen's probe keeps. Both are capped: a
     /// page that misses both windows reads as nil, and a late answer is dropped. Every
     /// step is logged, because the captures are being diagnosed on the simulator.
-    func snapshot(viewport: CGSize? = nil, trigger: String) async -> Data? {
+    func snapshot(trigger: String) async -> Data? {
         let start = ContinuousClock.now
         guard failure == nil, page.url != nil else {
             SnapshotLog.event(
                 "\(trigger) skip failure=\(failure != nil) url=\(page.url?.absoluteString ?? "nil")")
             return nil
         }
-        guard let size = viewport ?? viewportSize else {
+        guard let size = viewportSize else {
             SnapshotLog.event("\(trigger) skip viewport=nil")
             return nil
         }

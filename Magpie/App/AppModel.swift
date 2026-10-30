@@ -93,13 +93,16 @@ final class AppModel {
         store.currentTab.flatMap { sessions[$0.id] }
     }
 
-    /// The tab's page session, made on demand and kept in step with the tab.
+    /// The tab's page session, made on demand and kept in step with the tab. The settle
+    /// handler is on before the session starts, and a settle it somehow misses still gets
+    /// one late look.
     func ensureSession(for tab: Tab) -> ReadingSession {
         if let session = sessions[tab.id] { return session }
         let session = ReadingSession(url: tab.url ?? Self.blankPage)
         sessions[tab.id] = session
-        sessionTasks[tab.id] = Task { await session.run() }
         session.onPageSettled = { [weak self] in self?.pageSettled(for: tab.id) }
+        sessionTasks[tab.id] = Task { await session.run() }
+        replayMissedSettle(for: tab.id, session: session)
         pruneSessions()
         return session
     }
@@ -147,12 +150,29 @@ final class AppModel {
         captureSnapshot(for: id, trigger: "settle")
     }
 
+    /// A page that settles with no one watching — the handler late, or the navigation
+    /// stream dropping the event — still gets its picture: a look soon after the session
+    /// starts, while the page is likely still on screen, and one more for a slow page;
+    /// both only whenever the tab still has none.
+    private func replayMissedSettle(for id: Tab.ID, session: ReadingSession) {
+        Task { @MainActor in
+            for delay in [Duration.milliseconds(700), .seconds(2)] {
+                try? await Task.sleep(for: delay)
+                guard
+                    !Task.isCancelled, sessions[id] === session,
+                    let tab = store.tabs.first(where: { $0.id == id }), tab.snapshot == nil
+                else { return }
+                captureSnapshot(for: id, trigger: "late")
+            }
+        }
+    }
+
     /// The page's picture onto its tab, whenever it answers.
-    private func captureSnapshot(for id: Tab.ID, viewport: CGSize? = nil, trigger: String) {
+    private func captureSnapshot(for id: Tab.ID, trigger: String) {
         guard let session = sessions[id] else { return }
         snapshotTasks[id]?.cancel()
         snapshotTasks[id] = Task { @MainActor in
-            let data = await session.snapshot(viewport: viewport, trigger: trigger)
+            let data = await session.snapshot(trigger: trigger)
             guard !Task.isCancelled, let data else { return }
             store.setSnapshot(data, for: id)
             SnapshotLog.event("\(trigger) stored \(data.count)B tab=\(id.uuidString.prefix(4))")
@@ -188,21 +208,9 @@ final class AppModel {
         surface = .reading(searchOpen: false)
     }
 
-    /// The tab count: the page folds into its card. The surface moves at once; a tab that
-    /// still has no picture gets a best-effort one alongside, ungated.
-    func openTabs(viewport: CGSize) {
-        if let tab = store.currentTab, let session = sessions[tab.id], tab.snapshot == nil {
-            Task { @MainActor in
-                guard let data = await session.snapshot(viewport: viewport, trigger: "leave")
-                else { return }
-                store.setSnapshot(data, for: tab.id)
-                SnapshotLog.event("leave stored \(data.count)B tab=\(tab.id.uuidString.prefix(4))")
-            }
-        }
-        surface = .tabs
-    }
-
-    /// The tabs screen.
+    /// The tabs screen. The page folds into its card carrying the picture its settle
+    /// captured; capturing on the way out is worthless — by the time it runs, the page is
+    /// off-window and its renderer never answers.
     func showTabs() {
         surface = .tabs
     }
