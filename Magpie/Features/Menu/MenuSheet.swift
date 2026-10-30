@@ -382,7 +382,7 @@ private struct MenuSurface: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .background(shape.fill(Palette.menuSheetFill).opacity(fillSettled ? 1 : 0))
+            .background(shape.fill(Palette.sheetSolid).opacity(fillSettled ? 1 : 0))
             .glassEffect(.regular, in: shape)
             .modifier(MorphTag(namespace: namespace))
     }

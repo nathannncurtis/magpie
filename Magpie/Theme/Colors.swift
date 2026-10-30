@@ -182,9 +182,6 @@ enum Palette {
 
     // MARK: Menu
 
-    /// The open menu's fill, near solid once the bar has grown into it.
-    static let menuSheetFill = dynamic(
-        light: 0xF8F7F4, lightOpacity: 0.9, dark: 0x1A1B1F, darkOpacity: 0.92)
     /// A menu tile's fill.
     static let menuTile = dynamic(
         light: 0xFFFFFF, lightOpacity: 0.5, dark: 0xFFFFFF, darkOpacity: 0.06)
