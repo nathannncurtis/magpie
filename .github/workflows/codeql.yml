@@ -80,16 +80,19 @@ jobs:
         include: ${{ fromJSON(needs.changes.outputs.matrix) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Project generation runs before CodeQL init: init puts the shell under its tracer, and Homebrew refuses to
+      # install from there.
       - if: matrix.language == 'swift'
-        run: sudo xcode-select -s /Applications/Xcode_27.1.app
+        run: |
+          sudo xcode-select -s /Applications/Xcode_27.1.app
+          command -v xcodegen >/dev/null || brew install xcodegen
+          xcodegen generate
       - uses: github/codeql-action/init@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
       - if: matrix.language == 'swift'
         run: |
-          command -v xcodegen >/dev/null || brew install xcodegen
-          xcodegen generate
           xcodebuild build -project Magpie.xcodeproj -scheme Magpie -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath build CODE_SIGNING_ALLOWED=NO
       - uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
