@@ -83,6 +83,7 @@ struct SkimPageScreen: View {
                     ForEach(Array(page.sections.enumerated()), id: \.element.id) { index, section in
                         SkimSectionRow(section: section, sources: page.sources) { citation in
                             withAnimation(Springs.settle.animation) {
+                                proxy.scrollTo(Self.sourcesAnchor, anchor: .center)
                                 proxy.scrollTo(Self.sourceAnchor(citation), anchor: .center)
                             }
                         }
@@ -143,6 +144,7 @@ struct SkimPageScreen: View {
                 .padding(.top, Layout.sourcesTop)
                 .padding(.bottom, Layout.sourcesBottom)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .id(Self.sourcesAnchor)
                 .modifier(Arrived(shown: step >= sourcesStep))
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: Layout.cardGap) {
@@ -226,6 +228,11 @@ struct SkimPageScreen: View {
     static func sourceAnchor(_ number: Int) -> String {
         "skim.source.\(number)"
     }
+
+    /// The strip the citation dots scroll to: its own anchor for the page's
+    /// vertical scroll, beside the card's anchor for the strip's horizontal
+    /// one, so a tapped citation lands its card on screen on both axes.
+    static let sourcesAnchor = "skim.sources"
 }
 
 /// One piece of the page arriving: fading in, rising 8 pt — or dropping in, for

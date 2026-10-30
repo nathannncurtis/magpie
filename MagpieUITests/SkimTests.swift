@@ -67,9 +67,13 @@ final class SkimTests: XCTestCase {
 
         // A citation chip scrolls to its source card.
         app.buttons["Source 3"].firstMatch.tap()
-        Thread.sleep(forTimeInterval: 1)
         let third = element("skim.source.3")
-        land("page-third-source") { third.exists && third.isHittable }
+        land("page-third-source") {
+            let landed = NSPredicate(format: "hittable == true")
+            return XCTWaiter().wait(
+                for: [XCTNSPredicateExpectation(predicate: landed, object: third)], timeout: 8
+            ) == .completed
+        }
     }
 
     // MARK: Failed
