@@ -41,6 +41,11 @@ final class MenuTests: XCTestCase {
         let address = app.buttons["bar.url"]
         land("reading") { address.waitForExistence(timeout: 20) }
 
+        // The page's own content, painted behind whatever opens over it.
+        let heading = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label CONTAINS %@", "/page")).firstMatch
+        land("page-painted") { heading.waitForExistence(timeout: 20) }
+
         // •••: the bar grows into the menu, the bar row pinned at its base.
         let menuButton = app.buttons["bar.menu"]
         land("menu-button") { menuButton.waitForExistence(timeout: 10) }
