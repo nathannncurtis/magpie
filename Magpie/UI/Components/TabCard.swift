@@ -2,14 +2,17 @@ import SwiftUI
 import UIKit
 
 /// One card in the tab stack: the page snapshot at 62% of the screen's scale, in a
-/// 5 pt white ring with an outer hairline and the soft shadow. The size comes from the
-/// stack; the card only fills what it is given.
+/// 5 pt white ring with an outer hairline and the soft shadow. The stack names the size;
+/// the picture fills it from the top, cropped to the card's rounded shape — a fill-sized
+/// image left to size itself would report its own, larger bounds and run under the
+/// neighbours.
 ///
 /// A `namespace` wires the card into the page ↔ card transition: both geometry effects
 /// are keyed by the tab id, so the reading screen can match against it.
 struct TabCard: View {
     let tab: Tab
     var snapshot: Data?
+    var size: CGSize
     var namespace: Namespace.ID?
 
     private enum CardMetrics {
@@ -24,6 +27,7 @@ struct TabCard: View {
     var body: some View {
         matched(
             content
+                .frame(width: size.width, height: size.height, alignment: .top)
                 .clipShape(RoundedRectangle(cornerRadius: Metrics.Radius.tabCard, style: .continuous))
                 .shadow(
                     color: shadowColor,
@@ -102,15 +106,18 @@ struct TabCard: View {
         UIColor.systemTeal.setFill()
         context.fill(CGRect(origin: .zero, size: CGSize(width: 240, height: 500)))
     }
-    TabCard(tab: Tab(title: "The web, read slowly", lastActive: .now), snapshot: snapshot)
-        .frame(width: 240, height: 500)
-        .padding(40)
+    TabCard(
+        tab: Tab(title: "The web, read slowly", lastActive: .now),
+        snapshot: snapshot,
+        size: CGSize(width: 240, height: 500)
+    )
+    .padding(40)
 }
 
 #Preview("Placeholder") {
     TabCard(
-        tab: Tab(url: URL(string: "https://en.wikipedia.org/wiki/Carbon_steel"), lastActive: .now)
+        tab: Tab(url: URL(string: "https://en.wikipedia.org/wiki/Carbon_steel"), lastActive: .now),
+        size: CGSize(width: 240, height: 500)
     )
-    .frame(width: 240, height: 500)
     .padding(40)
 }

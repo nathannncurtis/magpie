@@ -59,7 +59,9 @@ struct ReadingScreen: View {
             .onGeometryChange(for: CGSize.self) { proxy in
                 proxy.size
             } action: { size in
-                session?.viewportSize = size
+                guard let session, session.viewportSize != size else { return }
+                session.viewportSize = size
+                session.viewportKnown()
             }
         }
         .onChange(of: colorScheme) { _, _ in rereadPageTint() }
