@@ -22,6 +22,11 @@ shots=${MAGPIE_SHOTS_DIR:-$PWD/shots}
 mkdir -p "$shots"
 export TEST_RUNNER_MAGPIE_SHOTS_DIR="$shots"
 
+# The first UI test can start before the simulator finishes booting, and the launch then
+# times out; boot the device and wait for it first.
+xcrun simctl boot "$udid" || true
+xcrun simctl bootstatus "$udid" -b
+
 set +e
 xcodebuild test \
   -project Magpie.xcodeproj -scheme Magpie \

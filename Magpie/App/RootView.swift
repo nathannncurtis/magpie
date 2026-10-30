@@ -1,4 +1,5 @@
 import SwiftUI
+import WebKit
 
 /// The root switch (04 · the navigation map): the launch search, reading, or the tab
 /// stack. The bar and the search sheet are one glass shape, and the page and its tab
@@ -18,6 +19,23 @@ struct RootView: View {
     var body: some View {
         GeometryReader { geo in
             ZStack {
+                // Pages that still owe their tab a picture keep drawing in the window,
+                // unseen, under whatever surface shows; each leaves once its picture lands.
+                // Laid out exactly as the reading screen lays out its page, full screen
+                // under every inset, so the picture matches one taken in place.
+                ForEach(model.pagesStillDrawing, id: \.self) { session in
+                    WebView(session.page)
+                        .ignoresSafeArea()
+                        .onAppear { session.isDrawnUnseen = true }
+                        .onDisappear { session.isDrawnUnseen = false }
+                        .opacity(Self.unseen)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                        // Gone at once, never animated out: a reading screen can take
+                        // the page the same moment.
+                        .transition(.identity)
+                }
+                .animation(nil, value: model.pagesStillDrawing)
                 switch model.surface {
                 case .launchSearch:
                     LaunchScreen(
@@ -41,8 +59,16 @@ struct RootView: View {
                         onSearchSubmit: { model.navigateCurrent($0) },
                         onSearchDismiss: { model.closeSearchOverPage() },
                         onAddressTap: { model.openSearchOverPage() },
-                        onTabsTap: { model.openTabs(viewport: geo.size) }
+                        onTabsTap: { model.showTabs() },
+                        onPageSize: { model.notePageSize($0) }
                     )
+                    // The page never answers the keyboard. An address just submitted
+                    // arrives with the keys still dropping, and a first frame squeezed
+                    // by them is the wrong size to arm captures at; the sheet over the
+                    // page is the piece that rides the keys.
+                    .ignoresSafeArea(.keyboard, edges: searchOpen ? [] : .bottom)
+                    .onAppear { model.readingScreenMounted = true }
+                    .onDisappear { model.readingScreenMounted = false }
                     .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("reading.screen")
                 case .tabs:
@@ -52,6 +78,7 @@ struct RootView: View {
                         onNewTab: { model.newTabFromTabs() },
                         onClose: { model.closeTab($0) },
                         onShowArchive: { model.showArchive() },
+                        pageBackground: { id in model.sessions[id]?.pageBackground },
                         transitionNamespace: cards
                     )
                     .accessibilityElement(children: .contain)
@@ -85,6 +112,10 @@ struct RootView: View {
             }
         }
     }
+
+    /// Drawn, but not seen: WebKit keeps drawing a page that is in the window, which a
+    /// hidden or fully transparent view is not taken to be.
+    private static let unseen = 0.01
 
     private var transition: Animation? {
         reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation
