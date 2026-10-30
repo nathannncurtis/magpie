@@ -24,6 +24,9 @@ struct RootView: View {
                         engine: model.engine,
                         suggestions: model.suggestions,
                         recents: model.recents,
+                        initialText: model.searchPrefill ?? "",
+                        skimEnabled: model.skimAvailable,
+                        onSkim: { model.startSkim(query: $0) },
                         onOpen: { model.openFromLaunch($0) },
                         onDismiss: { model.dismissLaunchSearch() }
                     )
@@ -37,6 +40,8 @@ struct RootView: View {
                         engine: model.engine,
                         suggestions: model.suggestions,
                         recents: model.recents,
+                        skimEnabled: model.skimAvailable,
+                        onSkim: { model.startSkim(query: $0) },
                         chromeNamespace: chrome,
                         cardNamespace: cards,
                         onSearchSubmit: { model.navigateCurrent($0) },
@@ -68,6 +73,9 @@ struct RootView: View {
                         onOpen: { model.openBookmark($0) }
                     )
                     .accessibilityIdentifier("bookmarks.screen")
+                case .skim:
+                    SkimFlowScreen()
+                        .accessibilityIdentifier("skim.screen")
                 case nil:
                     // Nothing has started yet: the mist, while the saved tabs load.
                     MistBackground()

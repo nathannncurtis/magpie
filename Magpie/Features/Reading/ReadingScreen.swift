@@ -15,6 +15,9 @@ struct ReadingScreen: View {
     var engine: SearchEngine
     var suggestions: any SuggestionProviding
     var recents: any RecentSearchStoring
+    /// Whether the search sheet over the page shows its Skim pill.
+    var skimEnabled: Bool = true
+    var onSkim: (String) -> Void = { _ in }
     var chromeNamespace: Namespace.ID? = nil
     var cardNamespace: Namespace.ID? = nil
     var onSearchSubmit: (URL) -> Void
@@ -69,11 +72,13 @@ struct ReadingScreen: View {
         SearchSheet(
             engine: engine,
             opensFromPage: true,
+            skimEnabled: skimEnabled,
             initialText: session?.page.url?.absoluteString ?? "",
             morphNamespace: chromeNamespace,
             suggestions: suggestions,
             recents: recents,
             onOpen: onSearchSubmit,
+            onSkim: onSkim,
             onDismiss: onSearchDismiss)
     }
 

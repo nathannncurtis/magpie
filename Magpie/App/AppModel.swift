@@ -14,6 +14,8 @@ enum Surface: Equatable {
     case archive
     /// The bookmarks, over whatever screen opened it.
     case bookmarks
+    /// A Skim run: working, its finished page, or the failure that stopped it.
+    case skim
 }
 
 /// The app's own state: the tabs, the engine, the recents, and which surface is up.
@@ -38,6 +40,20 @@ final class AppModel {
     let suggestions: any SuggestionProviding
     /// Recent searches.
     let recents: any RecentSearchStoring
+    /// Whether Skim can run on this device; every Skim entry point is hidden
+    /// wherever this is false.
+    let skimAvailable: Bool
+    /// The pieces a Skim run is made of; fakes for the UI tests.
+    let skimDependencies: SkimDependencies
+    /// Saved Skim pages, brought back by their bookmarks.
+    let skimPageStore: SkimPageStore
+
+    /// The Skim run on screen, when one is going.
+    private(set) var skimRun: SkimRun?
+    /// Where to go back to when a Skim run leaves the screen.
+    private var surfaceBeforeSkim: Surface?
+    /// Text the search sheet opens with: the Skim query bar's edit.
+    var searchPrefill: String?
 
     /// Nil until `start` has loaded the saved tabs: the app shows the mist while that
     /// happens, and the restored surface lands with nothing animating.
@@ -52,13 +68,19 @@ final class AppModel {
         bookmarks: BookmarkStore = BookmarkStore(),
         engine: SearchEngine = .default,
         suggestions: any SuggestionProviding = SuggestionService(),
-        recents: any RecentSearchStoring = RecentSearches()
+        recents: any RecentSearchStoring = RecentSearches(),
+        skimPageStore: SkimPageStore = SkimPageStore(),
+        skimDependencies: SkimDependencies = .live,
+        skimAvailable: Bool = SkimAvailability.resolve().isAvailable
     ) {
         self.store = store
         self.bookmarks = bookmarks
         self.engine = engine
         self.suggestions = suggestions
         self.recents = recents
+        self.skimPageStore = skimPageStore
+        self.skimDependencies = skimDependencies
+        self.skimAvailable = skimAvailable
     }
 
     /// The app as it runs on a device: the JSON indexes in Application Support.
@@ -157,6 +179,7 @@ final class AppModel {
     func openFromLaunch(_ url: URL, now: Date = .now) {
         let tab = store.newTab(url: url, now: now)
         _ = ensureSession(for: tab)
+        searchPrefill = nil
         surface = .reading(searchOpen: false)
     }
 
@@ -203,12 +226,14 @@ final class AppModel {
 
     /// The + on the tabs screen: the launch search, which submits into a new tab.
     func newTabFromTabs() {
+        searchPrefill = nil
         surface = .launchSearch
     }
 
     /// A swipe down on the launch sheet: back to the stack, when there are tabs to show.
     func dismissLaunchSearch() {
         guard !store.tabs.isEmpty else { return }
+        searchPrefill = nil
         surface = .tabs
     }
 
@@ -221,6 +246,110 @@ final class AppModel {
         if store.tabs.isEmpty {
             surface = .launchSearch
         }
+    }
+
+    // MARK: Skim
+
+    /// A Skim pill, or a retry: read the top results for the query and build the
+    /// page, on the Skim surface.
+    func startSkim(query: String) {
+        guard
+            skimAvailable,
+            !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        else { return }
+        if case .reading(true) = surface {
+            surfaceBeforeSkim = .reading(searchOpen: false)
+        } else if surface != .skim {
+            surfaceBeforeSkim = surface
+        }
+        let run = SkimRun(query: query, engine: engine, dependencies: skimDependencies)
+        skimRun = run
+        searchPrefill = nil
+        surface = .skim
+        run.start()
+    }
+
+    /// The working screen's Cancel: back to where the Skim began.
+    func cancelSkim() {
+        skimRun?.cancel()
+        leaveSkim()
+    }
+
+    /// The query bar on a finished page: the search sheet with the query in the
+    /// field, ready to run again.
+    func editSkimQuery() {
+        guard let run = skimRun else { return }
+        let query = run.query
+        run.cancel()
+        skimRun = nil
+        surfaceBeforeSkim = nil
+        searchPrefill = query
+        surface = .launchSearch
+    }
+
+    /// A failure's way forward: the query on the engine, in a tab.
+    func showSkimSearchResults() {
+        guard let run = skimRun else { return }
+        let query = run.query
+        skimRun = nil
+        surfaceBeforeSkim = nil
+        searchPrefill = nil
+        guard let url = engine.searchURL(for: query) else { return }
+        openFromLaunch(url)
+    }
+
+    /// A failure's other way forward: the same query, read again.
+    func retrySkim() {
+        skimRun?.start()
+    }
+
+    /// The control bar's "Dig deeper": read on up to ten sources, then compose
+    /// again from all of them.
+    func skimDigDeeper() {
+        skimRun?.digDeeper()
+    }
+
+    /// A run made elsewhere: a saved page, or the UI tests' seeded run.
+    func showSkimRun(_ run: SkimRun) {
+        if case .reading(true) = surface {
+            surfaceBeforeSkim = .reading(searchOpen: false)
+        } else if surface != .skim {
+            surfaceBeforeSkim = surface
+        }
+        skimRun = run
+        searchPrefill = nil
+        surface = .skim
+    }
+
+    private func leaveSkim() {
+        let back = surfaceBeforeSkim
+        surfaceBeforeSkim = nil
+        skimRun = nil
+        searchPrefill = nil
+        if let back {
+            surface = back
+        } else {
+            coldStart()
+        }
+    }
+
+    /// The Bookmark tile's tap on a Skim page: the page saved, and its address
+    /// kept in the bookmarks as a Skim page.
+    @discardableResult
+    func bookmarkSkimPage(now: Date = .now) -> Bookmark? {
+        guard let page = skimRun?.page else { return nil }
+        let id = UUID()
+        guard
+            let address = SkimPageStore.address(forID: id),
+            skimPageStore.save(page, id: id)
+        else { return nil }
+        return bookmarks.add(
+            url: address,
+            title: page.title,
+            faviconURL: nil,
+            folder: nil,
+            kind: .skim(sourceHosts: page.sources.map(\.host)),
+            now: now)
     }
 
     // MARK: Archive and bookmarks
@@ -247,9 +376,23 @@ final class AppModel {
         surface = .bookmarks
     }
 
-    /// A tapped bookmark: a new tab, opened on the spot.
+    /// A tapped bookmark: a new tab, opened on the spot — or, for a Skim page,
+    /// the saved page back on the Skim surface.
     func openBookmark(_ url: URL, now: Date = .now) {
+        if let id = SkimPageStore.pageID(forBookmarkURL: url),
+            let page = skimPageStore.load(id: id)
+        {
+            openSkimPage(page)
+            return
+        }
         openFromLaunch(url, now: now)
+    }
+
+    /// A saved Skim page, back on the screen without reading its sources again.
+    private func openSkimPage(_ page: SkimPage) {
+        let run = SkimRun(query: page.query, engine: engine, dependencies: skimDependencies)
+        run.land(.finished(page))
+        showSkimRun(run)
     }
 
     /// The Bookmark tile's tap: the page the current tab shows, saved.

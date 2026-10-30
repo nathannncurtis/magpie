@@ -8,6 +8,11 @@ struct LaunchScreen: View {
     let engine: SearchEngine
     let suggestions: any SuggestionProviding
     let recents: any RecentSearchStoring
+    /// Text the field opens with: the Skim query bar's edit.
+    var initialText: String = ""
+    /// Whether the search sheet shows its Skim pill.
+    var skimEnabled: Bool = true
+    var onSkim: (String) -> Void = { _ in }
     let onOpen: (URL) -> Void
     let onDismiss: () -> Void
 
@@ -23,9 +28,12 @@ struct LaunchScreen: View {
                 .ignoresSafeArea()
             SearchSheet(
                 engine: engine,
+                skimEnabled: skimEnabled,
+                initialText: initialText,
                 suggestions: suggestions,
                 recents: recents,
                 onOpen: onOpen,
+                onSkim: onSkim,
                 onDismiss: onDismiss
             )
             .offset(y: arrived ? 0 : Self.riseDistance)
