@@ -63,6 +63,13 @@ final class ReadingSession {
     /// The viewport the page is shown at, kept by the reading screen for captures.
     var viewportSize: CGSize?
 
+    /// The reading screen has geometry for this session: a page that settled with no
+    /// viewport to capture at settles again now, capture included.
+    func viewportKnown() {
+        guard failure == nil, page.url != nil else { return }
+        onPageSettled?()
+    }
+
     /// The web view SwiftUI built for this page, kept by the reading screen's probe.
     /// Weak, because the hierarchy owns the view.
     @ObservationIgnored var webView: WKWebView?

@@ -93,16 +93,17 @@ final class AppModel {
         store.currentTab.flatMap { sessions[$0.id] }
     }
 
-    /// The tab's page session, made on demand and kept in step with the tab. The settle
-    /// handler is on before the session starts, and a settle it somehow misses still gets
-    /// one late look.
+    /// The tab's page session, made on demand and kept in step with the tab. A reused
+    /// session whose page is already loaded settles again, so it still gets its picture.
     func ensureSession(for tab: Tab) -> ReadingSession {
-        if let session = sessions[tab.id] { return session }
+        if let session = sessions[tab.id] {
+            refireSettleIfPictureless(tab, session: session)
+            return session
+        }
         let session = ReadingSession(url: tab.url ?? Self.blankPage)
         sessions[tab.id] = session
-        session.onPageSettled = { [weak self] in self?.pageSettled(for: tab.id) }
         sessionTasks[tab.id] = Task { await session.run() }
-        replayMissedSettle(for: tab.id, session: session)
+        session.onPageSettled = { [weak self] in self?.pageSettled(for: tab.id) }
         pruneSessions()
         return session
     }
@@ -146,25 +147,20 @@ final class AppModel {
     /// A page settled: the tab takes what the page now shows. The capture is debounced — a
     /// settle that lands while one is still in flight replaces it.
     private func pageSettled(for id: Tab.ID) {
+        SnapshotLog.event("settle fired tab=\(id.uuidString.prefix(4))")
         syncTab(for: id)
         captureSnapshot(for: id, trigger: "settle")
     }
 
-    /// A page that settles with no one watching — the handler late, or the navigation
-    /// stream dropping the event — still gets its picture: a look soon after the session
-    /// starts, while the page is likely still on screen, and one more for a slow page;
-    /// both only whenever the tab still has none.
-    private func replayMissedSettle(for id: Tab.ID, session: ReadingSession) {
-        Task { @MainActor in
-            for delay in [Duration.milliseconds(700), .seconds(2)] {
-                try? await Task.sleep(for: delay)
-                guard
-                    !Task.isCancelled, sessions[id] === session,
-                    let tab = store.tabs.first(where: { $0.id == id }), tab.snapshot == nil
-                else { return }
-                captureSnapshot(for: id, trigger: "late")
-            }
-        }
+    /// A reused session whose page is already loaded but has no picture — a tab switched
+    /// back to, or one restored — settles again, with its viewport already known.
+    private func refireSettleIfPictureless(_ tab: Tab, session: ReadingSession) {
+        guard
+            session.page.url != nil,
+            session.failure == nil,
+            store.tabs.first(where: { $0.id == tab.id })?.snapshot == nil
+        else { return }
+        pageSettled(for: tab.id)
     }
 
     /// The page's picture onto its tab, whenever it answers.
