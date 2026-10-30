@@ -6,7 +6,7 @@ Status: draft 1, 2026-10-30. Sources:
 
 | What | Where |
 |---|---|
-| Design board: screens light + dark, edge states, Skim photo tiers, motion, brand, app icon | `docs/design/` (coming) |
+| Design board: screens light + dark, edge states, Skim photo tiers, motion, brand, app icon | `docs/design/board.html` |
 | Mark source | `../design/assets/mark-6d.svg` |
 | App icon layers | `../design/assets/icon/` |
 
