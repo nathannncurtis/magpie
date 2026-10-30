@@ -94,7 +94,7 @@ jobs:
       - if: matrix.language == 'swift'
         run: |
           xcodebuild build -project Magpie.xcodeproj -scheme Magpie -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO ARCHS=arm64 ONLY_ACTIVE_ARCH=YES
       - uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
         with:
           category: /language:${{ matrix.language }}
