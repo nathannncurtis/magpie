@@ -157,17 +157,17 @@ struct BookmarksScreen: View {
                 .listRow()
         }
         ForEach(Array(store.folders.enumerated()), id: \.element.id) { index, folder in
-            Button(action: { folderTapped(folder) }) {
-                FolderRow(
-                    name: folder.name, tint: folder.tint,
-                    count: store.count(inFolder: folder.id)
-                )
-                .overlay(alignment: .top) {
-                    separator(visible: index > 0)
-                }
-                .padding(.horizontal, Metrics.Spacing.insetList)
+            FolderRow(
+                name: folder.name, tint: folder.tint,
+                count: store.count(inFolder: folder.id)
+            )
+            .overlay(alignment: .top) {
+                separator(visible: index > 0)
             }
-            .buttonStyle(.plain)
+            .padding(.horizontal, Metrics.Spacing.insetList)
+            .contentShape(.rect)
+            .onTapGesture { folderTapped(folder) }
+            .accessibilityAddTraits(.isButton)
             .accessibilityIdentifier("bookmarks.folder.\(folder.name)")
             .listRow()
             .deleteDisabled(!editing)
@@ -210,20 +210,20 @@ struct BookmarksScreen: View {
 
     /// "New folder", at the head of the folders while editing.
     private var newFolderRow: some View {
-        Button(action: { store.addDefaultFolder() }) {
-            HStack(spacing: 12) {
-                Image(systemName: "plus")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(Palette.teal)
-                Text("New folder")
-                    .font(Typography.rowTitle)
-                    .foregroundStyle(Palette.textPrimary)
-                Spacer()
-            }
-            .padding(.vertical, 8)
-            .padding(.horizontal, Metrics.Spacing.insetList)
+        HStack(spacing: 12) {
+            Image(systemName: "plus")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundStyle(Palette.teal)
+            Text("New folder")
+                .font(Typography.rowTitle)
+                .foregroundStyle(Palette.textPrimary)
+            Spacer()
         }
-        .buttonStyle(.plain)
+        .padding(.vertical, 8)
+        .padding(.horizontal, Metrics.Spacing.insetList)
+        .contentShape(.rect)
+        .onTapGesture { store.addDefaultFolder() }
+        .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("bookmarks.newFolder")
     }
 
@@ -364,33 +364,33 @@ private struct BookmarkRow: View {
     var onOpen: () -> Void
 
     var body: some View {
-        Button(action: onOpen) {
-            Group {
-                switch bookmark.kind {
-                case .page:
-                    ListRow(
-                        title: bookmark.title,
-                        subtitle: subtitle,
-                        host: bookmark.host
-                    )
-                case .skim(let sourceHosts):
-                    SkimPageRow(
-                        title: bookmark.title,
-                        folderName: folderName,
-                        sourceHosts: sourceHosts)
-                }
+        Group {
+            switch bookmark.kind {
+            case .page:
+                ListRow(
+                    title: bookmark.title,
+                    subtitle: subtitle,
+                    host: bookmark.host
+                )
+            case .skim(let sourceHosts):
+                SkimPageRow(
+                    title: bookmark.title,
+                    folderName: folderName,
+                    sourceHosts: sourceHosts)
             }
-            .overlay(alignment: .top) {
-                if showsSeparator {
-                    Rectangle()
-                        .fill(Palette.separatorOnMist)
-                        .frame(height: 0.5)
-                        .padding(.leading, SeparatorMetrics.inset)
-                }
-            }
-            .padding(.horizontal, Metrics.Spacing.insetList)
         }
-        .buttonStyle(.plain)
+        .overlay(alignment: .top) {
+            if showsSeparator {
+                Rectangle()
+                    .fill(Palette.separatorOnMist)
+                    .frame(height: 0.5)
+                    .padding(.leading, SeparatorMetrics.inset)
+            }
+        }
+        .padding(.horizontal, Metrics.Spacing.insetList)
+        .contentShape(.rect)
+        .onTapGesture(perform: onOpen)
+        .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("bookmarks.row.\(bookmark.title)")
     }
 

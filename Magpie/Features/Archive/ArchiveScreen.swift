@@ -136,25 +136,25 @@ private struct ArchiveRow: View {
     var onRestore: () -> Void
 
     var body: some View {
-        Button(action: onRestore) {
-            ListRow(
-                title: tab.displayTitle,
-                subtitle: tab.host ?? "",
-                host: tab.host,
-                faviconData: tab.faviconData,
-                time: time
-            )
-            .overlay(alignment: .top) {
-                if showsSeparator {
-                    Rectangle()
-                        .fill(Palette.separatorOnMist)
-                        .frame(height: 0.5)
-                        .padding(.leading, SeparatorMetrics.inset)
-                }
+        ListRow(
+            title: tab.displayTitle,
+            subtitle: tab.host ?? "",
+            host: tab.host,
+            faviconData: tab.faviconData,
+            time: time
+        )
+        .overlay(alignment: .top) {
+            if showsSeparator {
+                Rectangle()
+                    .fill(Palette.separatorOnMist)
+                    .frame(height: 0.5)
+                    .padding(.leading, SeparatorMetrics.inset)
             }
-            .padding(.horizontal, Metrics.Spacing.insetList)
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, Metrics.Spacing.insetList)
+        .contentShape(.rect)
+        .onTapGesture(perform: onRestore)
+        .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("archive.row.\(tab.title)")
     }
 
