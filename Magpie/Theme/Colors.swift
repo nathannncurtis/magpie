@@ -94,6 +94,22 @@ enum Palette {
     static let searchFieldFill = dynamic(
         light: 0xFFFFFF, lightOpacity: 0.72, dark: 0x1D2023, darkOpacity: 1)
 
+    // MARK: Mods
+
+    /// The "Get" capsule's fill.
+    static let getButtonFill = dynamic(
+        light: 0xEEF0EE, dark: 0xFFFFFF, darkOpacity: 0.10)
+    /// The install-from-URL field's fill.
+    static let installURLFill = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.80, dark: 0xFFFFFF, darkOpacity: 0.08)
+    /// A sheet's grabber.
+    static let grabber = dynamic(
+        light: 0x101115, lightOpacity: 0.18, dark: 0xFFFFFF, darkOpacity: 0.25)
+    /// The featured card's sky, top of its 160-degree gradient.
+    static let featuredPreviewTop = dynamic(light: 0xEAF1FE, dark: 0x18233B)
+    /// The featured card's sky, bottom of its 160-degree gradient.
+    static let featuredPreviewBottom = dynamic(light: 0xD7E5FD, dark: 0x0F1626)
+
     // MARK: Skim pill
 
     /// The resting Skim pill's fill.
