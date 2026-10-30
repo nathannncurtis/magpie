@@ -103,8 +103,8 @@ final class SkimTests: XCTestCase {
     ) -> (XCUIApplication, ShotWriter) {
         let app = XCUIApplication()
         app.launchArguments += [
-            "-uiTesting", "-uiTestingResetStore", "-uiTestingSurface=\(surface)",
-            "-uiTestingSkim", "-AppleInterfaceStyle", appearance,
+            "-uiTesting", "-uiTestingResetStore", "-uiTestingSkipOnboarding",
+            "-uiTestingSurface=\(surface)", "-uiTestingSkim", "-AppleInterfaceStyle", appearance,
         ]
         if let skimState {
             app.launchArguments += ["-uiTestingSkimState=\(skimState)"]

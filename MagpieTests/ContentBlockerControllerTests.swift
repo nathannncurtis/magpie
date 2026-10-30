@@ -34,6 +34,8 @@ struct ContentBlockerControllerTests {
         var overallLastUpdated: Date? { nil }
 
         func listUpdates() async -> [FilterListUpdate] { [] }
+
+        func setUserLists(_ lists: [FilterList]) async {}
     }
 
     private func makeBlocker(defaults: UserDefaults? = nil) -> ContentBlocker {

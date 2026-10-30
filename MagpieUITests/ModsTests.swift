@@ -82,7 +82,10 @@ final class ModsTests: XCTestCase {
     private func launch(appearance: String, resetting: Bool = false, seeding: Bool = false) {
         app?.terminate()
         let app = XCUIApplication()
-        app.launchArguments = ["-uiTesting", "-uiTestingSurface=mods", "-AppleInterfaceStyle", appearance]
+        app.launchArguments = [
+            "-uiTesting", "-uiTestingSkipOnboarding", "-uiTestingSurface=mods",
+            "-AppleInterfaceStyle", appearance,
+        ]
         if resetting {
             app.launchArguments.append("-uiTestingResetStore")
         }

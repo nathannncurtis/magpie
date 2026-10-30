@@ -23,16 +23,13 @@ enum UITestEnvironment {
         ProcessInfo.processInfo.arguments.contains("-uiTestingSkipOnboarding")
     }
 
-    /// Whether the app opens on Settings instead of the browser.
-    static var startsAtSettings: Bool {
-        ProcessInfo.processInfo.arguments.contains("-uiTestingSurface=settings")
-    }
-
     /// A screen the UI tests open directly while no flow reaches it: the archive, the
-    /// bookmarks, the mods, or one of the Skim screens, through `-uiTestingSurface=<name>`.
+    /// bookmarks, Settings, the mods, or one of the Skim screens, through
+    /// `-uiTestingSurface=<name>`.
     enum Surface: String {
         case archive
         case bookmarks
+        case settings
         case mods
         case skimWorking
         case skimPage
@@ -104,6 +101,8 @@ enum UITestEnvironment {
         case .bookmarks:
             AppModel.seedLists(on: model, empty: listsEmpty)
             model.showBookmarks()
+        case .settings:
+            model.showSettings()
         case .mods:
             model.showMods()
         case .skimWorking:
@@ -256,7 +255,7 @@ extension AppModel {
         switch surface {
         case .archive: seedArchive(in: model.store, now: .now)
         case .bookmarks: seedBookmarks(in: model.bookmarks, now: .now)
-        case .mods, .skimWorking, .skimPage, .skimFailed: break
+        case .settings, .mods, .skimWorking, .skimPage, .skimFailed: break
         }
     }
 

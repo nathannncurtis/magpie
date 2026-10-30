@@ -76,10 +76,6 @@ final class AppModel {
     /// Settings, once the menu exists; the UI tests open it directly meanwhile.
     var showsSettings = false
 
-    /// The surface to open on instead, once `start` has run: how a UI test enters the app
-    /// somewhere other than a cold start.
-    var launchSurfaceOverride: Surface?
-
     /// The live page sessions, by tab.
     private(set) var sessions: [Tab.ID: ReadingSession] = [:]
     private var sessionTasks: [Tab.ID: Task<Void, Never>] = [:]
@@ -149,9 +145,6 @@ final class AppModel {
         await refreshBlocking()
         await modDirectory.refresh()
         coldStart()
-        if let launchSurfaceOverride {
-            surface = launchSurfaceOverride
-        }
     }
 
     /// A cold start: restore the last tab, with nothing animating, or open on the launch

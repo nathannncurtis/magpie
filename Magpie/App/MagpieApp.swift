@@ -14,7 +14,6 @@ struct MagpieApp: App {
                 .task {
                     if UITestEnvironment.isUITesting { UITestPageServer.shared.start() }
                     await model.start()
-                    if UITestEnvironment.startsAtSettings { model.showSettings() }
                     UITestEnvironment.applySurfaceOverride(to: model)
                 }
                 .onChange(of: scenePhase) { _, phase in

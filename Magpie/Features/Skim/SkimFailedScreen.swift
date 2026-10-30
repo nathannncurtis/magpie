@@ -68,6 +68,7 @@ struct SkimFailedScreen: View {
             bottomInset = $0
         }
         .ignoresSafeArea(edges: .bottom)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("skim.failed")
     }
 

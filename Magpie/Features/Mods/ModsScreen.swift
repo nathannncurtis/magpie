@@ -94,7 +94,6 @@ struct ModsScreen: View {
             Text(ModsCopy.title)
                 .font(Typography.screenTitleSmall)
                 .foregroundStyle(Palette.textPrimary)
-                .accessibilityIdentifier("mods.screen")
             Spacer()
             Button(ModsCopy.done, action: onDone)
                 .font(Typography.rowTitle)

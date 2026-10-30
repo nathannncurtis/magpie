@@ -67,6 +67,7 @@ struct SkimWorkingScreen: View {
         }
         .ignoresSafeArea(edges: .bottom)
         .onAppear { arrive() }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("skim.working")
     }
 
