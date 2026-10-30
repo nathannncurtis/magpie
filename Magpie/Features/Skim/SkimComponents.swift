@@ -141,6 +141,9 @@ struct PhotoHeader: View {
         static let largeShare: CGFloat = 1.55 / 2.55
         /// Where the block's photos start fading into the paper the title sits on.
         static let fadeFrom: Double = 0.87
+        /// Where the fade is fully paper — above the block's edge, so no tile
+        /// edge shows through the last points of the blend.
+        static let fadeEnd: Double = 0.98
     }
 
     var body: some View {
@@ -150,6 +153,7 @@ struct PhotoHeader: View {
             } else if let hero = photos.first {
                 SkimPhoto(url: hero, revealed: revealed > 0)
                     .frame(width: geo.size.width, height: geo.size.height)
+                    .clipped()
             }
         }
         .frame(height: Layout.height)
@@ -167,23 +171,28 @@ struct PhotoHeader: View {
         return HStack(alignment: .top, spacing: Layout.gap) {
             SkimPhoto(url: photos[0], revealed: revealed > 0)
                 .frame(width: large, height: size.height)
+                .clipped()
             VStack(spacing: Layout.gap) {
                 SkimPhoto(url: photos[1], revealed: revealed > 1)
                     .frame(width: small, height: stacked)
+                    .clipped()
                 SkimPhoto(url: photos[2], revealed: revealed > 2)
                     .frame(width: small, height: stacked)
+                    .clipped()
             }
         }
         .frame(width: size.width, height: size.height)
     }
 
     /// The block's bottom fading into the page's paper, so the title below reads
-    /// on paper, never across a tile edge.
+    /// on paper, never across a tile edge. Fully paper above the edge: the fill
+    /// photos are clipped to their frames, and the fade holds opaque paper
+    /// through its last stretch.
     private static var paperFade: some View {
         LinearGradient(
             stops: [
                 .init(color: Palette.skimBackground.opacity(0), location: Layout.fadeFrom),
-                .init(color: Palette.skimBackground, location: 1),
+                .init(color: Palette.skimBackground, location: Layout.fadeEnd),
             ],
             startPoint: .top,
             endPoint: .bottom
@@ -210,7 +219,6 @@ private struct SkimPhoto: View {
         }
         .opacity(revealed ? 1 : 0)
         .scaleEffect(revealed ? 1 : 1.04)
-        .clipped()
     }
 }
 
