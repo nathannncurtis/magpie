@@ -86,6 +86,9 @@ struct ModsScreen: View {
             .presentationDragIndicator(.hidden)
             .presentationBackgroundInteraction(.disabled)
         }
+        .onChange(of: showingInstallSheet) { _, showing in
+            if !showing { holdLandedCheck() }
+        }
         .onDisappear { newlyInstalled.removeAll() }
     }
 
@@ -261,8 +264,13 @@ struct ModsScreen: View {
             segment = .installed
             landedModID = id
         }
+    }
+
+    /// The check holds behind the dropping sheet long enough to be seen, then gives way
+    /// to the row's switch. Counted from the sheet's drop, not the install tap.
+    private func holdLandedCheck() {
+        guard let id = landedModID else { return }
         Task { @MainActor in
-            // The check holds behind the dropping sheet long enough to be seen.
             try? await Task.sleep(for: .seconds(2))
             if landedModID == id {
                 withAnimation(.easeInOut(duration: 0.2)) {
