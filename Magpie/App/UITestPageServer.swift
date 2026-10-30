@@ -35,14 +35,20 @@ final class UITestPageServer: @unchecked Sendable {
         let parameters = NWParameters.tcp
         parameters.allowLocalEndpointReuse = true
         guard let listener = try? NWListener(using: parameters, on: port) else {
+            SnapshotLog.event("server listener attempt=\(attempt) create failed")
             retry(gate: gate, attempt: attempt)
             return
         }
         listener.newConnectionHandler = { connection in
+            SnapshotLog.event("server connection \(connection.endpoint)")
+            connection.stateUpdateHandler = { state in
+                SnapshotLog.event("server connection state \(state)")
+            }
             connection.start(queue: self.queue)
             self.serve(connection)
         }
         listener.stateUpdateHandler = { state in
+            SnapshotLog.event("server listener attempt=\(attempt) state=\(state)")
             switch state {
             case .ready:
                 gate.open()
@@ -80,6 +86,7 @@ final class UITestPageServer: @unchecked Sendable {
         let headEnd = Data("\r\n\r\n".utf8)
         if buffer.range(of: headEnd) != nil || buffer.count > 16 * 1024 {
             let reply = self.reply(to: buffer)
+            SnapshotLog.event("server reply \(Self.route(of: buffer)) \(reply.count)B")
             connection.send(
                 content: reply,
                 completion: .contentProcessed { _ in connection.cancel() })

@@ -96,6 +96,29 @@ final class AppModel {
         store.currentTab.flatMap { sessions[$0.id] }
     }
 
+    /// Pages that still owe their tab a picture while no reading screen shows them. WebKit
+    /// stops drawing a page that is out of the window, so a tab left before its page drew
+    /// would never get one; the root keeps these in the window, unseen, until it lands.
+    /// A page can be in only one web view at a time, so the tab a reading screen shows —
+    /// up, or on its way in or out — is never kept here.
+    var pagesStillDrawing: [ReadingSession] {
+        let readingUp: Bool = {
+            if case .reading = surface { return true }
+            return readingScreenMounted
+        }()
+        let shown = readingUp ? store.currentTabID : nil
+        return store.tabs.compactMap { tab in
+            guard tab.id != shown, tab.snapshot == nil, let session = sessions[tab.id],
+                session.failure == nil
+            else { return nil }
+            return session
+        }
+    }
+
+    /// Whether a reading screen is in the hierarchy, set by the screen itself: it stays
+    /// through its leaving transition, after the surface has already moved on.
+    var readingScreenMounted = false
+
     /// The tab's page session, made on demand and kept in step with the tab. A reused
     /// session whose page is already loaded settles again, so it still gets its picture.
     func ensureSession(for tab: Tab) -> ReadingSession {
@@ -243,7 +266,11 @@ final class AppModel {
                 captureGates[id] = nil
                 return
             }
-            let outcome = await session.snapshot(trigger: trigger)
+            // A page with no reading screen is drawn unseen only while its tab has no
+            // picture; once one lands it leaves the window, and a capture of it then
+            // is laid out wrong. It may fill a missing picture, never replace one.
+            let pictureless = store.tabs.first(where: { $0.id == id })?.snapshot == nil
+            let outcome = await session.snapshot(trigger: trigger, offScreenAllowed: pictureless)
             gate = captureGates[id] ?? CaptureGate()
             gate.isRunning = false
             if let rerun = gate.rerunTrigger {

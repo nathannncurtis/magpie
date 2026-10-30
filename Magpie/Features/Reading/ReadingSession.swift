@@ -81,6 +81,15 @@ final class ReadingSession {
 
     /// The standing wait for the page's first layout, while a capture is held back.
     @ObservationIgnored private var layoutWatch: Task<Void, Never>?
+    /// Whether the root is drawing this page unseen, in the window, for its picture. A
+    /// page with no view anywhere is laid out wrong, and is never captured.
+    @ObservationIgnored var isDrawnUnseen = false {
+        didSet {
+            // Back in the window with its load done: a held picture can be taken now.
+            guard isDrawnUnseen, !oldValue, hasSettled, !page.isLoading else { return }
+            settleWithLateBeat()
+        }
+    }
     /// The standing wait for the current load to be done, whatever the event streams say.
     @ObservationIgnored private var loadWatch: Task<Void, Never>?
 
@@ -99,7 +108,11 @@ final class ReadingSession {
     /// stored, never here: running page JavaScript at commit time sits before the first
     /// paint and has been seen to stall the load.
     func captureOpportunity() {
-        guard viewportSize != nil, failure == nil, page.url != nil else { return }
+        // A page still loading shows the last page, or nothing: its picture waits for the
+        // load to be done, which the load watch reports.
+        guard viewportSize != nil, failure == nil, page.url != nil, !page.isLoading else {
+            return
+        }
         guard let found = onScreenWebView() else {
             // No view at all: the page is off screen, and nothing can land there. Its
             // settle comes from the load's own end, watched apart from the screen.
@@ -435,7 +448,7 @@ final class ReadingSession {
     /// layout yet is not ready, held for the layout watch rather than spent on the retry
     /// ladder. Every step is logged, because the captures are being diagnosed on the
     /// simulator.
-    func snapshot(trigger: String) async -> CaptureOutcome {
+    func snapshot(trigger: String, offScreenAllowed: Bool = true) async -> CaptureOutcome {
         let start = ContinuousClock.now
         guard failure == nil, page.url != nil else {
             SnapshotLog.event(
@@ -445,6 +458,12 @@ final class ReadingSession {
         guard let size = viewportSize else {
             SnapshotLog.event("\(trigger) skip viewport=nil")
             return .miss
+        }
+        // A capture taken mid-load is a picture of a blank page: hold it for the load's
+        // end, which settles again.
+        guard !page.isLoading else {
+            SnapshotLog.event("\(trigger) notReady loading progress=\(page.estimatedProgress)")
+            return .notReady
         }
         // The region is the remembered viewport; the view's bounds and its scroll view's
         // content size are what the page actually laid out at — logged together so a
@@ -468,9 +487,18 @@ final class ReadingSession {
                     + " content=\(Int(scroll.contentSize.width))x\(Int(scroll.contentSize.height))"
             )
         } else {
-            guard hasSettled else {
-                SnapshotLog.event("\(trigger) notReady view=none")
+            guard hasSettled, offScreenAllowed, isDrawnUnseen else {
+                SnapshotLog.event(
+                    "\(trigger) notReady view=none settled=\(hasSettled) "
+                        + "allowed=\(offScreenAllowed) drawn=\(isDrawnUnseen)")
                 return .notReady
+            }
+            // Drawn unseen, the page can still be laid out at the width it had on its
+            // way out — the card's, mid-transition. Its picture waits until the page
+            // has laid itself out at the screen's own width again.
+            guard await layoutWidthMatches(size.width) else {
+                SnapshotLog.event("\(trigger) notReady width settling")
+                return .miss
             }
             SnapshotLog.event(
                 "\(trigger) capture region=\(Int(size.width))x\(Int(size.height)) view=none settled")
@@ -527,6 +555,28 @@ final class ReadingSession {
             "\(trigger) view[\(found.source)] \(outcome) \(Self.ms(since: viewStart))ms")
         return data.map(CaptureOutcome.stored) ?? .miss
     }
+
+    /// Waits, briefly, for the page's own layout width to be the given width.
+    private func layoutWidthMatches(_ width: CGFloat) async -> Bool {
+        let deadline = ContinuousClock.now + Self.widthWait
+        while ContinuousClock.now < deadline {
+            if let result = try? await page.callJavaScript(
+                "return window.innerWidth", contentWorld: .defaultClient),
+                let inner = (result as? NSNumber)?.doubleValue,
+                abs(inner - Double(width)) < 1
+            {
+                // The layout is right; the drawing lags it. Let the page repaint at the
+                // new width before its picture is taken.
+                try? await Task.sleep(for: Self.repaintWait)
+                return true
+            }
+            try? await Task.sleep(for: .milliseconds(150))
+        }
+        return false
+    }
+
+    private static let widthWait: Duration = .milliseconds(2_000)
+    private static let repaintWait: Duration = .milliseconds(500)
 
     /// The web view's own snapshot, through its completion-based API.
     private static func viewSnapshot(
@@ -597,11 +647,15 @@ final class ReadingSession {
     private static let loadWatchLimit: Duration = .seconds(20)
 }
 
-extension ReadingSession: Equatable {
+extension ReadingSession: Hashable {
 
     /// Identity: the screen's change triggers compare sessions by who they are.
     nonisolated static func == (lhs: ReadingSession, rhs: ReadingSession) -> Bool {
         lhs === rhs
+    }
+
+    nonisolated func hash(into hasher: inout Hasher) {
+        hasher.combine(ObjectIdentifier(self))
     }
 }
 
