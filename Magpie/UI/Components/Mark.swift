@@ -115,7 +115,7 @@ private struct MarkBrushShape: Shape {
 }
 
 /// The sheen bead, scaled with the brush.
-private struct MarkBeadShape: Shape {
+struct MarkBeadShape: Shape {
     func path(in rect: CGRect) -> Path {
         let transform = MarkGeometry.transform(into: rect)
         let center = CGPoint(x: MarkPath.beadCenter.x, y: MarkPath.beadCenter.y)

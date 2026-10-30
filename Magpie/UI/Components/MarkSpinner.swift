@@ -15,19 +15,6 @@ struct MarkSpinner: View {
         static let pause: TimeInterval = 0.25
     }
 
-    /// The brush stroke's width in the artwork's own units: 170 units of the
-    /// foundations centreline, in the artwork's 512-unit space.
-    private static let strokeWidth = 170.0 * MarkPath.units / 600
-
-    /// Where the bead sits within the drawn mark, in unit coordinates, so its
-    /// drop scales about its own centre.
-    private static let beadAnchor: UnitPoint = {
-        let bounds = MarkGeometry.drawnBounds
-        return UnitPoint(
-            x: (MarkPath.beadCenter.x - bounds.minX) / bounds.width,
-            y: (MarkPath.beadCenter.y - bounds.minY) / bounds.height)
-    }()
-
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var trim: CGFloat = 0
     @State private var beadDropped = false
@@ -36,10 +23,10 @@ struct MarkSpinner: View {
     var body: some View {
         ZStack {
             Mark(size: size, style: .strokeOnly)
-                .mask(RevealStroke(progress: trim, strokeWidth: Self.strokeWidth))
-            SpinnerBead()
+                .mask(RevealStroke(progress: trim, strokeWidth: MarkDraw.strokeWidth))
+            MarkBeadShape()
                 .fill(Palette.sheen)
-                .scaleEffect(beadDropped ? 1 : 0.001, anchor: Self.beadAnchor)
+                .scaleEffect(beadDropped ? 1 : 0.001, anchor: MarkDraw.beadAnchor)
                 .opacity(beadDropped ? 1 : 0)
         }
         .frame(width: size, height: size)
@@ -84,9 +71,27 @@ struct MarkSpinner: View {
     }
 }
 
+/// The numbers a drawing mark shares, so the spinner and the launch intro draw the same
+/// one.
+enum MarkDraw {
+
+    /// The brush stroke's width in the artwork's own units: 170 units of the
+    /// foundations centreline, in the artwork's 512-unit space.
+    static let strokeWidth = 170.0 * MarkPath.units / 600
+
+    /// Where the bead sits within the drawn mark, in unit coordinates, so its
+    /// drop scales about its own centre.
+    static let beadAnchor: UnitPoint = {
+        let bounds = MarkGeometry.drawnBounds
+        return UnitPoint(
+            x: (MarkPath.beadCenter.x - bounds.minX) / bounds.width,
+            y: (MarkPath.beadCenter.y - bounds.minY) / bounds.height)
+    }()
+}
+
 /// The centreline as a round-capped stroke, trimmed to how far the mark has
 /// drawn; the mask that reveals the brush.
-private struct RevealStroke: Shape {
+struct RevealStroke: Shape {
 
     var progress: CGFloat
     var strokeWidth: Double
@@ -98,21 +103,6 @@ private struct RevealStroke: Shape {
             .trimmedPath(from: 0, to: min(max(progress, 0.001), 1))
         return line.strokedPath(
             StrokeStyle(lineWidth: strokeWidth * transform.a, lineCap: .round))
-    }
-}
-
-/// The sheen bead, scaled with the brush.
-private struct SpinnerBead: Shape {
-
-    func path(in rect: CGRect) -> Path {
-        let transform = MarkGeometry.transform(into: rect)
-        let center = CGPoint(x: MarkPath.beadCenter.x, y: MarkPath.beadCenter.y)
-            .applying(transform)
-        let radius = MarkPath.beadRadius * transform.a
-        return Path(
-            ellipseIn: CGRect(
-                x: center.x - radius, y: center.y - radius,
-                width: radius * 2, height: radius * 2))
     }
 }
 
