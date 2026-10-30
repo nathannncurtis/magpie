@@ -49,16 +49,23 @@ final class ReadingSession {
     private(set) var failure: PageLoadFailure?
     /// The page's own background, when it sets one and declares no theme colour.
     private(set) var pageBackground: Color?
+    /// The site's own icon, when the page declares one.
+    private(set) var pageIconURL: URL?
     /// Whether the network path is up.
     private(set) var isOnline = true
 
     let page = WebPage()
+
+    /// Called whenever the page settles or moves, so the tab can take what it now shows.
+    var onPageSettled: (@MainActor () -> Void)?
 
     private let initialURL: URL
     /// The URL the session last asked to load. Its host is what a failure names, so a
     /// failure always has one even when the page never got far enough to have a URL.
     private(set) var requestedURL: URL?
     private var loadTask: Task<Void, Never>?
+    /// The site the icon link was last read for.
+    private var iconHost: String?
 
     private let monitor = NWPathMonitor()
     private let monitorQueue = DispatchQueue(label: "com.magpiebrowser.reading.path")
@@ -106,6 +113,16 @@ final class ReadingSession {
         !page.backForwardList.backList.isEmpty
     }
 
+    /// The site's icon link, for the tab's card and labels. Falls back to the touch icon
+    /// a page declares for elsewhere; "" when the page declares none.
+    private static let pageIconScript = #"""
+        (() => {
+            const icon = document.querySelector("link[rel~='icon']")
+                || document.querySelector("link[rel='apple-touch-icon']");
+            return icon ? icon.href : "";
+        })()
+        """#
+
     /// Starts the session: the first load, then the standing watch on navigation events.
     func run() async {
         open(initialURL)
@@ -117,6 +134,8 @@ final class ReadingSession {
                     }
                     if event == .finished {
                         await refreshPageBackground()
+                        await readPageIcon()
+                        settle()
                     }
                 }
                 return
@@ -128,6 +147,17 @@ final class ReadingSession {
                 if case WebPage.NavigationError.failedProvisionalNavigation = error { continue }
                 return
             }
+        }
+    }
+
+    /// Tells the owner the page settled. A title can land after the event, so it settles
+    /// once more a beat later.
+    private func settle() {
+        onPageSettled?()
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(800))
+            guard !Task.isCancelled else { return }
+            self?.onPageSettled?()
         }
     }
 
@@ -209,5 +239,28 @@ final class ReadingSession {
             let text = result as? String
         else { return }
         pageBackground = PageBackgroundColor.parse(text)
+    }
+
+    /// Reads the site's icon link from the page once per site, so the tab's card and
+    /// labels can show it.
+    private func readPageIcon() async {
+        guard let host = page.url?.host(), host != iconHost else { return }
+        iconHost = host
+        guard
+            let result = try? await page.callJavaScript(
+                Self.pageIconScript, contentWorld: .defaultClient),
+            let href = result as? String,
+            let url = URL(string: href), url.scheme != nil
+        else { return }
+        pageIconURL = url
+    }
+
+    /// The page as an image: what the tab's card shows while the page itself is away.
+    func snapshot(viewport: CGSize) async -> Data? {
+        guard failure == nil, page.url != nil else { return nil }
+        let region = WebPage.ExportedContentConfiguration.Region.rect(
+            CGRect(origin: .zero, size: viewport))
+        return try? await page.exported(
+            as: .image(region: region, allowTransparentBackground: false))
     }
 }

@@ -2,18 +2,27 @@ import SwiftUI
 import WebKit
 
 /// 02 · Reading: a full-bleed web view under the status bar with the ReadingBar
-/// floating at the bottom. The bar takes the page's tint and slims on scroll.
+/// floating at the bottom. The bar takes the page's tint and slims on scroll; the URL
+/// pill opens the search sheet over the page, growing from the bar as one glass shape
+/// (05 · The bar into the sheet), and the page is one view with its tab card (05 · The
+/// page into its card).
 struct ReadingScreen: View {
 
+    let session: ReadingSession?
+    let tabID: Tab.ID?
     var tabCount: Int
-    var onBack: () -> Void
-    var onAddressTap: () -> Void
-    var onTabsTap: () -> Void
-    var onMenuTap: () -> Void
+    var isSearchOpen: Bool
+    var engine: SearchEngine
+    var suggestions: any SuggestionProviding
+    var recents: any RecentSearchStoring
+    var chromeNamespace: Namespace.ID? = nil
+    var cardNamespace: Namespace.ID? = nil
+    var onSearchSubmit: (URL) -> Void
+    var onSearchDismiss: () -> Void
+    var onTabsTap: () -> Void = {}
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
-    @State private var session: ReadingSession
     @State private var collapse: CGFloat = 0
     @State private var chrome = ChromeCollapse()
     @State private var snapTask: Task<Void, Never>?
@@ -29,22 +38,6 @@ struct ReadingScreen: View {
     /// The opacity page tints take through the glass (02 · Glass).
     private static let pageTintOpacity = 0.55
 
-    init(
-        url: URL,
-        tabCount: Int = 1,
-        onBack: @escaping () -> Void = {},
-        onAddressTap: @escaping () -> Void = {},
-        onTabsTap: @escaping () -> Void = {},
-        onMenuTap: @escaping () -> Void = {}
-    ) {
-        self.tabCount = tabCount
-        self.onBack = onBack
-        self.onAddressTap = onAddressTap
-        self.onTabsTap = onTabsTap
-        self.onMenuTap = onMenuTap
-        _session = State(initialValue: ReadingSession(url: url))
-    }
-
     var body: some View {
         GeometryReader { geo in
             let bottomEdge =
@@ -53,31 +46,16 @@ struct ReadingScreen: View {
             ZStack(alignment: .bottom) {
                 pageArea
                 GlassEffectContainer {
-                    ReadingBar(
-                        host: session.failure?.host ?? HostFormatter.host(for: session.page.url),
-                        tabCount: tabCount,
-                        canGoBack: session.canGoBack,
-                        isSlim: collapse >= 1,
-                        collapse: collapse,
-                        isMenuOpen: false,
-                        showsLock: session.failure != nil,
-                        tint: barTint,
-                        onBack: {
-                            session.goBack()
-                            onBack()
-                        },
-                        onAddressTap: {
-                            expandBar()
-                            onAddressTap()
-                        },
-                        onTabsTap: onTabsTap,
-                        onMenuTap: onMenuTap)
+                    if isSearchOpen {
+                        searchSheet
+                    } else {
+                        bar
+                            .padding(.bottom, bottomEdge)
+                            .ignoresSafeArea(edges: .bottom)
+                    }
                 }
-                .padding(.bottom, bottomEdge)
             }
-            .ignoresSafeArea(edges: .bottom)
         }
-        .task { await session.run() }
         .onChange(of: colorScheme) { _, _ in rereadPageTint() }
         .onDisappear {
             snapTask?.cancel()
@@ -85,28 +63,61 @@ struct ReadingScreen: View {
         }
     }
 
-    /// The page, or Magpie's own page when it can't load.
+    /// The search sheet over the page, prefilled with the page's address.
+    private var searchSheet: some View {
+        SearchSheet(
+            engine: engine,
+            opensFromPage: true,
+            initialText: session?.page.url?.absoluteString ?? "",
+            morphNamespace: chromeNamespace,
+            suggestions: suggestions,
+            recents: recents,
+            onOpen: onSearchSubmit,
+            onDismiss: onSearchDismiss)
+    }
+
+    private var bar: some View {
+        ReadingBar(
+            host: session?.failure?.host ?? HostFormatter.host(for: session?.page.url),
+            tabCount: tabCount,
+            canGoBack: session?.canGoBack ?? false,
+            isSlim: collapse >= 1,
+            collapse: collapse,
+            showsLock: session?.failure != nil,
+            tint: barTint,
+            onBack: { session?.goBack() },
+            onAddressTap: { expandBar() },
+            onTabsTap: onTabsTap,
+            onMenuTap: {})
+    }
+
+    /// The page, or Magpie's own page when it can't load — one view with its tab card.
     @ViewBuilder
     private var pageArea: some View {
-        if let failure = session.failure {
-            PageLoadFailureView(failure: failure) { session.retry() }
-                .ignoresSafeArea()
+        if let session {
+            Group {
+                if let failure = session.failure {
+                    PageLoadFailureView(failure: failure) { session.retry() }
+                        .ignoresSafeArea()
+                } else {
+                    WebView(session.page)
+                        .ignoresSafeArea()
+                        .webViewOnScrollGeometryChange(
+                            for: ScrollSnapshot.self,
+                            of: ScrollSnapshot.init,
+                            action: { _, new in scrollDidChange(new) })
+                }
+            }
+            .modifier(CardMatch(namespace: cardNamespace, id: tabID))
         } else {
-            WebView(session.page)
-                .ignoresSafeArea()
-                .webViewOnScrollGeometryChange(
-                    for: ScrollSnapshot.self,
-                    of: ScrollSnapshot.init,
-                    action: { _, new in scrollDidChange(new) })
+            Color.black.ignoresSafeArea()
         }
     }
 
     /// The bar's glass tint: the page's theme colour, else the page's own background,
     /// else the default (02 · Glass).
     private var barTint: Color {
-        if session.failure != nil {
-            return Palette.pageTintGlass
-        }
+        guard let session, session.failure == nil else { return Palette.pageTintGlass }
         if let themeColor = session.page.themeColor {
             return themeColor.opacity(Self.pageTintOpacity)
         }
@@ -156,10 +167,25 @@ struct ReadingScreen: View {
     private func rereadPageTint() {
         tintRetryTask?.cancel()
         tintRetryTask = Task {
+            guard let session else { return }
             await session.refreshPageBackground()
             try? await Task.sleep(for: Self.tintRetryDelay)
             guard !Task.isCancelled else { return }
             await session.refreshPageBackground()
+        }
+    }
+}
+
+/// Names the page so it and its tab card are one view moving between the two surfaces.
+private struct CardMatch: ViewModifier {
+    let namespace: Namespace.ID?
+    let id: Tab.ID?
+
+    func body(content: Content) -> some View {
+        if let namespace, let id {
+            content.matchedGeometryEffect(id: id, in: namespace)
+        } else {
+            content
         }
     }
 }
@@ -177,5 +203,17 @@ private struct ScrollSnapshot: Hashable {
 }
 
 #Preview {
-    ReadingScreen(url: URL(string: "https://example.org") ?? URL(fileURLWithPath: "/"))
+    let session = ReadingSession(url: URL(string: "https://example.org") ?? URL(fileURLWithPath: "/"))
+    return ReadingScreen(
+        session: session,
+        tabID: nil,
+        tabCount: 2,
+        isSearchOpen: false,
+        engine: .default,
+        suggestions: StubSuggestionProvider(rowsByPrefix: ["seasoning carbon steel"]),
+        recents: RecentSearches(),
+        onSearchSubmit: { _ in },
+        onSearchDismiss: {}
+    )
+    .task { await session.run() }
 }

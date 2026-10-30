@@ -40,6 +40,7 @@ struct SearchSheet: View {
     @State private var rowsAreRecents = false
     @State private var visibleRows = 0
     @State private var fieldArrived = false
+    @State private var fillSettled = false
     @State private var dragOffset: CGFloat = 0
     @FocusState private var focused: Bool
 
@@ -81,36 +82,43 @@ struct SearchSheet: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            tapAway
-            sheetBody
-                .ignoresSafeArea(.keyboard, edges: .bottom)
+        GeometryReader { geo in
+            let bottomInset = geo.safeAreaInsets.bottom
+            VStack(spacing: 0) {
+                tapAway
+                sheetSurface(bottomInset: bottomInset)
+            }
         }
+        .ignoresSafeArea(edges: [.top, .bottom])
         .task(id: text) {
             await reloadRows()
         }
     }
 
-    /// Everything above the sheet. On the mist it is clear; over a page it is the scrim,
-    /// which runs on behind the keyboard.
+    /// Everything above the sheet. On the mist it is clear; over a page it is the scrim.
     private var tapAway: some View {
         Rectangle()
             .fill(opensFromPage ? AnyShapeStyle(Palette.scrim) : AnyShapeStyle(.clear))
-            .ignoresSafeArea(.keyboard, edges: .bottom)
             .contentShape(Rectangle())
             .onTapGesture(perform: onDismiss)
+            .accessibilityIdentifier("search.scrim")
     }
 
-    /// The sheet rides the keyboard: its content ends at the keyboard while the surface runs
-    /// on behind it. `Color.clear` fills the space the keyboard covers.
-    @ViewBuilder
-    private var sheetBody: some View {
-        VStack(spacing: 0) {
-            sheetContent
-            Color.clear
-        }
-        .frame(maxWidth: .infinity)
-        .modifier(SheetSurface(opensFromPage: opensFromPage, shape: sheetShape, namespace: morphNamespace))
+    /// The sheet rides the keyboard: its content ends where the keyboard begins, while the
+    /// surface runs on behind it to the bottom edge. `bottomInset` is the keyboard's height,
+    /// or the home indicator's distance when the keyboard is away.
+    private func sheetSurface(bottomInset: CGFloat) -> some View {
+        sheetContent
+            .padding(.bottom, bottomInset)
+            .frame(maxWidth: .infinity)
+            .modifier(
+                SheetSurface(
+                    opensFromPage: opensFromPage,
+                    shape: sheetShape,
+                    namespace: morphNamespace,
+                    fillSettled: fillSettled)
+            )
+            .accessibilityIdentifier("search.sheet")
     }
 
     private var sheetContent: some View {
@@ -124,6 +132,7 @@ struct SearchSheet: View {
             .padding(.horizontal, Metrics.Spacing.insetFloating)
             .padding(.top, Layout.topPadding)
             .opacity(fieldArrived ? 1 : 0)
+            .accessibilityIdentifier("search.field")
             rowList
                 .padding(.horizontal, Layout.rowListInset)
                 .padding(.top, Layout.rowListInset)
@@ -189,13 +198,18 @@ struct SearchSheet: View {
         return SkimPill.State.resolve(skimEnabled: skimEnabled, primed: index == 0)
     }
 
-    /// The field fades in just after the sheet; suggestions then stagger beneath it.
+    /// The field fades in just after the sheet; over a page the solid fill settles behind
+    /// it, so the sheet is glass while it grows from the bar and solid once it is there.
     private func arrive() {
         if reduceMotion {
             withAnimation(.easeInOut(duration: 0.2)) {
                 fieldArrived = true
+                fillSettled = true
             }
             return
+        }
+        withAnimation(Springs.chrome.animation) {
+            fillSettled = true
         }
         withAnimation(.easeOut(duration: 0.2).delay(Layout.fieldDelay)) {
             fieldArrived = true
@@ -273,30 +287,30 @@ struct SearchSheet: View {
     }
 }
 
-/// The sheet's surface: solid over a page, glass on the mist.
+/// The sheet's surface: glass, which the reading bar grows into; solid once it has settled
+/// over a page.
 private struct SheetSurface: ViewModifier {
     let opensFromPage: Bool
     let shape: UnevenRoundedRectangle
     let namespace: Namespace.ID?
+    let fillSettled: Bool
 
     func body(content: Content) -> some View {
-        if opensFromPage {
-            content.background(shape.fill(Palette.sheetSolid))
-        } else {
-            content
-                .glassEffect(.regular, in: shape)
-                .modifier(MorphTag(namespace: namespace))
-        }
+        content
+            .background(shape.fill(Palette.sheetSolid).opacity(opensFromPage && fillSettled ? 1 : 0))
+            .glassEffect(.regular, in: shape)
+            .modifier(MorphTag(namespace: namespace))
     }
 }
 
-/// Tags the sheet's glass surface so the reading bar can morph into it later.
+/// Tags the sheet's glass surface as the chrome shape, so the bar and the sheet are one
+/// piece of glass moving between the two.
 private struct MorphTag: ViewModifier {
     let namespace: Namespace.ID?
 
     func body(content: Content) -> some View {
         if let namespace {
-            content.glassEffectID("searchSheet", in: namespace)
+            content.glassEffectID(ChromeGlassID.chrome, in: namespace)
         } else {
             content
         }

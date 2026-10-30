@@ -8,6 +8,7 @@ struct TabsScreen: View {
     let store: TabStore
     var onOpen: (Tab.ID) -> Void
     var onNewTab: () -> Void
+    var onClose: (Tab.ID) -> Void
     var onShowArchive: () -> Void
     /// Wired to the reading screen's half of the page ↔ card transition.
     var transitionNamespace: Namespace.ID? = nil
@@ -33,12 +34,13 @@ struct TabsScreen: View {
                     tabs: store.tabs,
                     currentID: store.currentTabID,
                     onSelect: { store.select($0) },
-                    onOpen: open,
-                    onClose: { store.close($0) },
+                    onOpen: onOpen,
+                    onClose: onClose,
                     snapshotLoader: { await store.loadSnapshot(for: $0) },
                     namespace: transitionNamespace
                 )
                 .frame(width: geo.size.width, height: geo.size.height)
+                .accessibilityIdentifier("tabs.stack")
             }
             bottomRow
                 .padding(
@@ -55,21 +57,18 @@ struct TabsScreen: View {
         .ignoresSafeArea()
     }
 
-    /// Opening a card makes its tab current and active before the reading screen takes over.
-    private func open(_ id: Tab.ID) {
-        store.activate(id, now: Date.now)
-        onOpen(id)
-    }
-
     private var bottomRow: some View {
         HStack {
             ArchivedChip(count: store.archivedTabs.count, action: onShowArchive)
+                .accessibilityIdentifier("tabs.archive")
             Spacer()
             Text(TabsCopy.openCount(store.tabs.count))
                 .font(Typography.small)
                 .foregroundStyle(Palette.labelOnMist)
+                .accessibilityIdentifier("tabs.openCount")
             Spacer()
             PlusButton(action: onNewTab)
+                .accessibilityIdentifier("tabs.plus")
         }
         .padding(.horizontal, ScreenMetrics.rowInset)
     }

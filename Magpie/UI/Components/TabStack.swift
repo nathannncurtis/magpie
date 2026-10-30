@@ -74,6 +74,10 @@ private enum StackMetrics {
     static let swipeFraction: CGFloat = 0.25
     /// Cards up to this far from the current one are drawn.
     static let visibleNeighbours = 2
+    /// Neighbours slide in this long behind the current card's arrival.
+    static let neighbourDelay: TimeInterval = 0.04
+    /// How far out neighbours start when they slide in.
+    static let neighbourSlide: CGFloat = 0.5
     /// How long a closed card takes to leave, and the crossfade under Reduce Motion.
     static let flightDuration: TimeInterval = 0.35
     static let crossfadeDuration: TimeInterval = 0.2
@@ -101,6 +105,8 @@ struct TabStack: View {
     @State private var flyingID: Tab.ID?
     @State private var flyOffset: CGFloat = 0
     @State private var snapshots: [Tab.ID: Data] = [:]
+    /// Whether the neighbours have slid in beside the current card.
+    @State private var neighboursArrived = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -123,6 +129,7 @@ struct TabStack: View {
             }
             .contentShape(Rectangle())
             .gesture(dragGesture(size: size, stride: stride))
+            .onAppear { arriveNeighbours() }
 
             // Reduce Motion: the stack crossfades between its states instead of sliding.
             if reduceMotion {
@@ -130,6 +137,14 @@ struct TabStack: View {
             } else {
                 stack
             }
+        }
+    }
+
+    /// The neighbours slide in from the sides just behind the current card's arrival.
+    private func arriveNeighbours() {
+        guard !reduceMotion, !neighboursArrived else { return }
+        withAnimation(Springs.chrome.animation.delay(StackMetrics.neighbourDelay)) {
+            neighboursArrived = true
         }
     }
 
@@ -148,8 +163,9 @@ struct TabStack: View {
             lift = 0
         }
         return TabCard(tab: tab, snapshot: snapshots[tab.id], namespace: namespace)
+            .accessibilityIdentifier(tab.id == currentID ? "tabs.card.current" : "tabs.card.neighbour")
             .frame(width: frame.width, height: frame.height)
-            .position(x: frame.midX, y: frame.midY + lift)
+            .position(x: frame.midX + neighbourOffset(from: index - current, stride: stride), y: frame.midY + lift)
             .zIndex(Double(100 - abs(index - current)))
             .onTapGesture {
                 guard flyingID == nil else { return }
@@ -161,6 +177,12 @@ struct TabStack: View {
                     }
                 }
             }
+    }
+
+    /// How far out a card sits while the neighbours have yet to slide in.
+    private func neighbourOffset(from current: Int, stride: CGFloat) -> CGFloat {
+        guard !neighboursArrived, current != 0 else { return 0 }
+        return CGFloat(current > 0 ? 1 : -1) * stride * StackMetrics.neighbourSlide
     }
 
     /// A label rides above its own card, aligned to its leading edge and clipped by the

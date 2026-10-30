@@ -34,6 +34,12 @@ enum ReadableForeground {
     }
 }
 
+/// The id the bar's and the search sheet's glass shapes share, so one grows into the other
+/// as a single piece of glass.
+enum ChromeGlassID {
+    static let chrome = "chrome"
+}
+
 /// The reading bar (03 · Chrome): one glass capsule carrying back, the URL, the tab
 /// count and the menu trigger, floating over the page and taking the page's tint.
 struct ReadingBar: View {
@@ -66,8 +72,6 @@ struct ReadingBar: View {
 
     @Environment(\.colorScheme) private var colorScheme
 
-    /// The id the bar's glass shape is known by when morphing.
-    private static let glassID = "chrome"
     /// How much further in from the screen sides the slim pill sits, past the full bar's
     /// inset (the motion board's 110, minus the 12 it already has).
     private static let slimSideInsetGain: CGFloat = 98
@@ -95,7 +99,7 @@ struct ReadingBar: View {
     @ViewBuilder
     private var namedGlass: some View {
         if let glassNamespace {
-            capsule.glassEffectID(Self.glassID, in: glassNamespace)
+            capsule.glassEffectID(ChromeGlassID.chrome, in: glassNamespace)
         } else {
             capsule
         }
@@ -107,15 +111,19 @@ struct ReadingBar: View {
                 CircleButton(systemName: "chevron.backward", action: onBack)
                     .disabled(!canGoBack)
                     .accessibilityLabel(Text("Back"))
+                    .accessibilityIdentifier("bar.back")
             }
             URLPill(host: host, collapse: progress, showsLock: showsLock, action: onAddressTap)
+                .accessibilityIdentifier("bar.url")
             side {
                 CircleButton(action: onTabsTap) { TabCount(count: tabCount) }
                     .accessibilityLabel(Text("Tabs"))
+                    .accessibilityIdentifier("bar.tabs")
             }
             side {
                 CircleButton(systemName: "ellipsis", isPressed: isMenuOpen, action: onMenuTap)
                     .accessibilityLabel(Text("Menu"))
+                    .accessibilityIdentifier("bar.menu")
             }
         }
         .padding(.leading, 4)

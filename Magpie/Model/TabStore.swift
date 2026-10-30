@@ -38,15 +38,19 @@ final class TabStore {
     /// Loads the saved index into a fresh store.
     static func open(persistence: TabPersistence) async -> TabStore {
         let store = TabStore(persistence: persistence)
-        if let index = try? await persistence.loadIndex() {
-            store.tabs = index.openTabs
-            store.archivedTabs = index.archivedTabs
-            store.currentTabID =
-                index.currentTabID.flatMap { id in
-                    store.tabs.contains { $0.id == id } ? id : nil
-                } ?? store.tabs.first?.id
-        }
+        await store.loadIndex()
         return store
+    }
+
+    /// Reads the saved index into this store.
+    func loadIndex() async {
+        guard let persistence, let index = try? await persistence.loadIndex() else { return }
+        tabs = index.openTabs
+        archivedTabs = index.archivedTabs
+        currentTabID =
+            index.currentTabID.flatMap { id in
+                tabs.contains { $0.id == id } ? id : nil
+            } ?? tabs.first?.id
     }
 
     // MARK: Open tabs
@@ -87,6 +91,29 @@ final class TabStore {
     /// Marks the tab active without changing which tab is current.
     func touch(_ id: Tab.ID, now: Date) {
         guard let i = tabs.firstIndex(where: { $0.id == id }) else { return }
+        tabs[i].lastActive = now
+        saveIndex()
+    }
+
+    /// Brings the tab in step with its page: where it is, what it's called, its site's own
+    /// icon, and when it was last read. Nothing without a page behind it moves it.
+    func update(id: Tab.ID, url: URL?, title: String, faviconURL: URL?, now: Date) {
+        guard let i = tabs.firstIndex(where: { $0.id == id }) else { return }
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        var changed = false
+        if let url, tabs[i].url != url {
+            tabs[i].url = url
+            changed = true
+        }
+        if !trimmed.isEmpty, tabs[i].title != trimmed {
+            tabs[i].title = trimmed
+            changed = true
+        }
+        if let faviconURL, tabs[i].faviconURL != faviconURL {
+            tabs[i].faviconURL = faviconURL
+            changed = true
+        }
+        guard changed else { return }
         tabs[i].lastActive = now
         saveIndex()
     }
