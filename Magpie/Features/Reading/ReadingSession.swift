@@ -63,10 +63,14 @@ final class ReadingSession {
     /// The viewport the page is shown at, kept by the reading screen for captures.
     var viewportSize: CGSize?
 
+    /// Whether the page has settled at least once. The extra settle paths wait for it,
+    /// so a load still in flight never writes its half-state onto the tab.
+    private(set) var hasSettled = false
+
     /// The reading screen has geometry for this session: a page that settled with no
     /// viewport to capture at settles again now, capture included.
     func viewportKnown() {
-        guard failure == nil, page.url != nil else { return }
+        guard hasSettled else { return }
         onPageSettled?()
     }
 
@@ -171,6 +175,7 @@ final class ReadingSession {
     /// Tells the owner the page settled. A title can land after the event, so it settles
     /// once more a beat later.
     private func settle() {
+        hasSettled = true
         onPageSettled?()
         Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(800))

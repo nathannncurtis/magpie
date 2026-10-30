@@ -152,11 +152,12 @@ final class AppModel {
         captureSnapshot(for: id, trigger: "settle")
     }
 
-    /// A reused session whose page is already loaded but has no picture — a tab switched
-    /// back to, or one restored — settles again, with its viewport already known.
+    /// A reused session whose page has settled with no picture — a tab switched back to,
+    /// or one restored — settles again, with its viewport already known. Only a page that
+    /// truly settled: one still in flight would write its half-state onto the tab.
     private func refireSettleIfPictureless(_ tab: Tab, session: ReadingSession) {
         guard
-            session.page.url != nil,
+            session.hasSettled,
             session.failure == nil,
             store.tabs.first(where: { $0.id == tab.id })?.snapshot == nil
         else { return }
