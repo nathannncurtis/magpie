@@ -302,11 +302,6 @@ final class ReadingSession {
             SnapshotLog.event("\(trigger) skip viewport=nil")
             return nil
         }
-        if let found = onScreenWebView() {
-            SnapshotLog.event(
-                "\(trigger) view found[\(found.source)] inset=\(found.view.scrollView.adjustedContentInset.top) safe=\(found.view.safeAreaInsets.top)"
-            )
-        }
         let region = WebPage.ExportedContentConfiguration.Region.rect(
             CGRect(origin: .zero, size: size))
         let exportThrown = ErrorBox()

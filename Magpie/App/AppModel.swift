@@ -40,7 +40,8 @@ final class AppModel {
     /// The live page sessions, by tab.
     private(set) var sessions: [Tab.ID: ReadingSession] = [:]
     private var sessionTasks: [Tab.ID: Task<Void, Never>] = [:]
-    @ObservationIgnored private var snapshotTasks: [Tab.ID: Task<Void, Never>] = [:]
+    @ObservationIgnored private var captureGates: [Tab.ID: CaptureGate] = [:]
+    @ObservationIgnored private var captureDrains: [Tab.ID: Task<Void, Never>] = [:]
 
     init(
         store: TabStore = TabStore(),
@@ -164,13 +165,60 @@ final class AppModel {
         pageSettled(for: tab.id)
     }
 
-    /// The page's picture onto its tab, whenever it answers.
+    /// How long capture triggers wait for their neighbours: geometry, session and URL
+    /// landing in the same frame are one moment, one capture.
+    private static let captureDebounce: Duration = .milliseconds(150)
+
+    /// One tab's place in the capture pipeline. `pendingTrigger` is the debounced capture
+    /// to run; `rerunTrigger` is the one trigger that may land while a capture runs.
+    private struct CaptureGate {
+        var isRunning = false
+        var pendingTrigger: String?
+        var rerunTrigger: String?
+    }
+
+    /// The page's picture onto its tab. Triggers coalesce: they wait out the debounce,
+    /// one capture runs at a time, and a trigger that lands while one runs asks for
+    /// exactly one rerun after it — the page and its view answer one caller at a time,
+    /// and captures left to overlap have been seen to starve each other into nil.
+    /// Nothing is cancelled mid-flight.
     private func captureSnapshot(for id: Tab.ID, trigger: String) {
-        guard let session = sessions[id] else { return }
-        snapshotTasks[id]?.cancel()
-        snapshotTasks[id] = Task { @MainActor in
+        var gate = captureGates[id] ?? CaptureGate()
+        if gate.isRunning {
+            gate.rerunTrigger = trigger
+        } else {
+            gate.pendingTrigger = trigger
+        }
+        captureGates[id] = gate
+        guard captureDrains[id] == nil else { return }
+        captureDrains[id] = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: Self.captureDebounce)
+            await self?.drainCaptures(for: id)
+            self?.captureDrains[id] = nil
+        }
+    }
+
+    /// The pending captures, one at a time.
+    private func drainCaptures(for id: Tab.ID) async {
+        while true {
+            var gate = captureGates[id] ?? CaptureGate()
+            guard !gate.isRunning, let trigger = gate.pendingTrigger else { return }
+            gate.isRunning = true
+            gate.pendingTrigger = nil
+            captureGates[id] = gate
+            guard let session = sessions[id] else {
+                captureGates[id] = nil
+                return
+            }
             let data = await session.snapshot(trigger: trigger)
-            guard !Task.isCancelled, let data else { return }
+            gate = captureGates[id] ?? CaptureGate()
+            gate.isRunning = false
+            if let rerun = gate.rerunTrigger {
+                gate.pendingTrigger = rerun
+                gate.rerunTrigger = nil
+            }
+            captureGates[id] = gate
+            guard let data else { continue }
             store.setSnapshot(data, for: id)
             SnapshotLog.event("\(trigger) stored \(data.count)B tab=\(id.uuidString.prefix(4))")
         }
