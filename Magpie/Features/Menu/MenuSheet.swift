@@ -100,7 +100,8 @@ struct MenuSheet: View {
     }
 
     /// The sheet hugs its content and runs on to the bottom edge of the screen, with the
-    /// bar row sitting exactly where the floating bar sat.
+    /// bar row sitting exactly where the floating bar sat. The drag offset rides outside
+    /// the surface, so the glass follows the finger instead of the rows sliding under it.
     private var sheetBody: some View {
         sheetContent
             .frame(maxWidth: .infinity)
@@ -110,6 +111,8 @@ struct MenuSheet: View {
                     namespace: morphNamespace,
                     fillSettled: fillSettled)
             )
+            .offset(y: dragOffset)
+            .gesture(dismissDrag)
             .ignoresSafeArea(edges: .bottom)
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("menu.sheet")
@@ -129,8 +132,6 @@ struct MenuSheet: View {
             .padding(.bottom, Metrics.Menu.barGap)
             block(.bar) { barRow }
         }
-        .offset(y: dragOffset)
-        .gesture(dismissDrag)
     }
 
     // MARK: Quick actions
@@ -332,7 +333,11 @@ struct MenuSheet: View {
                 let distance = change.translation.height
                 let fling = change.predictedEndTranslation.height - distance
                 if distance > Layout.dismissDistance || fling > Layout.dismissFling {
-                    onDismiss()
+                    // The sheet shrinks back into the bar on the same spring, wherever
+                    // the finger left it.
+                    withAnimation(Springs.chrome.animation) {
+                        onDismiss()
+                    }
                 } else {
                     withAnimation(Springs.chrome.animation) {
                         dragOffset = 0
