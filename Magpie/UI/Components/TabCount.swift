@@ -40,6 +40,6 @@ struct TabCount: View {
         TabCount(count: 99)
         TabCount(count: 100)
     }
-    .foregroundStyle(Color(hex: 0x3A2E26))
+    .foregroundStyle(Palette.onLightPageTint)
     .padding(40)
 }
