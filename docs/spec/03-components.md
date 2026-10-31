@@ -124,7 +124,7 @@ Photos come only from the source pages' `og:image` or largest article image. The
 - **Left column:** an `EmojiTile` (30 × 30, radius 9, `emojiTile` fill, 16 pt emoji).
 - **Right column:** the **Term** in `body` semibold `textPrimary`, then " — ", then the claim in `body`, then one or more `CitationDot`s.
 
-**CitationDot**: a 17 pt `sheen` circle with the source number in white, 10 pt semibold. Tapping it scrolls to that source card, and a long press previews the page. In a claim's text the circled-digit glyphs are links a finger follows while reading; on their own (the source cards' site lines) the dot carries an invisible 44 pt target.
+**CitationDot**: a 17 pt `sheen` circle with the source number in white, 10 pt semibold. Tapping it scrolls to that source card, and a long press previews the page. In a claim's text the circled-digit glyphs are links a finger follows while reading; they take `teal` in light (the sheen's green falls short of contrast on the skim paper) and the sheen's mid green in dark. On their own (the source cards' site lines) the dot carries an invisible 44 pt target.
 
 **SourceCard**: solid card, 200 wide, radius 18, padding 8.
 - Contents: a thumbnail (84 tall, radius 12), then the site line (favicon, `CitationDot` and host in `tag`), then the title in `meta` semibold.

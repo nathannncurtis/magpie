@@ -304,6 +304,8 @@ struct SkimSectionRow: View {
     let section: SkimSection
     let onCitation: (Int) -> Void
 
+    @Environment(\.colorScheme) private var colorScheme
+
     private enum Layout {
         static let tile: CGFloat = 30
         static let radius: CGFloat = 9
@@ -355,7 +357,9 @@ struct SkimSectionRow: View {
             text += space
             var dot = AttributedString(Self.dotGlyph(for: citation))
             dot.font = .system(size: Layout.dotSize)
-            dot.foregroundColor = Palette.sheenMid
+            // The sheen's green falls short of contrast on the light skim paper;
+            // there the text accent's teal stands in for it.
+            dot.foregroundColor = colorScheme == .dark ? Palette.sheenMid : Palette.teal
             dot.baselineOffset = Layout.dotLift
             dot.link = URL(string: "magpie-cite://\(citation)")
             text += dot
