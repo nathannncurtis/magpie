@@ -48,6 +48,12 @@ struct ChromeCollapse: Equatable {
         return .settle
     }
 
+    /// Drops the last offset, so the next sample only sets it: a page that moved itself
+    /// is not a scroll.
+    mutating func forgetOffset() {
+        lastOffset = nil
+    }
+
     /// Brings the full bar back: the slim pill's tap.
     mutating func expand() -> Step {
         collapseToFull()

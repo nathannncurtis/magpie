@@ -118,10 +118,11 @@ final class UITestPageServer: @unchecked Sendable {
 
     /// The full HTTP reply for one request's bytes.
     private func reply(to request: Data) -> Data {
-        let page = Self.page(for: Self.route(of: request))
+        let route = Self.route(of: request)
+        let page = Self.page(for: route)
         let head = [
             "HTTP/1.1 200 OK",
-            "Content-Type: text/html; charset=utf-8",
+            "Content-Type: \(Self.contentType(for: route)); charset=utf-8",
             "Content-Length: \(page.utf8.count)",
             "Connection: close",
         ].joined(separator: "\r\n")
@@ -147,8 +148,24 @@ final class UITestPageServer: @unchecked Sendable {
             return shell(title: "magpie test", path: route, block: "#B3410C")
         case "/page":
             return shell(title: "magpie test page", path: route, block: "#2B62C2")
+        case "/mod.user.js":
+            return UITestModFixtures.userscript
+        case "/mod.list.txt":
+            return UITestModFixtures.filterList
         default:
             return shell(title: "magpie test", path: route, block: "#2B8A5A")
+        }
+    }
+
+    /// What each route serves; mods' files are not pages.
+    private static func contentType(for route: String) -> String {
+        switch route {
+        case "/mod.user.js":
+            return "text/javascript"
+        case "/mod.list.txt":
+            return "text/plain"
+        default:
+            return "text/html"
         }
     }
 

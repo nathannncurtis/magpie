@@ -58,12 +58,17 @@ final class ReadingSession {
     private(set) var failure: PageLoadFailure?
     /// The page's own background, when it sets one and declares no theme colour.
     private(set) var pageBackground: Color?
+    /// The colour at the top of what the reader sees: what shows under the status bar,
+    /// read at load and wherever the reader comes to rest. Nil until read.
+    private(set) var topColour: Color?
     /// The site's own icon, when the page declares one.
     private(set) var pageIconURL: URL?
     /// Whether the network path is up.
     private(set) var isOnline = true
 
-    let page = WebPage()
+    /// The page this session reads. It carries the shared content configuration, so every
+    /// page runs the mods' scripts under the same rules.
+    let page: WebPage
 
     /// Called whenever the page settles or moves, so the tab can take what it now shows.
     var onPageSettled: (@MainActor () -> Void)?
@@ -78,6 +83,10 @@ final class ReadingSession {
     /// The tab this session serves, for the log: set by the owner when the session is
     /// made, so every line names the page it belongs to.
     @ObservationIgnored var logTag = "tab=----"
+
+    /// Whether a reading screen's web view holds this page — the current tab's, or one
+    /// still on its way out after the screen moved to another tab.
+    var isOnReadingScreen = false
 
     /// The standing wait for the page's first layout, while a capture is held back.
     @ObservationIgnored private var layoutWatch: Task<Void, Never>?
@@ -197,6 +206,9 @@ final class ReadingSession {
     /// The URL the session last asked to load. Its host is what a failure names, so a
     /// failure always has one even when the page never got far enough to have a URL.
     private(set) var requestedURL: URL?
+    /// The address the last failure was loading. A load that fails before it commits
+    /// leaves the page on the one before, so reloading would bring that back instead.
+    private var failedURL: URL?
     private var loadTask: Task<Void, Never>?
     /// The site the icon link was last read for.
     private var iconHost: String?
@@ -227,9 +239,27 @@ final class ReadingSession {
         return m ? m[1] + "," + m[2] + "," + m[3] : "";
         """#
 
-    init(url: URL) {
+    /// Reads the background behind the top centre of the viewport, as "r,g,b": the
+    /// nearest opaque background from the element there up through its ancestors; ""
+    /// when none is opaque.
+    private static let topColourScript = #"""
+        const rgb = (s) => {
+            const m = s && s.match(/^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)$/);
+            return (!m || m[4] === undefined || parseFloat(m[4]) !== 0) ? m : null;
+        };
+        let el = document.elementFromPoint(window.innerWidth / 2, 1);
+        while (el) {
+            const m = rgb(getComputedStyle(el).backgroundColor);
+            if (m) { return m[1] + "," + m[2] + "," + m[3]; }
+            el = el.parentElement;
+        }
+        return "";
+        """#
+
+    init(url: URL, pageConfiguration: WebPage.Configuration? = nil) {
         initialURL = url
         requestedURL = url
+        page = pageConfiguration.map { WebPage(configuration: $0) } ?? WebPage()
         monitor.pathUpdateHandler = { [weak self] path in
             let online = path.status == .satisfied
             Task { @MainActor in
@@ -247,14 +277,21 @@ final class ReadingSession {
         !page.backForwardList.backList.isEmpty
     }
 
-    /// The site's icon link, for the tab's card and labels. Falls back to the touch icon
-    /// a page declares for elsewhere; "" when the page declares none.
+    /// The site's icon link, for the tab's card and labels: an icon the page declares,
+    /// preferring one that can be drawn — an SVG is skipped, whatever carries it — then
+    /// the touch icon a page declares for elsewhere, and the site's own /favicon.ico
+    /// when the page declares nothing usable.
     private static let pageIconScript = #"""
-        (() => {
-            const icon = document.querySelector("link[rel~='icon']")
-                || document.querySelector("link[rel='apple-touch-icon']");
-            return icon ? icon.href : "";
-        })()
+        const isRaster = (link) => {
+            if (!link.href) return false;
+            if ((link.type || "").toLowerCase() === "image/svg+xml") return false;
+            return !link.href.toLowerCase().split("?")[0].split("#")[0].endsWith(".svg");
+        };
+        const declared = document.querySelectorAll("link[rel~='icon']");
+        for (const link of declared) { if (isRaster(link)) return link.href; }
+        const touch = document.querySelectorAll("link[rel='apple-touch-icon']");
+        for (const link of touch) { if (isRaster(link)) return link.href; }
+        return new URL("/favicon.ico", location.href).href;
         """#
 
     /// Starts the session: the first load, then the standing watch on navigation events.
@@ -273,6 +310,7 @@ final class ReadingSession {
                     }
                     if event == .finished {
                         await refreshPageBackground()
+                        await refreshTopColour()
                         await readPageIcon()
                         settle()
                     }
@@ -313,9 +351,18 @@ final class ReadingSession {
         startLoad { self.page.load(url) }
     }
 
-    /// Reloads the current page: "Try again", or the connection coming back.
+    /// Reloads the current page: "Try again", or the connection coming back. After a
+    /// failure it opens the address that failed: the page itself still holds the one
+    /// before, or no URL at all.
     func retry() {
-        startLoad { self.page.reload() }
+        if failure != nil, let url = failedURL {
+            requestedURL = url
+            startLoad { self.page.load(url) }
+        } else if page.url != nil {
+            startLoad { self.page.reload() }
+        } else if let url = requestedURL {
+            startLoad { self.page.load(url) }
+        }
     }
 
     /// Goes back one page.
@@ -330,6 +377,10 @@ final class ReadingSession {
     ) {
         failure = nil
         pageBackground = nil
+        topColour = nil
+        // The page being left does not keep speaking for the one arriving: its icon
+        // goes with it, read afresh once the new page has settled.
+        pageIconURL = nil
         loadTask?.cancel()
         SnapshotLog.event("load \(logTag) \(requestedURL?.absoluteString ?? "nil")")
         let sequence = events()
@@ -357,6 +408,10 @@ final class ReadingSession {
                         "load done \(self.logTag) progress=\(self.page.estimatedProgress) "
                             + "url=\(self.page.url?.absoluteString ?? "nil")")
                     self.loadWatch = nil
+                    // A first load can finish before the navigation watch subscribes;
+                    // the page colour and icon are read here too.
+                    await self.refreshPageBackground()
+                    await self.readPageIcon()
                     self.settle()
                     return
                 }
@@ -394,6 +449,7 @@ final class ReadingSession {
             underlying = error
         }
         var offline = false
+        failedURL = (underlying as? URLError)?.failingURL ?? requestedURL ?? page.url
         if let urlError = underlying as? URLError {
             offline = [
                 .notConnectedToInternet, .networkConnectionLost, .dataNotAllowed,
@@ -402,6 +458,12 @@ final class ReadingSession {
         failure = PageLoadFailure(
             host: HostFormatter.host(for: requestedURL ?? page.url), isOffline: offline)
         pageBackground = nil
+        topColour = nil
+        // The failure page takes the web view's place in the hierarchy, so the
+        // session's hold on it is dropped here too — a detached view held alive keeps
+        // its accessibility line open. The probe re-finds it when a load lands.
+        webView?.endEditing(true)
+        webView = nil
     }
 
     private func connectivityChanged(_ online: Bool) {
@@ -425,17 +487,30 @@ final class ReadingSession {
         pageBackground = PageBackgroundColor.parse(text)
     }
 
+    /// Reads the colour under the status bar; a page with no opaque background there
+    /// leaves the strip's own colour to stand.
+    func refreshTopColour() async {
+        guard failure == nil, page.url != nil else { return }
+        guard
+            let result = try? await page.callJavaScript(
+                Self.topColourScript, contentWorld: .defaultClient),
+            let text = result as? String
+        else { return }
+        topColour = PageBackgroundColor.parse(text)
+    }
+
     /// Reads the site's icon link from the page once per site, so the tab's card and
-    /// labels can show it.
+    /// labels can show it. The site is remembered only once its link has been read —
+    /// a page whose reading fails keeps its place among the unread, to try again.
     private func readPageIcon() async {
         guard let host = page.url?.host(), host != iconHost else { return }
-        iconHost = host
         guard
             let result = try? await page.callJavaScript(
                 Self.pageIconScript, contentWorld: .defaultClient),
             let href = result as? String,
             let url = URL(string: href), url.scheme != nil
         else { return }
+        iconHost = host
         pageIconURL = url
     }
 

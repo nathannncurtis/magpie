@@ -33,6 +33,8 @@ enum Palette {
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
+    /// The sheen's middle stop, for the fills that must be one solid colour.
+    static let sheenMid = Color(hex: 0x10B981)
     /// Text accents: "Get", "Done" on paper screens, the swipe-to-restore background.
     static let teal = dynamic(light: 0x0D7F74, dark: 0x5EEAD4)
 
@@ -66,6 +68,9 @@ enum Palette {
     static let emojiTile = dynamic(light: 0xEEECE6, dark: 0xFFFFFF, darkOpacity: 0.07)
     /// The engine tag inside the search field.
     static let tag = dynamic(light: 0xF1F0EB, dark: 0xFFFFFF, darkOpacity: 0.08)
+    /// A switched-on toggle: `ink` in light, `teal` in dark, where the system knob's
+    /// white would vanish on the near-white ink track.
+    static let toggleOn = dynamic(light: 0x101115, dark: 0x5EEAD4)
     /// A toggle in its off state.
     static let toggleOff = dynamic(light: 0xDADAD4, dark: 0xFFFFFF, darkOpacity: 0.16)
     /// The default reading-bar tint when the site gives no colour.
@@ -101,6 +106,49 @@ enum Palette {
     static let faviconRingOnMist = dynamic(
         light: 0xE1F0EC, lightOpacity: 0.95, dark: 0x0C1211, darkOpacity: 1)
 
+    // MARK: Settings
+
+    /// The inner hairline on Settings' material groups.
+    static let groupHairline = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.75, dark: 0xFFFFFF, darkOpacity: 0.08)
+
+    // MARK: Onboarding
+
+    /// An engine tile's glass fill.
+    static let engineTile = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.55, dark: 0xFFFFFF, darkOpacity: 0.07)
+    /// An engine tile's fill once picked.
+    static let engineTileSelected = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.88, dark: 0xFFFFFF, darkOpacity: 0.15)
+    /// An engine tile's inner hairline.
+    static let engineTileHairline = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.70, dark: 0xFFFFFF, darkOpacity: 0.14)
+    /// The Other tile's glass fill.
+    static let engineTileOther = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.30, dark: 0xFFFFFF, darkOpacity: 0)
+    /// The Other tile's inset outline.
+    static let engineTileOtherOutline = dynamic(
+        light: 0x101115, lightOpacity: 0.14, dark: 0xFFFFFF, darkOpacity: 0.18)
+    /// The plus-glyph square on the Other tile.
+    static let engineTileOtherGlyph = dynamic(
+        light: 0x101115, lightOpacity: 0.07, dark: 0xFFFFFF, darkOpacity: 0.10)
+
+    // MARK: Mods
+
+    /// The "Get" capsule's fill.
+    static let getButtonFill = dynamic(
+        light: 0xEEF0EE, dark: 0xFFFFFF, darkOpacity: 0.10)
+    /// The install-from-URL field's fill.
+    static let installURLFill = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.80, dark: 0xFFFFFF, darkOpacity: 0.08)
+    /// A sheet's grabber.
+    static let grabber = dynamic(
+        light: 0x101115, lightOpacity: 0.18, dark: 0xFFFFFF, darkOpacity: 0.25)
+    /// The featured card's sky, top of its 160-degree gradient.
+    static let featuredPreviewTop = dynamic(light: 0xEAF1FE, dark: 0x18233B)
+    /// The featured card's sky, bottom of its 160-degree gradient.
+    static let featuredPreviewBottom = dynamic(light: 0xD7E5FD, dark: 0x0F1626)
+
     // MARK: Skim pill
 
     /// The resting Skim pill's fill.
@@ -112,6 +160,42 @@ enum Palette {
     /// The resting Skim pill's inner top highlight; gone in dark.
     static let skimPillHighlight = dynamic(
         light: 0xFFFFFF, lightOpacity: 0.90, dark: 0xFFFFFF, darkOpacity: 0)
+
+    // MARK: Skim page
+
+    /// Skim section text.
+    static let skimBody = dynamic(light: 0x2B2D33, dark: 0xC4C6CB)
+    /// The query in the Skim query bar.
+    static let skimQueryText = dynamic(light: 0x3A3C44, dark: 0xD6D7DB)
+    /// A source card's title.
+    static let skimSourceTitle = dynamic(light: 0x1B1C21, dark: 0xE6E6E2)
+    /// A source card's site line.
+    static let skimSourceSite = dynamic(light: 0x5B5D64, dark: 0x8E9097)
+    /// The working line on the mist, and the from-line on the no-photo tier.
+    static let skimStatus = dynamic(light: 0x2F4F4A, dark: 0xA9C9C3)
+    /// The divider inside the Skim control bar.
+    static let skimControlDivider = dynamic(
+        light: 0x101115, lightOpacity: 0.14, dark: 0xFFFFFF, darkOpacity: 0.16)
+    /// The ring around a Skim source card.
+    static let skimSourceRing = dynamic(
+        light: 0x101115, lightOpacity: 0.05, dark: 0xFFFFFF, darkOpacity: 0.06)
+    /// The shadow under a Skim source card.
+    static let skimSourceShadow = dynamic(
+        light: 0x101115, lightOpacity: 0.30, dark: 0x000000, darkOpacity: 0.35)
+
+    // MARK: Menu
+
+    /// A menu tile's fill.
+    static let menuTile = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.5, dark: 0xFFFFFF, darkOpacity: 0.06)
+    /// A menu group's fill.
+    static let menuGroup = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.55, dark: 0xFFFFFF, darkOpacity: 0.06)
+    /// The inner hairline on a menu tile and a menu group.
+    static let menuHairline = dynamic(
+        light: 0xFFFFFF, lightOpacity: 0.6, dark: 0xFFFFFF, darkOpacity: 0.08)
+    /// A menu tile's icon and label.
+    static let menuTileLabel = dynamic(light: 0x2B2D33, dark: 0xF2F2EE)
 
     // MARK: Tab cards
 

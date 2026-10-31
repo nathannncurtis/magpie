@@ -11,6 +11,8 @@ struct FolderRow: View {
         static let countGap: CGFloat = 8
         static let chevron: CGFloat = 15
         static let verticalPadding: CGFloat = 8
+        /// The least the row offers a finger.
+        static let minHeight: CGFloat = 44
     }
 
     var body: some View {
@@ -31,6 +33,7 @@ struct FolderRow: View {
                 .foregroundStyle(Palette.textSecondary)
         }
         .padding(.vertical, RowMetrics.verticalPadding)
+        .frame(minHeight: RowMetrics.minHeight)
         .accessibilityElement(children: .combine)
     }
 }

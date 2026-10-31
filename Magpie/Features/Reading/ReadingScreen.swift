@@ -1,8 +1,10 @@
 import SwiftUI
 import WebKit
 
-/// 02 · Reading: a full-bleed web view under the status bar with the ReadingBar
-/// floating at the bottom. The bar takes the page's tint and slims on scroll; the URL
+/// 02 · Reading: a web view that starts below the status bar and runs under the bar to
+/// the bottom edge, with the ReadingBar floating at the bottom. The strip above the
+/// page, under the status bar, takes the page's own top colour, so the screen still
+/// reads edge to edge. The bar takes the page's tint and slims on scroll; the URL
 /// pill opens the search sheet over the page, growing from the bar as one glass shape
 /// (05 · The bar into the sheet), and the page is one view with its tab card (05 · The
 /// page into its card).
@@ -13,8 +15,17 @@ struct ReadingScreen: View {
     var tabCount: Int
     var isSearchOpen: Bool
     var engine: SearchEngine
+    /// Whether the search sheet over the page shows its Skim pill.
+    var skimEnabled: Bool = true
+    /// Whether Skim runs on this device at all: the menu's Skim tile hides when it
+    /// can't, whatever the pill's own toggle says.
+    var skimRunsHere: Bool = true
+    var suggestionsEnabled: Bool = true
+    /// While a full screen (Settings) covers the sheet over the page.
+    var focusSuspended: Bool = false
     var suggestions: any SuggestionProviding
     var recents: any RecentSearchStoring
+    var onSkim: (String) -> Void = { _ in }
     var chromeNamespace: Namespace.ID? = nil
     var cardNamespace: Namespace.ID? = nil
     var onSearchSubmit: (URL) -> Void
@@ -24,6 +35,10 @@ struct ReadingScreen: View {
     /// The page area's size, kept past this screen: a session made with no reading
     /// screen up still needs a region to capture at.
     var onPageSize: (CGSize) -> Void = { _ in }
+    /// The card's picture, held over the page while the card grows back into it: the
+    /// web view re-hosts blank and lays out at the card's width for a few frames.
+    var arrivalPicture: Data? = nil
+    var onArrivalDone: () -> Void = {}
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
@@ -33,6 +48,7 @@ struct ReadingScreen: View {
     @State private var restingSize: CGSize?
     @State private var sizeSettleTask: Task<Void, Never>?
     @State private var chrome = ChromeCollapse()
+    @State private var isMenuOpen = false
     @State private var snapTask: Task<Void, Never>?
     @State private var tintRetryTask: Task<Void, Never>?
 
@@ -43,6 +59,9 @@ struct ReadingScreen: View {
     private static let snapDelay: Duration = .milliseconds(250)
     /// How long a size must hold before it counts as the screen at rest.
     private static let sizeSettleDelay: Duration = .milliseconds(200)
+    /// How long the card's picture stays over the page: the chrome spring's growth, plus
+    /// the page's first paint at full width.
+    private static let arrivalHold: Duration = .milliseconds(550)
     /// How long to let the page re-render under a new appearance before re-reading it.
     private static let tintRetryDelay: Duration = .milliseconds(600)
     /// The opacity page tints take through the glass (02 · Glass).
@@ -53,11 +72,15 @@ struct ReadingScreen: View {
             let bottomEdge =
                 Metrics.Spacing.barBottomEdge(safeAreaBottom: geo.safeAreaInsets.bottom)
                 - Self.slimBottomDrop * collapse
+            let menuBottomEdge = Metrics.Spacing.barBottomEdge(
+                safeAreaBottom: geo.safeAreaInsets.bottom)
             ZStack(alignment: .bottom) {
-                pageArea
+                pageArea(bottomClearance: menuBottomEdge + Metrics.Bar.readingHeight)
                 GlassEffectContainer {
                     if isSearchOpen {
                         searchSheet
+                    } else if isMenuOpen {
+                        menuSheet(bottomEdge: menuBottomEdge)
                     } else {
                         bar
                             .padding(.bottom, bottomEdge)
@@ -113,6 +136,9 @@ struct ReadingScreen: View {
                 session?.titleKnown()
             }
         }
+        // The strip the page leaves above itself, under the status bar: filled with the
+        // page's own top colour, so nothing shows through from the surface before.
+        .background(topEdgeFill.ignoresSafeArea(edges: .top))
         .onChange(of: colorScheme) { _, _ in rereadPageTint() }
         .onDisappear {
             snapTask?.cancel()
@@ -122,16 +148,41 @@ struct ReadingScreen: View {
         }
     }
 
+    /// The menu (05): the bar's glass grows up into it, the bar row pinned in place.
+    private func menuSheet(bottomEdge: CGFloat) -> some View {
+        MenuSheet(
+            host: session?.failure?.host ?? HostFormatter.host(for: session?.page.url),
+            tabCount: tabCount,
+            canGoBack: session?.canGoBack ?? false,
+            showsWarning: session?.failure != nil,
+            skimOffered: skimRunsHere,
+            barBottomEdge: bottomEdge,
+            morphNamespace: chromeNamespace,
+            onBack: { session?.goBack() },
+            onAddressTap: {
+                closeMenu()
+                expandBar()
+                onAddressTap()
+            },
+            onTabsTap: onTabsTap,
+            onMenuTap: closeMenu,
+            onDismiss: closeMenu)
+    }
+
     /// The search sheet over the page, prefilled with the page's address.
     private var searchSheet: some View {
         SearchSheet(
             engine: engine,
             opensFromPage: true,
+            skimEnabled: skimEnabled,
+            suggestionsEnabled: suggestionsEnabled,
+            focusSuspended: focusSuspended,
             initialText: session?.page.url?.absoluteString ?? "",
             morphNamespace: chromeNamespace,
             suggestions: suggestions,
             recents: recents,
             onOpen: onSearchSubmit,
+            onSkim: onSkim,
             onDismiss: onSearchDismiss)
     }
 
@@ -142,20 +193,27 @@ struct ReadingScreen: View {
             canGoBack: session?.canGoBack ?? false,
             isSlim: collapse >= 1,
             collapse: collapse,
-            showsLock: session?.failure != nil,
+            showsWarning: session?.failure != nil,
             tint: barTint,
+            glassNamespace: chromeNamespace,
             onBack: { session?.goBack() },
             onAddressTap: {
                 expandBar()
                 onAddressTap()
             },
             onTabsTap: onTabsTap,
-            onMenuTap: {})
+            onMenuTap: {
+                expandBar()
+                openMenu()
+            })
     }
 
     /// The page, or Magpie's own page when it can't load — one view with its tab card.
+    ///
+    /// `bottomClearance` is how far the full bar reaches up from the bottom edge: the
+    /// page's end scrolls clear of it, while the page itself still runs on under it.
     @ViewBuilder
-    private var pageArea: some View {
+    private func pageArea(bottomClearance: CGFloat) -> some View {
         if let session {
             Group {
                 if let failure = session.failure {
@@ -164,14 +222,41 @@ struct ReadingScreen: View {
                 } else {
                     ZStack {
                         WebView(session.page)
-                            .ignoresSafeArea()
+                            .safeAreaPadding(.bottom, bottomClearance)
+                            // The page starts below the status bar and runs under the
+                            // bar to the bottom edge; the strip it leaves above takes
+                            // the page's own top colour.
+                            .ignoresSafeArea(edges: .bottom)
                             .webViewOnScrollGeometryChange(
                                 for: ScrollSnapshot.self,
                                 of: ScrollSnapshot.init,
-                                action: { _, new in scrollDidChange(new) })
+                                action: { _, new in scrollDidChange(new) }
+                            )
+                            // A tab opened over this one swaps the view out with an
+                            // animation; the root waits for it to let the page go
+                            // before drawing the page unseen in a view of its own.
+                            .onAppear { session.isOnReadingScreen = true }
+                            .onDisappear { session.isOnReadingScreen = false }
                         WebViewProbe(session: session)
                             .frame(width: 0, height: 0)
                             .allowsHitTesting(false)
+                        if let picture = arrivalPicture.flatMap(UIImage.init(data:)) {
+                            Image(uiImage: picture)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                                .clipped()
+                                .ignoresSafeArea(edges: .bottom)
+                                .allowsHitTesting(false)
+                                .accessibilityHidden(true)
+                                .transition(.opacity)
+                        }
+                    }
+                    .task(id: arrivalPicture != nil) {
+                        guard arrivalPicture != nil else { return }
+                        try? await Task.sleep(for: Self.arrivalHold)
+                        guard !Task.isCancelled else { return }
+                        withAnimation(.easeOut(duration: 0.18)) { onArrivalDone() }
                     }
                     // One view per session: a page re-hosted on a session change has
                     // been seen to keep the old view's stale handle, and a fresh view
@@ -198,7 +283,38 @@ struct ReadingScreen: View {
         return Palette.pageTintGlass
     }
 
+    /// The colour of the strip above the page, under the status bar: the page's own top
+    /// colour at full strength, solid rather than glass, so the screen still reads edge
+    /// to edge with the page starting below the inset. Paper when the page has no colour
+    /// of its own to lend.
+    private var topEdgeFill: Color { Self.topEdgeFill(for: session) }
+
+    /// What sits under the status bar, for its ink: the colour read at the top of the
+    /// page as it rests, else the strip's own.
+    static func statusBarFill(for session: ReadingSession?) -> Color {
+        if let session, session.failure == nil, let top = session.topColour { return top }
+        return topEdgeFill(for: session)
+    }
+
+    /// The strip's colour: the page's theme colour, else its background, else paper.
+    static func topEdgeFill(for session: ReadingSession?) -> Color {
+        guard let session, session.failure == nil else { return Palette.paper }
+        if let themeColor = session.page.themeColor {
+            return themeColor
+        }
+        return session.pageBackground ?? Palette.paper
+    }
+
     private func scrollDidChange(_ snapshot: ScrollSnapshot) {
+        // A page moves itself while it loads — layout, restored positions — and none of
+        // that is the reader scrolling: the bar holds, and the reading starts after.
+        if session?.page.isLoading ?? true {
+            chrome.forgetOffset()
+            return
+        }
+        // Where the reader rests is what the tab's card should show: each scroll restarts
+        // the wait, and the picture is taken once the page holds still.
+        settleThenCapture()
         guard !reduceMotion else { return }
         let step = chrome.scrollDidChange(offsetY: snapshot.offsetY, atEndOfPage: snapshot.atEnd)
         guard step != .unchanged else { return }
@@ -213,12 +329,27 @@ struct ReadingScreen: View {
             try? await Task.sleep(for: Self.sizeSettleDelay)
             guard !Task.isCancelled, let session else { return }
             session.captureOpportunity()
+            await session.refreshTopColour()
         }
     }
 
     /// Expands the bar: the slim pill's tap, and search opening from it.
     private func expandBar() {
         apply(chrome.expand())
+    }
+
+    /// Opens the menu on the same spring the glass grows on.
+    private func openMenu() {
+        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
+            isMenuOpen = true
+        }
+    }
+
+    /// Folds the menu back into the bar.
+    private func closeMenu() {
+        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
+            isMenuOpen = false
+        }
     }
 
     private func apply(_ step: ChromeCollapse.Step) {

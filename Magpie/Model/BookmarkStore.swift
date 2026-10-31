@@ -21,6 +21,8 @@ struct Bookmark: Identifiable, Codable, Equatable, Sendable {
     var title: String
     /// Where the site's favicon lives, once a pipeline supplies it.
     var faviconURL: URL?
+    /// Cached favicon image data.
+    var faviconData: Data?
     /// The folder the bookmark sits in, if any.
     var folderID: BookmarkFolder.ID?
     /// When the page was saved.
@@ -33,6 +35,7 @@ struct Bookmark: Identifiable, Codable, Equatable, Sendable {
         url: URL,
         title: String,
         faviconURL: URL? = nil,
+        faviconData: Data? = nil,
         folderID: BookmarkFolder.ID? = nil,
         addedAt: Date,
         kind: Kind = .page
@@ -41,6 +44,7 @@ struct Bookmark: Identifiable, Codable, Equatable, Sendable {
         self.url = url
         self.title = title
         self.faviconURL = faviconURL
+        self.faviconData = faviconData
         self.folderID = folderID
         self.addedAt = addedAt
         self.kind = kind
@@ -211,16 +215,26 @@ final class BookmarkStore {
         url: URL,
         title: String,
         faviconURL: URL? = nil,
+        faviconData: Data? = nil,
         folder folderID: BookmarkFolder.ID? = nil,
         kind: Bookmark.Kind = .page,
         now: Date
     ) -> Bookmark {
         let bookmark = Bookmark(
-            url: url, title: title, faviconURL: faviconURL, folderID: folderID,
-            addedAt: now, kind: kind)
+            url: url, title: title, faviconURL: faviconURL, faviconData: faviconData,
+            folderID: folderID, addedAt: now, kind: kind)
         bookmarks.append(bookmark)
         saveIndex()
         return bookmark
+    }
+
+    /// The site's icon onto the bookmark: the bytes the list's rows show in place of the
+    /// letter tile. They land in the index with the bookmark.
+    func setFavicon(_ data: Data, for id: Bookmark.ID) {
+        guard let i = bookmarks.firstIndex(where: { $0.id == id }) else { return }
+        guard bookmarks[i].faviconData != data else { return }
+        bookmarks[i].faviconData = data
+        saveIndex()
     }
 
     /// Removes a bookmark.

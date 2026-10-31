@@ -58,7 +58,7 @@ final class ListsTests: XCTestCase {
     private func archive(appearance: String) throws {
         let app = XCUIApplication()
         app.launchArguments += [
-            "-uiTesting", "-uiTestingResetStore", "-uiTestingSurface=archive",
+            "-uiTesting", "-uiTestingResetStore", "-uiTestingSkipOnboarding", "-uiTestingSurface=archive",
             "-AppleInterfaceStyle", appearance,
         ]
         let shots = ShotWriter(test: self, prefix: appearance.lowercased())
@@ -114,7 +114,7 @@ final class ListsTests: XCTestCase {
         // 04 · nothing archived: the quiet line, and no pill to search with.
         app.terminate()
         app.launchArguments = [
-            "-uiTesting", "-uiTestingResetStore", "-uiTestingSurface=archive",
+            "-uiTesting", "-uiTestingResetStore", "-uiTestingSkipOnboarding", "-uiTestingSurface=archive",
             "-uiTestingListState=empty", "-AppleInterfaceStyle", appearance,
         ]
         app.launch()
@@ -131,7 +131,7 @@ final class ListsTests: XCTestCase {
     private func bookmarks(appearance: String) throws {
         let app = XCUIApplication()
         app.launchArguments += [
-            "-uiTesting", "-uiTestingResetStore", "-uiTestingSurface=bookmarks",
+            "-uiTesting", "-uiTestingResetStore", "-uiTestingSkipOnboarding", "-uiTestingSurface=bookmarks",
             "-AppleInterfaceStyle", appearance,
         ]
         let shots = ShotWriter(test: self, prefix: appearance.lowercased())
@@ -191,7 +191,7 @@ final class ListsTests: XCTestCase {
         // 04 · nothing saved: the quiet line, and no pill to search with.
         app.terminate()
         app.launchArguments = [
-            "-uiTesting", "-uiTestingResetStore", "-uiTestingSurface=bookmarks",
+            "-uiTesting", "-uiTestingResetStore", "-uiTestingSkipOnboarding", "-uiTestingSurface=bookmarks",
             "-uiTestingListState=empty", "-AppleInterfaceStyle", appearance,
         ]
         app.launch()

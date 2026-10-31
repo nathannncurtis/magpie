@@ -1,0 +1,80 @@
+{
+  "version" : 1,
+  "mods" : [
+    {
+      "id" : "google-answer-box",
+      "name" : "Google Answer Box",
+      "description" : "Pins the direct answer above the noise.",
+      "author" : "nathannncurtis",
+      "type" : "userscript",
+      "version" : "1.3",
+      "url" : "http://127.0.0.1:53117/mod.user.js",
+      "sha256" : "a572e8f3afce66eb1c43693f46ab63120df23d6c38321b39f41afe7cc633845a",
+      "icon" : {
+        "glyph" : "text.bubble",
+        "gradient" : ["#4C8DF6", "#1A56D6"]
+      },
+      "featured" : true,
+      "preview" : "googleAnswerBox"
+    },
+    {
+      "id" : "midnight-pages",
+      "name" : "Midnight Pages",
+      "description" : "Dark styles for sites that never shipped one.",
+      "author" : "magpie",
+      "type" : "filterList",
+      "version" : "1.0",
+      "url" : "http://127.0.0.1:53117/mod.list.txt",
+      "sha256" : "87a18f93c6e1b0d2e314f0387af69dc7e630925eee594348f66d70b6dccd7d62",
+      "icon" : {
+        "glyph" : "moon.fill",
+        "gradient" : ["#2B3358", "#0F1226"]
+      },
+      "popularRank" : 1
+    },
+    {
+      "id" : "youtube-quiet",
+      "name" : "YouTube, Quiet",
+      "description" : "Hides Shorts, end cards and the comment pile.",
+      "author" : "s.okafor",
+      "type" : "userscript",
+      "version" : "2.1",
+      "url" : "http://127.0.0.1:53117/mod.user.js",
+      "sha256" : "a572e8f3afce66eb1c43693f46ab63120df23d6c38321b39f41afe7cc633845a",
+      "icon" : {
+        "glyph" : "play.slash",
+        "gradient" : ["#F2706A", "#C9302C"]
+      },
+      "popularRank" : 2
+    },
+    {
+      "id" : "just-the-recipe",
+      "name" : "Just the Recipe",
+      "description" : "Skips the life story; lands on ingredients.",
+      "author" : "b.lindqvist",
+      "type" : "userscript",
+      "version" : "1.4",
+      "url" : "http://127.0.0.1:53117/mod.user.js",
+      "sha256" : "a572e8f3afce66eb1c43693f46ab63120df23d6c38321b39f41afe7cc633845a",
+      "icon" : {
+        "glyph" : "fork.knife",
+        "gradient" : ["#FFB65C", "#F07A1A"]
+      },
+      "popularRank" : 3
+    },
+    {
+      "id" : "wider-wikipedia",
+      "name" : "Wider Wikipedia",
+      "description" : "Lets articles use the full width.",
+      "author" : "l.marsh",
+      "type" : "userscript",
+      "version" : "1.2",
+      "url" : "http://127.0.0.1:53117/mod.user.js",
+      "sha256" : "a572e8f3afce66eb1c43693f46ab63120df23d6c38321b39f41afe7cc633845a",
+      "icon" : {
+        "glyph" : "arrow.left.and.right",
+        "gradient" : ["#A0A7B4", "#5A6270"]
+      }
+    }
+  ]
+}

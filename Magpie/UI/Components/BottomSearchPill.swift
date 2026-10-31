@@ -8,6 +8,12 @@ struct BottomSearchPill: View {
 
     @FocusState private var focused: Bool
 
+    /// The pill's height at the default size, growing with Dynamic Type the way its
+    /// field's text does.
+    @ScaledMetric(relativeTo: .subheadline) private var scaledHeight = PillMetrics.height
+    /// Grows with the type size, never below the board's height at the smaller sizes.
+    private var height: CGFloat { max(PillMetrics.height, scaledHeight) }
+
     private enum PillMetrics {
         static let height: CGFloat = Metrics.Bar.bottomSearchPillHeight
         static let horizontalPadding: CGFloat = 20
@@ -32,7 +38,7 @@ struct BottomSearchPill: View {
                 .accessibilityIdentifier("list.search.field")
         }
         .padding(.horizontal, PillMetrics.horizontalPadding)
-        .frame(height: PillMetrics.height)
+        .frame(minHeight: height)
         .glassEffect(.regular.interactive(), in: .capsule)
     }
 }

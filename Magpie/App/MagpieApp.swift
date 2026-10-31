@@ -18,7 +18,10 @@ struct MagpieApp: App {
                     await UITestEnvironment.play(UITestEnvironment.script, on: model)
                 }
                 .onChange(of: scenePhase) { _, phase in
-                    if phase == .active { model.refreshArchive() }
+                    if phase == .active {
+                        model.refreshArchive()
+                        Task { await model.refreshBlocking() }
+                    }
                 }
         }
     }

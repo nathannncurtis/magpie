@@ -18,11 +18,22 @@ enum UITestEnvironment {
         ProcessInfo.processInfo.arguments.contains("-uiTestingResetStore")
     }
 
-    /// A screen the UI tests open directly while no flow reaches it: the archive or the
-    /// bookmarks, through `-uiTestingSurface=<name>`.
+    /// Whether the run skips the first-launch flow (Welcome and the engine picker).
+    static var skipsOnboarding: Bool {
+        ProcessInfo.processInfo.arguments.contains("-uiTestingSkipOnboarding")
+    }
+
+    /// A screen the UI tests open directly while no flow reaches it: the archive, the
+    /// bookmarks, Settings, the mods, or one of the Skim screens, through
+    /// `-uiTestingSurface=<name>`.
     enum Surface: String {
         case archive
         case bookmarks
+        case settings
+        case mods
+        case skimWorking
+        case skimPage
+        case skimFailed
     }
 
     /// The screen the UI tests asked for, if any.
@@ -37,6 +48,50 @@ enum UITestEnvironment {
     /// Whether the seeded lists stay empty, for the empty states.
     static var listsEmpty: Bool {
         ProcessInfo.processInfo.arguments.contains("-uiTestingListState=empty")
+    }
+
+    /// Whether this run starts with mods installed, for the installed screens.
+    static var seedsMods: Bool {
+        ProcessInfo.processInfo.arguments.contains("-uiTestingModsInstalled")
+    }
+
+    /// Whether the UI tests force Skim on, with the fixture page behind it.
+    static var skimFaked: Bool {
+        ProcessInfo.processInfo.arguments.contains("-uiTestingSkim")
+    }
+
+    /// How many photos the seeded Skim page carries (`-uiTestingSkimState=`):
+    /// photos3, photo1, none.
+    static var skimPhotoCount: Int {
+        let prefix = "-uiTestingSkimState="
+        for argument in ProcessInfo.processInfo.arguments where argument.hasPrefix(prefix) {
+            switch String(argument.dropFirst(prefix.count)) {
+            case "photo1": return 1
+            case "none": return 0
+            default: return 3
+            }
+        }
+        return 3
+    }
+
+    /// Whether the landed install's check holds past its beat, so the UI test's shot can
+    /// catch it whatever the runner's latency; the released app clears it on time.
+    static var holdsInstallCheck: Bool {
+        ProcessInfo.processInfo.arguments.contains("-uiTestingHoldInstallCheck")
+    }
+
+    /// Whether the UI tests force Reduce Motion on (`-uiTestingReduceMotion`), injected
+    /// where `accessibilityReduceMotion` is read; nil outside the UI tests.
+    static var reduceMotionOverride: Bool? {
+        guard isUITesting else { return nil }
+        return ProcessInfo.processInfo.arguments.contains("-uiTestingReduceMotion")
+    }
+
+    /// Whether the launch intro's phases hold past their beats, so the UI tests' shots
+    /// can catch each one whatever the runner's latency; the released app plays them
+    /// on time.
+    static var holdsLaunchIntro: Bool {
+        ProcessInfo.processInfo.arguments.contains("-uiTestingHoldIntro")
     }
 
     /// The appearance the tests ask for by launch argument (`-AppleInterfaceStyle Dark`),
@@ -61,7 +116,7 @@ enum UITestEnvironment {
     }
 
     /// Plays the script against the model: `open:` submits an address as from the launch
-    /// sheet, `wait:` pauses, `tabs` shows the tabs screen.
+    /// sheet, `wait:` pauses, `tabs` shows the tabs screen, `mods` the mods screen.
     @MainActor
     static func play(_ steps: [String], on model: AppModel) async {
         for step in steps {
@@ -73,6 +128,9 @@ enum UITestEnvironment {
             } else if step == "tabs" {
                 SnapshotLog.event("script tabs")
                 model.showTabs()
+            } else if step == "mods" {
+                SnapshotLog.event("script mods")
+                model.showMods()
             } else if step.hasPrefix("card:"), let index = Int(step.dropFirst(5)),
                 model.store.tabs.indices.contains(index)
             {
@@ -99,15 +157,50 @@ enum UITestEnvironment {
         case .bookmarks:
             AppModel.seedLists(on: model, empty: listsEmpty)
             model.showBookmarks()
+        case .settings:
+            model.showSettings()
+        case .mods:
+            model.showMods()
+        case .skimWorking:
+            model.showSkimRun(seededSkimRun(on: model, state: seededWorking))
+        case .skimPage:
+            model.showSkimRun(
+                seededSkimRun(on: model, state: .finished(SkimFixture.page(photoCount: skimPhotoCount))))
+        case .skimFailed:
+            model.showSkimRun(
+                seededSkimRun(
+                    on: model,
+                    state: .failed(SkimFailure(line: SkimFailureLines.tooFew(read: 1, attempted: 3)))))
         case nil: break
         }
+    }
+
+    /// The seeded working state: two of three pages read.
+    @MainActor
+    private static var seededWorking: SkimRunState {
+        .working(
+            SkimProgress(plannedHosts: SkimFixture.hosts, readCount: 2, plannedCount: 3))
+    }
+
+    /// A run landed on a fixed state, with nothing running behind it.
+    @MainActor
+    private static func seededSkimRun(on model: AppModel, state: SkimRunState) -> SkimRun {
+        let run = SkimRun(
+            query: SkimFixture.query, engine: model.engine,
+            dependencies: model.skimDependencies)
+        run.land(state)
+        return run
     }
 }
 
 extension AppModel {
 
     /// The app as the UI tests drive it: a scratch store, a search engine pointed at the
-    /// app's own local page server, and fixed suggestion rows.
+    /// app's own local page server, fixed suggestion rows, and mods that never reach past
+    /// the loopback interface — the directory comes from the bundled fixture, already
+    /// fresh. The engine and the onboarding flag persist across a flow's launches, so
+    /// `-uiTestingResetStore` clears them too. Blocking reads a fixed tiny rule list,
+    /// except for the mods runs, whose installs compile into a real store.
     static func forUITesting(resetting: Bool) -> AppModel {
         let scratch = URL(
             fileURLWithPath: NSTemporaryDirectory(), isDirectory: true
@@ -115,21 +208,100 @@ extension AppModel {
         if resetting {
             try? FileManager.default.removeItem(at: scratch)
         }
-        let engine = SearchEngine(
+        let suite = "uitest-preferences"
+        let defaults = UserDefaults(suiteName: suite) ?? .standard
+        if resetting {
+            defaults.removePersistentDomain(forName: suite)
+        }
+        let preferences = Preferences(defaults: defaults)
+        preferences.searchEngine = SearchEngine(
             id: "uitest", displayName: "DuckDuckGo",
             searchTemplate: "http://127.0.0.1:\(UITestEnvironment.pageServerPort)/search?q=%s",
             suggestTemplate: nil, suggestFormat: nil)
-        let store = TabStore(persistence: FileSystemTabPersistence(directory: scratch))
-        let bookmarks = BookmarkStore(
-            persistence: FileSystemBookmarkPersistence(directory: scratch))
-        let model = AppModel(
-            store: store,
-            bookmarks: bookmarks,
-            engine: engine,
+        if UITestEnvironment.skipsOnboarding {
+            preferences.hasCompletedOnboarding = true
+        }
+        let modStore = ModStore(io: InMemoryModStoreIO(), listSink: nil)
+        if UITestEnvironment.seedsMods {
+            seedMods(into: modStore)
+        }
+        let blockerStore: any RuleSetProviding =
+            UITestEnvironment.seedsMods
+            ? FilterListStore(
+                lists: [],
+                directory: scratch.appending(component: "lists", directoryHint: .isDirectory))
+            : UITestRuleSets()
+        let blockingDefaults =
+            UserDefaults(suiteName: "uitest-blocking-\(UUID().uuidString)") ?? .standard
+        return AppModel(
+            store: TabStore(persistence: FileSystemTabPersistence(directory: scratch)),
+            preferences: preferences,
+            blocker: ContentBlocker(store: blockerStore, defaults: blockingDefaults),
+            bookmarks: BookmarkStore(
+                persistence: FileSystemBookmarkPersistence(directory: scratch)),
             suggestions: StubSuggestionProvider(
                 rowsByPrefix: ["magpie test", "magpie test page", "magpie test search"]),
-            recents: RecentSearches())
-        return model
+            recents: RecentSearches(),
+            modStore: modStore,
+            modDirectory: fixtureDirectory(),
+            skimAvailable: UITestEnvironment.skimFaked)
+    }
+
+    /// The directory over the bundled fixture index, cached warm so nothing fetches.
+    private static func fixtureDirectory() -> ModDirectory {
+        ModDirectory(cache: InMemoryModDirectoryCache.warm(UITestModFixtures.directoryIndex()))
+    }
+
+    /// The installed screens' three mods, newest install last (board 13): a link-installed
+    /// script, a directory filter list, and a directory script on top.
+    private static func seedMods(into store: ModStore) {
+        guard
+            let wikiURL = UITestModFixtures.serverURL("/mod.user.js"),
+            let listURL = UITestModFixtures.serverURL("/mod.list.txt"),
+            let wiki = Userscript.parse(UITestModFixtures.userscript)
+        else { return }
+        store.install(
+            ModDraft(
+                id: ModLinkInstaller.linkID(for: wikiURL),
+                name: "Wider Wikipedia",
+                kind: .userscript,
+                author: wiki.metadata.author,
+                version: wiki.metadata.version,
+                summary: "Lets articles use the full width.",
+                icon: .linkInstall(),
+                source: .link(wikiURL),
+                script: wiki.metadata,
+                scriptBody: wiki.body,
+                listURL: nil))
+
+        store.install(
+            ModDraft(
+                id: "midnight-pages",
+                name: "Midnight Pages",
+                kind: .filterList,
+                author: "magpie",
+                version: "1.0",
+                summary: "Dark styles for sites that never shipped one.",
+                icon: ModIconSpec(
+                    glyph: "moon.fill", gradient: ["#2B3358", "#0F1226"]),
+                source: .directory("midnight-pages"),
+                script: nil,
+                scriptBody: nil,
+                listURL: listURL))
+
+        store.install(
+            ModDraft(
+                id: "google-answer-box",
+                name: "Google Answer Box",
+                kind: .userscript,
+                author: "nathannncurtis",
+                version: "1.3",
+                summary: "Pins the direct answer above the noise.",
+                icon: ModIconSpec(glyph: "text.bubble", gradient: ["#4C8DF6", "#1A56D6"]),
+                source: .directory("google-answer-box"),
+                script: wiki.metadata,
+                scriptBody: wiki.body,
+                listURL: nil))
     }
 
     /// The seeded archive and bookmarks, fixed content with no network, once the saved
@@ -139,6 +311,7 @@ extension AppModel {
         switch surface {
         case .archive: seedArchive(in: model.store, now: .now)
         case .bookmarks: seedBookmarks(in: model.bookmarks, now: .now)
+        case .settings, .mods, .skimWorking, .skimPage, .skimFailed: break
         }
     }
 
@@ -222,4 +395,39 @@ extension AppModel {
             url: url("https://mobileread.com/night-mode-for-eink"),
             title: "Night mode for e-ink readers", folder: reading.id, now: now - 4 * 86_400)
     }
+}
+
+/// Blocking under the UI tests: one real, tiny rule list compiled into a private store,
+/// with fixed timestamps so the Settings rows read the same every run. No network.
+actor UITestRuleSets: RuleSetProviding {
+
+    /// Blocks a URL substring nothing in the test pages contains.
+    private static let json = #"[{"trigger":{"url-filter":"uitest-block"},"action":{"type":"block"}}]"#
+
+    private let compiler = WebKitRuleListCompiler(
+        url: URL(
+            fileURLWithPath: NSTemporaryDirectory(), isDirectory: true
+        ).appendingPathComponent("uitest-rules", isDirectory: true))
+
+    /// Fixed at two hours ago, so every run reads "Updated 2 h ago".
+    private let updated = Date(timeIntervalSinceNow: -(2 * 3600 + 60))
+    private var compiled: CompiledRuleList?
+
+    func refreshStale() async {}
+    func refreshNow() async {}
+
+    func ruleLists(for set: FilterRuleSet) async -> [CompiledRuleList] {
+        if compiled == nil {
+            compiled = try? await compiler.compile(identifier: "uitest-block", json: Self.json)
+        }
+        return compiled.map { [$0] } ?? []
+    }
+
+    var overallLastUpdated: Date? { updated }
+
+    func listUpdates() async -> [FilterListUpdate] {
+        FilterList.builtin.map { FilterListUpdate(list: $0, updated: updated) }
+    }
+
+    func setUserLists(_ lists: [FilterList]) async {}
 }

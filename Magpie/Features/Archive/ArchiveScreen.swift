@@ -20,6 +20,8 @@ struct ArchiveScreen: View {
         static let titleBottom: CGFloat = 10
         /// How the list's last rows keep clear of the search pill.
         static let listBottomClearance: CGFloat = 100
+        /// The least a control measures, so a tap never lands on less.
+        static let tapTarget: CGFloat = 44
     }
 
     private var now: Date { Date() }
@@ -39,7 +41,7 @@ struct ArchiveScreen: View {
                 .ignoresSafeArea()
             VStack(spacing: 0) {
                 navRow
-                Text("Archive")
+                Text(String(localized: "Archive"))
                     .font(Typography.screenTitle)
                     .foregroundStyle(Palette.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -47,19 +49,13 @@ struct ArchiveScreen: View {
                     .padding(.top, ScreenMetrics.titleTop)
                     .padding(.bottom, ScreenMetrics.titleBottom)
                     .accessibilityIdentifier("archive.title")
-                if store.archivedTabs.isEmpty {
-                    EmptyListState(
-                        icon: "archivebox",
-                        title: String(localized: "Nothing archived yet"),
-                        message: String(
-                            localized: "Tabs you leave alone for a day land here, and stay for 30 days.")
-                    )
-                    .ignoresSafeArea(edges: .top)
-                    .accessibilityIdentifier("archive.empty")
-                } else {
+                if !store.archivedTabs.isEmpty && !archived.isEmpty {
                     list
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            emptyBlock
+                .padding(.bottom, bottomInset)
             if !store.archivedTabs.isEmpty {
                 BottomSearchPill(
                     placeholder: String(localized: "Search archived tabs"),
@@ -69,6 +65,9 @@ struct ArchiveScreen: View {
                 .padding(
                     .bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset)
                 )
+                // The pill runs on behind the keys; the padding above, read off the safe
+                // area, is what lifts it onto them.
+                .ignoresSafeArea(.keyboard, edges: .bottom)
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("archive.search")
             }
@@ -78,20 +77,57 @@ struct ArchiveScreen: View {
         } action: {
             bottomInset = $0
         }
-        .ignoresSafeArea(edges: .bottom)
+        .ignoresSafeArea(.container, edges: .bottom)
+    }
+
+    /// The quiet block over the screen: nothing archived, or a search that matches
+    /// nothing. It lays over the whole screen so its share of the height is the
+    /// screen's, not the leftover under the header; the padding holds the layer to
+    /// the safe height, the screen's bottom being full-bleed for the pill.
+    @ViewBuilder
+    private var emptyBlock: some View {
+        if store.archivedTabs.isEmpty {
+            EmptyListState(
+                icon: "archivebox",
+                title: String(localized: "Nothing archived yet"),
+                message: String(
+                    localized: "Tabs you leave alone for a day land here, and stay for 30 days.")
+            )
+            .accessibilityIdentifier("archive.empty")
+        } else if archived.isEmpty {
+            noResults
+        }
+    }
+
+    /// What a search shows when it matches nothing: the pill stays, to take the query back.
+    private var noResults: some View {
+        EmptyListState(
+            icon: "magnifyingglass",
+            title: String(localized: "No results"),
+            message: String(localized: "Nothing in the archive matches that search.")
+        )
+        .accessibilityIdentifier("archive.results.empty")
     }
 
     private var navRow: some View {
         HStack {
             Spacer()
-            Button(String(localized: "Done"), action: onDone)
-                .font(Typography.buttonPill)
-                .foregroundStyle(Palette.textPrimary)
-                .frame(height: ScreenMetrics.navHeight)
-                .accessibilityIdentifier("archive.done")
+            Button(action: onDone) {
+                Text(String(localized: "Done"))
+                    .frame(
+                        minWidth: ScreenMetrics.tapTarget,
+                        minHeight: ScreenMetrics.tapTarget,
+                        alignment: .trailing
+                    )
+                    .contentShape(.rect)
+            }
+            .font(Typography.buttonPill)
+            .foregroundStyle(Palette.textPrimary)
+            .accessibilityIdentifier("archive.done")
         }
         .padding(.leading, ScreenMetrics.navLeading)
         .padding(.trailing, ScreenMetrics.navTrailing)
+        .frame(minHeight: ScreenMetrics.navHeight)
     }
 
     private var list: some View {
@@ -143,6 +179,7 @@ private struct ArchiveRow: View {
             faviconData: tab.faviconData,
             time: time
         )
+        .padding(.horizontal, Metrics.Spacing.insetList)
         .overlay(alignment: .top) {
             if showsSeparator {
                 Rectangle()
@@ -151,15 +188,14 @@ private struct ArchiveRow: View {
                     .padding(.leading, SeparatorMetrics.inset)
             }
         }
-        .padding(.horizontal, Metrics.Spacing.insetList)
         .rowPress(perform: onRestore)
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("archive.row.\(tab.title)")
     }
 
     private enum SeparatorMetrics {
-        /// The text's leading edge: the row inset, the favicon, and the gap after it.
-        static let inset: CGFloat = Metrics.Spacing.insetList + 26 + 12
+        /// The text's leading edge: the favicon and the gap after it.
+        static let inset: CGFloat = 26 + 12
     }
 }
 

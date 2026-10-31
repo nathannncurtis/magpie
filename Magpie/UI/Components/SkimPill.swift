@@ -25,6 +25,9 @@ struct SkimPill: View {
         static let verticalPadding: CGFloat = 6
         static let borderWidth: CGFloat = 1
         static let highlightHeight: CGFloat = 1.5
+        /// The least height the pill answers a tap in: the 44 pt guideline, met inside
+        /// the 46 pt suggestion row.
+        static let hitHeight: CGFloat = 44
     }
 
     let state: State
@@ -50,6 +53,10 @@ struct SkimPill: View {
                 .overlay(border)
                 .overlay(alignment: .top) { highlight }
                 .clipShape(.capsule)
+                // The capsule itself is half the row's height; the tap takes the whole
+                // 44 pt band the pill sits in, centred on it.
+                .frame(minHeight: Layout.hitHeight)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         }

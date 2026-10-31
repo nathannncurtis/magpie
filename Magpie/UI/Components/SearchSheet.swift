@@ -5,8 +5,8 @@ import UIKit
 /// keyboard, reading as one piece.
 ///
 /// On the mist it is glass; opened from a page it is solid `sheetSolid`. The field is focused
-/// with the keyboard up on arrival, rows stagger in 30 ms apart, and a swipe down or a tap
-/// away dismisses.
+/// with the keyboard up on arrival; the rows stagger in 30 ms apart as the list arrives, and
+/// play every later change as a diff. A swipe down or a tap away dismisses.
 struct SearchSheet: View {
 
     /// Layout numbers from the search-sheet spec.
@@ -29,6 +29,9 @@ struct SearchSheet: View {
     let opensFromPage: Bool
     let skimEnabled: Bool
     let suggestionsEnabled: Bool
+    /// True while a full screen covers the sheet (Settings, onboarding): the field gives
+    /// up focus — keyboard away — and takes it back when the cover goes.
+    var focusSuspended: Bool = false
     let morphNamespace: Namespace.ID?
     let suggestions: any SuggestionProviding
     let recents: any RecentSearchStoring
@@ -53,6 +56,7 @@ struct SearchSheet: View {
         opensFromPage: Bool = false,
         skimEnabled: Bool = true,
         suggestionsEnabled: Bool = true,
+        focusSuspended: Bool = false,
         initialText: String = "",
         morphNamespace: Namespace.ID? = nil,
         suggestions: any SuggestionProviding = SuggestionService(),
@@ -65,6 +69,7 @@ struct SearchSheet: View {
         self.opensFromPage = opensFromPage
         self.skimEnabled = skimEnabled
         self.suggestionsEnabled = suggestionsEnabled
+        self.focusSuspended = focusSuspended
         self.morphNamespace = morphNamespace
         self.suggestions = suggestions
         self.recents = recents
@@ -87,7 +92,6 @@ struct SearchSheet: View {
         VStack(spacing: 0) {
             tapAway
             sheetBody
-                .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .background {
             // Over a page, the whole page dims evenly, edge to edge behind the sheet; the
@@ -99,6 +103,8 @@ struct SearchSheet: View {
                     .opacity(fillSettled ? 1 : 0)
             }
         }
+        // VoiceOver's two-finger scrub folds the sheet away, as a tap above it does.
+        .accessibilityAction(.escape) { dismiss() }
         .onGeometryChange(for: CGFloat.self) { proxy in
             proxy.safeAreaInsets.bottom
         } action: { inset in
@@ -114,13 +120,16 @@ struct SearchSheet: View {
         Color.clear
             .ignoresSafeArea(edges: .top)
             .contentShape(Rectangle())
-            .onTapGesture(perform: onDismiss)
+            .onTapGesture(perform: dismiss)
             .accessibilityIdentifier("search.scrim")
     }
 
     /// The sheet hugs its content and rides the keyboard: the tail is exactly the keyboard's
     /// height (the home indicator's once it is away), so the rows sit on the keys and the
-    /// surface runs on behind them to the bottom edge.
+    /// surface runs on behind them to the bottom edge. Every bottom safe area is ignored,
+    /// so the glass reaches the physical edge even with the keys away; the drag offset
+    /// rides outside the surface, so the glass follows the finger instead of the rows
+    /// sliding under it.
     @ViewBuilder
     private var sheetBody: some View {
         VStack(spacing: 0) {
@@ -136,6 +145,9 @@ struct SearchSheet: View {
                 namespace: morphNamespace,
                 fillSettled: fillSettled)
         )
+        .offset(y: dragOffset)
+        .gesture(dismissDrag)
+        .ignoresSafeArea(edges: .bottom)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("search.sheet")
     }
@@ -157,12 +169,18 @@ struct SearchSheet: View {
                 .padding(.bottom, Layout.rowListBottomPadding)
         }
         .frame(maxWidth: .infinity)
-        .offset(y: dragOffset)
-        .gesture(dismissDrag)
         .onAppear {
-            focused = true
-            arrive()
+            // Under onboarding the sheet arrives already covered; the field waits.
+            if !focusSuspended {
+                focused = true
+                arrive()
+            }
             selectCarriedText()
+        }
+        .onChange(of: focusSuspended) { _, suspended in
+            focused = !suspended
+            // Covered, the sheet is out of the window and its arrival would never land.
+            if !suspended { arrive() }
         }
     }
 
@@ -199,6 +217,13 @@ struct SearchSheet: View {
         }
     }
 
+    /// Folds the sheet away with the keys: the focus goes first, so the keyboard drops on
+    /// the same beat as the glass instead of hanging over the page after it.
+    private func dismiss() {
+        focused = false
+        onDismiss()
+    }
+
     /// Follows a swipe down; a long enough or hard enough drag dismisses.
     private var dismissDrag: some Gesture {
         DragGesture(minimumDistance: 12)
@@ -210,7 +235,7 @@ struct SearchSheet: View {
                 let distance = change.translation.height
                 let fling = change.predictedEndTranslation.height - distance
                 if distance > Layout.dismissDistance || fling > Layout.dismissFling {
-                    onDismiss()
+                    dismiss()
                 } else {
                     withAnimation(Springs.chrome.animation) {
                         dragOffset = 0
@@ -231,6 +256,7 @@ struct SearchSheet: View {
     /// The field fades in just after the sheet; over a page the solid fill settles behind
     /// it, so the sheet is glass while it grows from the bar and solid once it is there.
     private func arrive() {
+        guard !fieldArrived else { return }
         if reduceMotion {
             withAnimation(.easeInOut(duration: 0.2)) {
                 fieldArrived = true
@@ -247,7 +273,9 @@ struct SearchSheet: View {
     }
 
     /// Loads the rows for the field's current text: recent searches while it is empty,
-    /// engine suggestions once there is something to ask about.
+    /// engine suggestions once there is something to ask about. The list's arrival — its
+    /// first rows, or its return from none at all — staggers in; after that the rows stay
+    /// up and each keystroke plays as the diff itself.
     private func reloadRows() async {
         let query = text
         let loaded: [String]
@@ -261,17 +289,27 @@ struct SearchSheet: View {
         }
         guard !Task.isCancelled else { return }
         if loaded == rows {
-            visibleRows = rows.count
+            withAnimation(rowAnimation) {
+                visibleRows = rows.count
+            }
             return
         }
-        rows = loaded
-        await revealRows()
+        if rows.isEmpty && !loaded.isEmpty {
+            rows = loaded
+            await revealRows()
+            return
+        }
+        withAnimation(rowAnimation) {
+            rows = loaded
+            visibleRows = loaded.count
+        }
     }
 
-    /// Reveals the loaded rows one apart, top to bottom; all at once under Reduce Motion.
+    /// Reveals the arriving rows one apart, top to bottom; all at once under Reduce
+    /// Motion.
     private func revealRows() async {
         guard !reduceMotion else {
-            withAnimation(.easeInOut(duration: 0.2)) {
+            withAnimation(rowAnimation) {
                 visibleRows = rows.count
             }
             return
@@ -279,7 +317,7 @@ struct SearchSheet: View {
         visibleRows = 0
         for index in rows.indices {
             guard !Task.isCancelled else { return }
-            withAnimation(Springs.chrome.animation) {
+            withAnimation(rowAnimation) {
                 visibleRows = index + 1
             }
             guard index < rows.count - 1 else { break }
@@ -289,6 +327,12 @@ struct SearchSheet: View {
                 return
             }
         }
+    }
+
+    /// How a change among the rows plays: the chrome spring, or Reduce Motion's 200 ms
+    /// crossfade.
+    private var rowAnimation: Animation {
+        reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation
     }
 
     /// A query goes to the engine; a URL goes to the site. The keyboard drops first:

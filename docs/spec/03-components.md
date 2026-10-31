@@ -5,7 +5,7 @@ Each component is one SwiftUI view in `UI/Components/`. Sizes are in points. "Da
 ## Chrome
 
 **ReadingBar**
-- Glass capsule, 60 tall; inset 12 from the screen sides and 26 above the bottom edge (see 01 Spacing). Padding: 4 on the leading side, 5 on the trailing side.
+- Glass capsule, 60 tall; inset 12 from the screen sides and 26 above the bottom edge (see 01 Spacing). Padding: 4 on the leading side, 5 on the trailing side. The 60/38 heights scale with Dynamic Type, capped at the first accessibility size.
 - Contents, left to right:
   - `CircleButton(back)`
   - `URLPill`, which grows to fill
@@ -14,9 +14,9 @@ Each component is one SwiftUI view in `UI/Components/`. Sizes are in points. "Da
 - Icon colour: the page tint's readable foreground. The default is #3A2E26 on the warm tint, and the dark default is #F2F2EE.
 - **States:** full; **slim** while scrolling (05 · Chrome on scroll); **••• pressed**, which fills that button with `ink` at 8–10% while the menu is open.
 
-**CircleButton**: a 48 × 48 hit area (minimum 44) holding a 20 pt symbol, with no background of its own.
+**CircleButton**: a 48 × 48 hit area (minimum 44) holding a 20 pt symbol, with no background of its own. A disabled button keeps its place and its hit area, at 45% opacity.
 
-**URLPill**: shows the host only ("quietweb.org"), in `row` medium, centred. It is 48 tall in the full bar and 30 in the slim bar. A lock icon appears only on errors; HTTPS is assumed. Tapping it opens search.
+**URLPill**: shows the host only ("quietweb.org"), in `row` medium, centred. It is 48 tall in the full bar and 30 in the slim bar, and its tap target never drops below 44 tall. A warning triangle (`exclamationmark.triangle.fill`) appears only on errors; HTTPS is assumed, so no lock ever shows. Tapping it opens search.
 
 **TabCount**: see 01 Icons. It shows the open-tab count. Above 99 it shows "∞".
 
@@ -31,7 +31,7 @@ The sheet's top corners are 38. On the mist it is glass; opened from a page, it 
 
 **SearchField**
 - **Ring:** an outer 1.5 pt `sheen` ring with radius 17.
-- **Inner field:** 48 tall, radius 15.5, filled white at 72% (dark: #1D2023). Padding: 16 leading, 8 trailing.
+- **Inner field:** 48 tall at the default size, growing with Dynamic Type; radius 15.5, filled white at 72% (dark: #1D2023). Padding: 16 leading, 8 trailing.
 - **Contents:**
   - the text field, in `field`, with autocorrect ON
   - an `EngineTag` at the trailing end: the engine name in `tag`, `textSecondary` on the `tag` fill, radius 9, padding 6 × 8
@@ -41,9 +41,11 @@ The sheet's top corners are 38. On the mist it is glass; opened from a page, it 
 - 46 tall, horizontal padding 12, gap 12.
 - Contents: a `magnifyingglass` icon at 16 in `textTertiary`, then the suggestion in `row`, then a trailing `SkimPill`.
 - Tapping the row searches; tapping the pill runs Skim for that query.
+- VoiceOver reads the row as the query alone, with a named "Skim" action in place of the pill.
 
 **SkimPill**
 - Capsule; padding 6 × 11; text `small` semibold reading "Skim", with a 13 pt mark.
+- Its tap target is a 44 pt band centred on the capsule, filling the row's height.
 - **Resting:** white at 45%, a 1 pt `ink` 16% border, and a white inner top highlight. Dark: white at 7% with a white 18% border.
 - **Primed** (the first row, top suggestion only): solid `ink` with `onInk` text.
 - Hidden entirely when Skim is unavailable or turned off.
@@ -59,7 +61,7 @@ The sheet's top corners are 38. On the mist it is glass; opened from a page, it 
 The sheet **hugs its content**: 14 pt between the last group and the bar, never more.
 
 **MenuTileRow**: 4 equal tiles with gap 8 and padding 4 × 14 × 12. Each tile:
-- size 64 tall, radius 18
+- at least 64 tall, radius 18; a long label wraps to a second line instead of clipping
 - fill: white at 50% with a white inner hairline (dark: white at 6%)
 - content: a 20 pt icon over a label in caption semibold
 - tiles: Skim (the mark), Bookmark (tap saves, long-press opens Bookmarks), Share, Mods
@@ -74,14 +76,14 @@ The sheet **hugs its content**: 14 pt between the last group and the bar, never 
 - Rows, as on the board:
   - Block ads & trackers [toggle]
   - Block cookie banners [toggle]
-  - Archive inactive tabs [After 1 day]
+  - Archive inactive tabs [After 1 day] — the whole row opens the interval picker
   - Search engine [DuckDuckGo ›]
   - Skim for me [toggle]
   - Settings [›], added 2026-10-30; this row isn't on the board yet
 
 **IconSquare**: 30 × 30, radius 9, `ink` fill with a `onInk` 16 pt icon. Dark: paper fill with ink icon.
 
-**Toggle**: the system `Toggle` with `.tint(ink)`. In dark the tint is paper, and the knob turns ink if the API allows; if not, keep the system knob.
+**Toggle**: the system `Toggle` tinted `toggleOn` — `ink` in light, `teal` in dark, where the system knob's white would vanish on the near-white ink track. The whole row flips the switch, not just the knob.
 
 ## Tabs
 
@@ -89,6 +91,7 @@ The sheet **hugs its content**: 14 pt between the last group and the bar, never 
 - A live snapshot of the page, radius 26, at 62% of the screen scale.
 - Ring: 5 pt of white at 38%, plus a 0.75 pt outer hairline of white at 75%, plus the soft shadow. Dark: white at 6% and 16%.
 - Above each card: a `TabLabel` (16 pt favicon plus the title in caption semibold, one line, truncated).
+- VoiceOver: the card speaks as one element (title, host, button, with a Close Tab action); the face inside is a single named element — the picture the UI tests wait on — never a bare second stop.
 - Gestures:
   - fling up to close (see 05)
   - tap to open
@@ -96,16 +99,16 @@ The sheet **hugs its content**: 14 pt between the last group and the bar, never 
 **TabStack**: cards sit side by side on the mist, 14 pt apart, with the current card centred and its neighbours peeking in from the screen edges.
 - Bottom row, inset 16 from the sides and 34 above the bottom: `ArchivedChip` ("Archived · 12") on the left, the count ("3 open", `small`, `labelOnMist`) in the middle, and `PlusButton` on the right.
 
-**ArchivedChip**: glass capsule, 46 tall, padding 0 × 16, with an `archivebox` icon and the label in `row` semibold.
+**ArchivedChip**: glass capsule, at least 46 tall (growing with Dynamic Type), padding 0 × 16, with an `archivebox` icon and the label in `row` semibold.
 
 **PlusButton**: 54 × 54 ink glass circle (paper in dark) with a 22 pt plus.
 
 ## Skim
 
 **SkimQueryBar**
-- Glass capsule, 42 tall, inset 14 from the sides, 58 from the top (just under the status bar).
+- Glass capsule, 42 tall, inset 14 from the sides, 4 pt below the status bar's bottom edge (58 pt from the top on the board's phone), so it sits just under the status bar on any device.
 - Contents: a search icon, the query, then a trailing tag of the mark plus "Skim" in caption semibold.
-- Tapping it edits the query.
+- Tapping it edits the query. The capsule carries an invisible 44 pt target: a taller frame around the 42 pt glass.
 
 **PhotoHeader**: chosen by how many photos were found.
 - **3 or more → mosaic.** 300 tall; a 1.55 : 1 grid with a 3 pt gap. The large photo sits on the left; the right column stacks two.
@@ -122,12 +125,14 @@ Photos come only from the source pages' `og:image` or largest article image. The
 
 **SkimSection**: a two-column grid, 30 and the remaining width, with gap 10, padding 0 × 22 and 14 above.
 - **Left column:** an `EmojiTile` (30 × 30, radius 9, `emojiTile` fill, 16 pt emoji).
-- **Right column:** the **Term** in `body` semibold `textPrimary`, then " — ", then the claim in `body`, then one or more `CitationDot`s.
+- **Right column:** the **Term** in `body` semibold `textPrimary`, then " — ", then the claim in `body`, then one or more inline citation digits.
 
-**CitationDot**: a 17 pt `sheen` circle with the source number in white, 10 pt semibold. Tapping it scrolls to that source card, and a long press previews the page.
+**Citation digits**: inside a claim the digits are the circled-digit glyphs (1–10; anything higher in brackets), links a finger follows while reading rather than buttons it aims at, so they carry no 44 pt target of their own — the source card itself is the target. They take `teal` in light (the sheen's green falls short of contrast on the skim paper) and the sheen's mid green in dark, and scale with Dynamic Type beside the claim's `body` text. Tapping one scrolls to its source card.
+
+**CitationBadge**: the 17 pt `sheen` circle with the source number in white, 10 pt semibold, on a source card's site line.
 
 **SourceCard**: solid card, 200 wide, radius 18, padding 8.
-- Contents: a thumbnail (84 tall, radius 12), then the site line (favicon, `CitationDot` and host in `tag`), then the title in `meta` semibold.
+- Contents: a thumbnail (84 tall, radius 12), then the site line (favicon, `CitationBadge` and host in `tag`), then the title in `meta` semibold.
 - Cards sit in a horizontal row under a "Sources" heading.
 
 **SkimControlBar**
@@ -149,7 +154,7 @@ Photos come only from the source pages' `og:image` or largest article image. The
 
 **DayHeader**: the `label` style in `labelOnMist`: "YESTERDAY", "EARLIER THIS WEEK".
 
-**FolderRow**: a 28 × 24 folder glyph tinted per folder, then the name, the count and a chevron. Each folder glyph is a two-tone tinted folder (back panel dark, front panel light). The user picks a tint from 6 presets. Defaults, as on the board (dark / light):
+**FolderRow**: a 28 × 24 folder glyph tinted per folder, then the name, the count and a chevron. The row is at least 44 tall. Each folder glyph is a two-tone tinted folder (back panel dark, front panel light). The user picks a tint from 6 presets. Defaults, as on the board (dark / light):
 - Kitchen: orange #F08A2A / #FFC27A
 - Reading: blue #2F6BDF / #7FB0FA
 - Work: sage #5E7550 / #9FB38E
@@ -157,13 +162,14 @@ Photos come only from the source pages' `og:image` or largest article image. The
 **SkimPageRow**: like ListRow, but the leading 26 pt tile is the mark on `ink` (radius 7) and the trailing element is a `FaviconStack` of its sources at 18 pt. The subtitle reads "Skim page · Kitchen".
 
 **BottomSearchPill**
-- Glass capsule, 54 tall, inset 14 from the sides and 26 above the bottom (see 01 Spacing).
+- Glass capsule, at least 54 tall (growing with Dynamic Type), inset 14 from the sides and 26 above the bottom (see 01 Spacing).
 - Contents: a search icon and the placeholder in `row` `textOnMistSecondary`.
+- Focused, it lifts itself clear of the keyboard, keeping its 26 pt foot clearance above the keys.
 - The list behind it uses the soft scroll-edge effect.
 
 ## Mods
 
-**SegmentedControl**: glass capsule, 38 tall, inset 3 inside the capsule. Segments: "Directory" and "Installed · N". The selected segment is solid `card` with a small shadow (dark: white at 16%).
+**SegmentedControl**: glass capsule, 38 tall, inset 3 inside the capsule. Segments: "Directory" and "Installed · N". The selected segment is solid `card` with a small shadow (dark: white at 16%). Each segment's tap target is at least 44 tall, standing taller than the track itself.
 
 **FeaturedModCard**: solid card, radius 24.
 - On top, a 150 pt preview showing what the mod does. For Google Answer Box, this is the drawn mini Google result with the answer card ringed.
@@ -178,9 +184,9 @@ Photos come only from the source pages' `og:image` or largest article image. The
   - a trailing `GetButton` or `InstalledCheck`
 - Rows are grouped in a solid card with radius 24.
 
-**GetButton**: a capsule with padding 6 × 16, reading "Get" in `meta` bold `teal` on a #EEF0EE fill (dark: white at 10% fill, #5EEAD4 text).
+**GetButton**: a capsule with padding 6 × 16, reading "Get" in `meta` bold `teal` on a #EEF0EE fill (dark: white at 10% fill, #5EEAD4 text). The capsule carries an invisible 44 pt target.
 
-**InstalledCheck**: a 30 pt `sheen` circle with a white checkmark. When it first appears it pops with the snap spring (05).
+**InstalledCheck**: a 30 pt `sheen` circle with a white checkmark. It pops with the snap spring (05) when an install lands — on a directory row or the featured card — and stays still on a revisit.
 
 **InstallFooter**: a glass capsule pill, 52 tall, reading "Install from URL" with a link icon.
 
@@ -190,11 +196,11 @@ Photos come only from the source pages' `og:image` or largest article image. The
 
 **EngineTile**
 - Glass, 92 tall, radius 20, padding 12 × 14.
-- Contents: the real favicon (30 pt, radius 8) at top left; the name in `row` semibold and a one-line note in `small` at the bottom.
+- Contents: the real favicon (30 pt, radius 8) at top left; the name in `row` semibold and a one-line note in `small` at the bottom (wrapping when type grows).
 - **Selected:** a 2 pt `ink` ring, a 22 pt `ink` check badge at top right, and a more opaque fill.
 - **Other tile:** no glass, just a 1 pt `ink` 14% outline and a generic icon on a `fill` square.
 
-**PrimaryCTA**: an ink glass capsule, 54 tall, full width minus 32, with `button` text. In dark it is paper.
+**PrimaryCTA**: an ink glass capsule, 54 tall, full width minus 32, with semibold text that scales with Dynamic Type. In dark it is paper.
 
 ## Settings
 
@@ -202,4 +208,4 @@ Photos come only from the source pages' `og:image` or largest article image. The
 
 **DefaultBrowserCard**: a SettingsGroup-styled card that reads "Make Magpie your default browser" / "Links from other apps open here. Set in iOS Settings." with a trailing ink "Open" capsule.
 - The "Open" button calls `UIApplication.openDefaultApplicationsSettingsURLString`.
-- The card is shown only until Magpie is the default browser; check with `UIApplication.shared.isDefault(.webBrowser)`.
+- The card is shown only until Magpie is the default browser; check with `UIApplication.shared.isDefault(.webBrowser)`, again whenever the app returns to the foreground.

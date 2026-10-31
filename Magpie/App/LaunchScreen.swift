@@ -6,8 +6,16 @@ import SwiftUI
 /// stack when there are tabs to return to.
 struct LaunchScreen: View {
     let engine: SearchEngine
+    /// Whether the search sheet shows its Skim pill.
+    var skimEnabled: Bool = true
+    var suggestionsEnabled: Bool = true
+    /// While a full screen (Settings, onboarding) covers the launch sheet.
+    var focusSuspended: Bool = false
     let suggestions: any SuggestionProviding
     let recents: any RecentSearchStoring
+    /// Text the field opens with: the Skim query bar's edit.
+    var initialText: String = ""
+    var onSkim: (String) -> Void = { _ in }
     let onOpen: (URL) -> Void
     let onDismiss: () -> Void
 
@@ -23,20 +31,32 @@ struct LaunchScreen: View {
                 .ignoresSafeArea()
             SearchSheet(
                 engine: engine,
+                skimEnabled: skimEnabled,
+                suggestionsEnabled: suggestionsEnabled,
+                focusSuspended: focusSuspended,
+                initialText: initialText,
                 suggestions: suggestions,
                 recents: recents,
                 onOpen: onOpen,
+                onSkim: onSkim,
                 onDismiss: onDismiss
             )
             .offset(y: arrived ? 0 : Self.riseDistance)
         }
-        .onAppear {
-            guard !arrived else { return }
-            withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
-                arrived = true
-            }
+        // A full screen over the launch takes it out of the window, and a rise started
+        // there never lands: the sheet rises once nothing covers it.
+        .onAppear { if !focusSuspended { rise() } }
+        .onChange(of: focusSuspended) { _, suspended in
+            if !suspended { rise() }
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("launch.screen")
+    }
+
+    private func rise() {
+        guard !arrived else { return }
+        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
+            arrived = true
+        }
     }
 }

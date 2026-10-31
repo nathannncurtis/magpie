@@ -25,7 +25,8 @@ final class FlowTests: XCTestCase {
     private func flow(appearance: String) {
         let app = XCUIApplication()
         app.launchArguments += [
-            "-uiTesting", "-uiTestingResetStore", "-AppleInterfaceStyle", appearance,
+            "-uiTesting", "-uiTestingResetStore", "-uiTestingSkipOnboarding",
+            "-AppleInterfaceStyle", appearance,
         ]
         // The app's capture log lands beside the shots; it cannot see the runner's own
         // environment, so the directory is handed over. The file is never cleared: one
@@ -108,7 +109,7 @@ final class FlowTests: XCTestCase {
 
         // 10 · a relaunch restores the last tab.
         app.terminate()
-        app.launchArguments = ["-uiTesting", "-AppleInterfaceStyle", appearance]
+        app.launchArguments = ["-uiTesting", "-uiTestingSkipOnboarding", "-AppleInterfaceStyle", appearance]
         app.launch()
         land("relaunch-restore") { address.waitForExistence(timeout: 20) }
         // The restored page itself, drawn: its heading carries the route.

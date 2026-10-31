@@ -1,6 +1,90 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@ — not supported yet" : {
+      "comment" : "Install sheet: the unsupported grants themselves",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ — not supported yet"
+          }
+        }
+      }
+    },
+    "%@, can't load" : {
+      "comment" : "Reading bar: the URL pill's label when the page can't load",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, can't load"
+          }
+        }
+      }
+    },
+    "%@ didn't install. Tap Get to try again." : {
+      "comment" : "Mods: a directory install that did not land, Get being the way to retry",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ didn't install. Tap Get to try again."
+          }
+        }
+      }
+    },
+    "%lld days" : {
+      "comment" : "Archive interval step in days",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld day"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld days"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld hours" : {
+      "comment" : "Archive interval step in hours",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld hour"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld hours"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld open" : {
       "comment" : "Open-tab count in the tabs screen's bottom row",
       "extractionState" : "manual",
@@ -25,6 +109,102 @@
         }
       }
     },
+    "%lld weeks" : {
+      "comment" : "Archive interval step in weeks",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld week"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld weeks"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "About Magpie" : {
+      "comment" : "Settings row and page: about the app",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About Magpie"
+          }
+        }
+      }
+    },
+    "Address" : {
+      "comment" : "Reading bar: the URL pill's label when no host is known",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Address"
+          }
+        }
+      }
+    },
+    "Ads & trackers" : {
+      "comment" : "Settings toggle row: ad and tracker blocking",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ads & trackers"
+          }
+        }
+      }
+    },
+    "After %@" : {
+      "comment" : "Menu archive row's value, %@ being like 1 day",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After %@"
+          }
+        }
+      }
+    },
+    "Also grants" : {
+      "comment" : "Install sheet: grants the shim cannot honour",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Also grants"
+          }
+        }
+      }
+    },
+    "Any, by search URL" : {
+      "comment" : "Note on the Other engine tile",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Any, by search URL"
+          }
+        }
+      }
+    },
     "Archive" : {
       "comment" : "Archive screen title",
       "extractionState" : "manual",
@@ -33,6 +213,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Archive"
+          }
+        }
+      }
+    },
+    "Archive inactive tabs" : {
+      "comment" : "Menu row: how long a tab sits untouched before it archives",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archive inactive tabs"
+          }
+        }
+      }
+    },
+    "Archive tabs after" : {
+      "comment" : "Settings row and page: the archive interval",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archive tabs after"
           }
         }
       }
@@ -73,6 +277,42 @@
         }
       }
     },
+    "Block ads & trackers" : {
+      "comment" : "Menu toggle row",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Block ads & trackers"
+          }
+        }
+      }
+    },
+    "Block cookie banners" : {
+      "comment" : "Menu toggle row",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Block cookie banners"
+          }
+        }
+      }
+    },
+    "Bookmark" : {
+      "comment" : "Menu tile: saves the page the tab shows; VoiceOver label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bookmark"
+          }
+        }
+      }
+    },
     "Bookmarks" : {
       "comment" : "Bookmarks screen title",
       "extractionState" : "manual",
@@ -93,6 +333,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bookmarks you move here will show up in this list."
+          }
+        }
+      }
+    },
+    "Can" : {
+      "comment" : "Install sheet: what the script can do",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can"
           }
         }
       }
@@ -122,7 +374,7 @@
       }
     },
     "Cancel" : {
-      "comment" : "Dismisses the folder rename alert",
+      "comment" : "Dismisses the folder rename alert; closes the install sheet and the Skim working screen",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -133,8 +385,92 @@
         }
       }
     },
+    "Check the address, or try again in a moment." : {
+      "comment" : "Install failed: line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check the address, or try again in a moment."
+          }
+        }
+      }
+    },
+    "Close tab" : {
+      "comment" : "Tab card: VoiceOver action that closes the tab",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close tab"
+          }
+        }
+      }
+    },
+    "Continue" : {
+      "comment" : "The engine picker's CTA before anything is picked",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
+          }
+        }
+      }
+    },
+    "Continue with %@" : {
+      "comment" : "The engine picker's CTA once an engine is picked",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue with %@"
+          }
+        }
+      }
+    },
+    "Cookie banners" : {
+      "comment" : "Settings toggle row: cookie banner blocking",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cookie banners"
+          }
+        }
+      }
+    },
+    "Dig deeper · up to 10" : {
+      "comment" : "The Skim control bar's way to read more sources, up to ten in all",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dig deeper · up to 10"
+          }
+        }
+      }
+    },
+    "Directory" : {
+      "comment" : "The mods screen's directory segment",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Directory"
+          }
+        }
+      }
+    },
     "Done" : {
-      "comment" : "Closes the archive, or leaves the bookmarks' edit mode",
+      "comment" : "Closes Settings, the archive or the mods screen; leaves the bookmarks' edit mode",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -169,6 +505,54 @@
         }
       }
     },
+    "Every site" : {
+      "comment" : "Install sheet: where a filter list applies",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every site"
+          }
+        }
+      }
+    },
+    "Filter list" : {
+      "comment" : "Install sheet preview: a filter list with no version",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter list"
+          }
+        }
+      }
+    },
+    "Filter list · v%@" : {
+      "comment" : "Install sheet preview: a filter list's version",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter list · v%@"
+          }
+        }
+      }
+    },
+    "Filter lists" : {
+      "comment" : "Settings row and page: the blocking filter lists",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filter lists"
+          }
+        }
+      }
+    },
     "Folder name" : {
       "comment" : "Placeholder in the folder rename alert",
       "extractionState" : "manual",
@@ -193,6 +577,162 @@
         }
       }
     },
+    "Free and open source. No account. Nothing collected." : {
+      "comment" : "Welcome fine print, also on About",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free and open source. No account. Nothing collected."
+          }
+        }
+      }
+    },
+    "From %lld pages · read on this phone" : {
+      "comment" : "Under a Skim page's title: how many sources it was read from, and where",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "From %lld page · read on this phone"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "From %lld pages · read on this phone"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Get" : {
+      "comment" : "Installs a directory mod",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get"
+          }
+        }
+      }
+    },
+    "Get started" : {
+      "comment" : "Welcome's only button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get started"
+          }
+        }
+      }
+    },
+    "Google, privately" : {
+      "comment" : "Note on the Startpage tile",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Google, privately"
+          }
+        }
+      }
+    },
+    "Install" : {
+      "comment" : "Installs the mod the sheet previewed",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install"
+          }
+        }
+      }
+    },
+    "Install from URL" : {
+      "comment" : "The mods footer and the install sheet's title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install from URL"
+          }
+        }
+      }
+    },
+    "Installed" : {
+      "comment" : "The installed check's label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installed"
+          }
+        }
+      }
+    },
+    "Installed · %lld" : {
+      "comment" : "The mods screen's installed segment, with its count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Installed · %lld"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Installed · %lld"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Installing" : {
+      "comment" : "The drawing mark's label while an install runs",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installing"
+          }
+        }
+      }
+    },
+    "It couldn't be put together from those pages. Try again in a moment." : {
+      "comment" : "Skim couldn't finish: the pages wouldn't compose. COPY: review",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It couldn't be put together from those pages. Try again in a moment."
+          }
+        }
+      }
+    },
     "It didn't answer. Try again in a moment." : {
       "comment" : "Page-load failure line for errors other than being offline",
       "extractionState" : "manual",
@@ -205,6 +745,54 @@
         }
       }
     },
+    "It names no site in @match or @include, so Magpie has nowhere to run it." : {
+      "comment" : "Install failed: line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It names no site in @match or @include, so Magpie has nowhere to run it."
+          }
+        }
+      }
+    },
+    "Licence" : {
+      "comment" : "About row: the app's licence",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Licence"
+          }
+        }
+      }
+    },
+    "Magpie needs a link to a userscript (ending in .user.js) or a filter list." : {
+      "comment" : "Install failed: what Magpie needs",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Magpie needs a link to a userscript (ending in .user.js) or a filter list."
+          }
+        }
+      }
+    },
+    "Make Magpie your default browser" : {
+      "comment" : "Default browser card title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make Magpie your default browser"
+          }
+        }
+      }
+    },
     "Menu" : {
       "comment" : "Reading bar button that opens the menu",
       "extractionState" : "manual",
@@ -213,6 +801,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Menu"
+          }
+        }
+      }
+    },
+    "Microsoft" : {
+      "comment" : "Note on the Bing tile",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microsoft"
+          }
+        }
+      }
+    },
+    "Mods" : {
+      "comment" : "The mods screen's header",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mods"
+          }
+        }
+      }
+    },
+    "Mods from the directory or a link show up here." : {
+      "comment" : "The installed list's empty line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mods from the directory or a link show up here."
           }
         }
       }
@@ -241,6 +865,30 @@
         }
       }
     },
+    "No answer from that link." : {
+      "comment" : "Install failed: the link didn't answer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No answer from that link."
+          }
+        }
+      }
+    },
+    "No bookmarks match that search." : {
+      "comment" : "A bookmarks search that matched nothing",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No bookmarks match that search."
+          }
+        }
+      }
+    },
     "No bookmarks yet" : {
       "comment" : "Empty bookmarks title",
       "extractionState" : "manual",
@@ -249,6 +897,78 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No bookmarks yet"
+          }
+        }
+      }
+    },
+    "No results" : {
+      "comment" : "A list search that matched nothing, in Archive and Bookmarks",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No results"
+          }
+        }
+      }
+    },
+    "No tracking" : {
+      "comment" : "Note on the DuckDuckGo tile",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No tracking"
+          }
+        }
+      }
+    },
+    "Nobody has reviewed this mod. Only install it if you trust where it came from." : {
+      "comment" : "Install sheet warning: line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nobody has reviewed this mod. Only install it if you trust where it came from."
+          }
+        }
+      }
+    },
+    "Not in the directory." : {
+      "comment" : "Install sheet warning: lead",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not in the directory."
+          }
+        }
+      }
+    },
+    "Not reviewed" : {
+      "comment" : "Tag on a link-installed mod",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not reviewed"
+          }
+        }
+      }
+    },
+    "Not updated yet" : {
+      "comment" : "Filter lists timestamp before any refresh",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not updated yet"
           }
         }
       }
@@ -265,6 +985,18 @@
         }
       }
     },
+    "Nothing in the archive matches that search." : {
+      "comment" : "An archive search that matched nothing",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing in the archive matches that search."
+          }
+        }
+      }
+    },
     "Nothing in this folder" : {
       "comment" : "Empty folder title",
       "extractionState" : "manual",
@@ -277,6 +1009,186 @@
         }
       }
     },
+    "Nothing installed" : {
+      "comment" : "The installed list's empty title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing installed"
+          }
+        }
+      }
+    },
+    "Off" : {
+      "comment" : "A mod's switch, off",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        }
+      }
+    },
+    "On" : {
+      "comment" : "A mod's switch, on",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On"
+          }
+        }
+      }
+    },
+    "Only %lld of %lld pages could be read. That's not enough to Skim." : {
+      "comment" : "Skim couldn't finish: too few of the source pages could be read",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only %lld of %lld pages could be read. That's not enough to Skim."
+          }
+        }
+      }
+    },
+    "Other" : {
+      "comment" : "The engine picker's last tile, and the engine list's last row",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other"
+          }
+        }
+      }
+    },
+    "Own index" : {
+      "comment" : "Note on the Brave Search tile",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Own index"
+          }
+        }
+      }
+    },
+    "Paid, no ads" : {
+      "comment" : "Note on the Kagi tile",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paid, no ads"
+          }
+        }
+      }
+    },
+    "Passwords" : {
+      "comment" : "Settings row: where passwords live",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwords"
+          }
+        }
+      }
+    },
+    "Pick one; you can switch any time from the menu." : {
+      "comment" : "The engine picker's single line under its question",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pick one; you can switch any time from the menu."
+          }
+        }
+      }
+    },
+    "Plants trees" : {
+      "comment" : "Note on the Ecosia tile",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plants trees"
+          }
+        }
+      }
+    },
+    "Popular this week" : {
+      "comment" : "Directory section title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Popular this week"
+          }
+        }
+      }
+    },
+    "Privacy" : {
+      "comment" : "Settings section label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy"
+          }
+        }
+      }
+    },
+    "Read and change pages on that site" : {
+      "comment" : "Install sheet: what a userscript can do, plainly",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read and change pages on that site"
+          }
+        }
+      }
+    },
+    "Reading %lld pages" : {
+      "comment" : "The Skim working screen's status line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Reading %lld page"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Reading %lld pages"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Recently added" : {
       "comment" : "Bookmarks section label over the newest saves",
       "extractionState" : "manual",
@@ -285,6 +1197,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Recently added"
+          }
+        }
+      }
+    },
+    "Remove" : {
+      "comment" : "The swipe action on an installed mod",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove"
           }
         }
       }
@@ -313,6 +1237,18 @@
         }
       }
     },
+    "Runs on" : {
+      "comment" : "Install sheet: where the script runs",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Runs on"
+          }
+        }
+      }
+    },
     "Save" : {
       "comment" : "Applies the folder rename",
       "extractionState" : "manual",
@@ -321,6 +1257,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Save"
+          }
+        }
+      }
+    },
+    "Saved" : {
+      "comment" : "The Bookmark tile's state, for VoiceOver",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved"
+          }
+        }
+      }
+    },
+    "Script · by %@ · v%@" : {
+      "comment" : "Install sheet preview: the script's author and version",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Script · by %@ · v%@"
+          }
+        }
+      }
+    },
+    "Search" : {
+      "comment" : "Settings section label; the picker's step label; the search field's spoken label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search"
+          }
+        }
+      }
+    },
+    "Search URL, with %s for the query" : {
+      "comment" : "Placeholder of the Other engine's URL field",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search URL, with %s for the query"
           }
         }
       }
@@ -349,6 +1333,54 @@
         }
       }
     },
+    "Search engine" : {
+      "comment" : "Settings row and page: which engine searches run on",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search engine"
+          }
+        }
+      }
+    },
+    "Settings" : {
+      "comment" : "The Settings screen's title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
+          }
+        }
+      }
+    },
+    "Share" : {
+      "comment" : "Menu tile: the system share sheet on the page's address",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share"
+          }
+        }
+      }
+    },
+    "Show search results" : {
+      "comment" : "Skim couldn't finish: open the query on the search engine instead",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show search results"
+          }
+        }
+      }
+    },
     "Skim" : {
       "comment" : "The Skim pill at the trailing end of a suggestion row",
       "extractionState" : "manual",
@@ -357,6 +1389,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Skim"
+          }
+        }
+      }
+    },
+    "Skim %@" : {
+      "comment" : "VoiceOver label of the Skim pill in a suggestion row",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skim %@"
+          }
+        }
+      }
+    },
+    "Skim for me" : {
+      "comment" : "Settings toggle row: the Skim pill in the search sheet",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skim for me"
           }
         }
       }
@@ -385,6 +1441,90 @@
         }
       }
     },
+    "Skim · %lld pages" : {
+      "comment" : "Kicker above a Skim page's title on the no-photo tier; shown uppercased",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Skim · %lld page"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Skim · %lld pages"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Source %lld" : {
+      "comment" : "A citation dot's accessibility label: the source's number",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source %lld"
+          }
+        }
+      }
+    },
+    "Source code" : {
+      "comment" : "About row: where the source lives",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source code"
+          }
+        }
+      }
+    },
+    "Sources" : {
+      "comment" : "Heading over a Skim page's source cards",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sources"
+          }
+        }
+      }
+    },
+    "Suggestions" : {
+      "comment" : "Settings toggle row: the search sheet's suggestion rows",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggestions"
+          }
+        }
+      }
+    },
+    "Swipe a mod left to remove it. Off keeps it, but it stops running." : {
+      "comment" : "The hint under the installed card",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe a mod left to remove it. Off keeps it, but it stops running."
+          }
+        }
+      }
+    },
     "Tabs" : {
       "comment" : "Reading bar button that opens the tab stack",
       "extractionState" : "manual",
@@ -393,6 +1533,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tabs"
+          }
+        }
+      }
+    },
+    "Tabs & more" : {
+      "comment" : "Settings section label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabs & more"
           }
         }
       }
@@ -409,6 +1561,30 @@
         }
       }
     },
+    "Tabs, %lld open" : {
+      "comment" : "Reading bar: the tabs button's label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tabs, %lld open"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tabs, %lld open"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Tap Bookmark in the menu to keep a page here." : {
       "comment" : "Empty bookmarks message",
       "extractionState" : "manual",
@@ -417,6 +1593,102 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tap Bookmark in the menu to keep a page here."
+          }
+        }
+      }
+    },
+    "That didn't work. Try again in a moment." : {
+      "comment" : "Skim couldn't finish: the page wouldn't compose. COPY: review",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That didn't work. Try again in a moment."
+          }
+        }
+      }
+    },
+    "That script runs nowhere." : {
+      "comment" : "Install failed: no @match or @include",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That script runs nowhere."
+          }
+        }
+      }
+    },
+    "That's a web page, not a mod." : {
+      "comment" : "Install failed: the link was a page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That's a web page, not a mod."
+          }
+        }
+      }
+    },
+    "The address needs %s where the query goes." : {
+      "comment" : "Why an Other engine URL is not accepted",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The address needs %s where the query goes."
+          }
+        }
+      }
+    },
+    "The browser you shape." : {
+      "comment" : "Welcome's line under the name",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The browser you shape."
+          }
+        }
+      }
+    },
+    "The search results didn't come back. Check the connection and try again." : {
+      "comment" : "Skim couldn't finish: the engine's results page wouldn't load. COPY: review",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The search results didn't come back. Check the connection and try again."
+          }
+        }
+      }
+    },
+    "The usual" : {
+      "comment" : "Note on the Google tile",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The usual"
+          }
+        }
+      }
+    },
+    "Those pages are too long to read together. Try a narrower search." : {
+      "comment" : "Skim couldn't finish: the sources were too large to compose from. COPY: review",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Those pages are too long to read together. Try a narrower search."
           }
         }
       }
@@ -445,6 +1717,78 @@
         }
       }
     },
+    "Update now" : {
+      "comment" : "Filter lists page row: refresh every list now",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update now"
+          }
+        }
+      }
+    },
+    "Updated %@ ago" : {
+      "comment" : "Filter lists timestamp, %@ being like 2 h",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updated %@ ago"
+          }
+        }
+      }
+    },
+    "Updated just now" : {
+      "comment" : "Filter lists timestamp within a minute of a refresh",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Updated just now"
+          }
+        }
+      }
+    },
+    "Use this URL" : {
+      "comment" : "Engine list page: save the Other engine's URL",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use this URL"
+          }
+        }
+      }
+    },
+    "Version" : {
+      "comment" : "About row: the app's version",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        }
+      }
+    },
+    "Where should searches go?" : {
+      "comment" : "The engine picker's question",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Where should searches go?"
+          }
+        }
+      }
+    },
     "Yesterday" : {
       "comment" : "Archive day group holding yesterday",
       "extractionState" : "manual",
@@ -465,6 +1809,114 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "You're offline. It'll load when you're back."
+          }
+        }
+      }
+    },
+    "example.com/mod.user.js" : {
+      "comment" : "The install sheet's URL field placeholder",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "example.com/mod.user.js"
+          }
+        }
+      }
+    },
+    "filter list" : {
+      "comment" : "Row author line: a filter list with no author",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "filter list"
+          }
+        }
+      }
+    },
+    "filter list · %@" : {
+      "comment" : "Row author line: a filter list",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "filter list · %@"
+          }
+        }
+      }
+    },
+    "from a link" : {
+      "comment" : "Row author line suffix on a link install",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "from a link"
+          }
+        }
+      }
+    },
+    "iOS Passwords" : {
+      "comment" : "Settings row value: where passwords live",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS Passwords"
+          }
+        }
+      }
+    },
+    "magpie" : {
+      "comment" : "The wordmark on Welcome",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "magpie"
+          }
+        }
+      }
+    },
+    "script" : {
+      "comment" : "Row author line: a userscript with no author",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "script"
+          }
+        }
+      }
+    },
+    "script · %@" : {
+      "comment" : "Row author line: a userscript",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "script · %@"
+          }
+        }
+      }
+    },
+    "the sites it names: %@" : {
+      "comment" : "Install sheet: where a script with only @include rules runs",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the sites it names: %@"
           }
         }
       }

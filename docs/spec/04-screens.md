@@ -21,13 +21,13 @@ Later launches restore the last tab, with no animation.
 ## 01 · Launch / search
 - **Background:** the mist.
 - **Sheet:** a `SearchSheet` attached to the keyboard, glass, edge to edge, top corners 38. The field is focused with the keyboard up on arrival.
-- **Suggestions:** up to 3 rows, coming from the chosen engine's suggest API. The first row's Skim pill is primed (ink).
+- **Suggestions:** up to 3 rows, coming from the chosen engine's suggest API. The first row's Skim pill is primed (ink). The rows stagger in once as the list arrives; typing animates the rows it adds or drops, never resetting the list.
 - **Empty field:** show recent searches as rows, or no rows at all. Nothing else.
 - **Submitting:** a query goes to the chosen engine; a URL goes to that site. The Skim pill runs Skim (08).
 - **Opened from a page:** the bar morphs into this sheet and the sheet turns solid (02, 05 · Open search).
 
 ## 02 · Reading
-- **Layout:** a full-bleed `WKWebView` under the status bar, with the `ReadingBar` floating at the bottom.
+- **Layout:** a `WKWebView` that starts below the status bar and runs to the bottom edge under the floating `ReadingBar`. The strip above the page, under the status bar, takes the page's own top colour (`themeColor`, else its own background, else paper), so the screen still reads edge to edge.
 - **Bar tint:** comes from the page's `themeColor`, or `underPageBackgroundColor` when there's no theme colour.
 - **Scrolling:** collapses the bar to slim (05 · Chrome on scroll).
 - **Dark mode on pages:** never inverted. Send `Sec-CH-Prefers-Color-Scheme: dark` to Google, and inject nothing; sites with a dark theme show it themselves.
@@ -36,7 +36,7 @@ Later launches restore the last tab, with no animation.
 ## 03 · Tabs
 - **Layout:** a `TabStack` on the mist. The current tab is centred; the others sit to each side, with labels above.
 - **Gestures:** fling up to close; tap to open; swipe sideways to move through the stack.
-- **Bottom row:** the Archived chip (opens 09), the open count, and + (opens the launch search sheet, 01, on the mist, as a new tab).
+- **Bottom row:** the Archived chip (opens 09), the open count, and + (opens the launch search sheet, 01, on the mist, as a new tab). The row sits like the bars (foundations · bottom controls), its bottom edge `max(26, safe-area-bottom − 8)` above the physical bottom; the stack keeps clear of the status bar.
 - **Auto-archive:** tabs untouched for the set time move to Archive. The default is 1 day, adjustable from 12 hours to 30 days, ON by default.
 
 ## 04 · Skim page
@@ -66,6 +66,7 @@ Later launches restore the last tab, with no animation.
 - **Header:** "Mods" in `screenTitle`, with "Done" at top right.
 - **Segments:** Directory | Installed · N.
 - **Directory tab:** the `FeaturedModCard` (Google Answer Box), then "Popular this week" (`sectionTitle`) and a card of `ModRow`s.
+- **Directory install:** while the entry's file is fetched and checked, the row's Get gives way to the 24 pt `MarkSpinner` (05 · 06). More than one can run at once, each row carrying its own mark; a Get for an entry already installing does nothing. The install stays on the Directory tab: when it lands, the row's Get becomes a popping `InstalledCheck` in place. An install that does not land shows one plain line under the card, with Get as the way to try again.
 - **Footer:** the glass `InstallFooter` pill.
 - **Installed tab:** the same rows, each with an on/off toggle and swipe-to-remove.
 - **Directory source:** a JSON index in a public GitHub repo. Every addition is reviewed through a pull request. It is fetched at most once a day.
@@ -75,15 +76,16 @@ Later launches restore the last tab, with no animation.
 
 ## 07a · Welcome (first launch only)
 - **Background:** the mist.
+- **Anchor:** the block's top sits 0.23 of the height below the safe-area top (about 176 pt on a standard phone).
 - **Centre:** the mark draws itself (`MarkSpinner`, played once), then "magpie" in `wordmark` and "The browser you shape." in `row` `textOnMistSecondary` settle in beneath it.
 - **Bottom:** the `PrimaryCTA` "Get started", with "Free and open source. No account. Nothing collected." in `small` under it.
 
 ## 07b · Pick a search engine
-- **Header:** a step label, then "Where should searches go?" in `screenTitle`, then "Pick one; you can switch any time from the menu."
+- **Header:** a step label 26 pt below the safe-area top, then "Where should searches go?" in `screenTitle`, then "Pick one; you can switch any time from the menu."
 - **Grid:** `EngineTile`s, two per row, in this fixed order: DuckDuckGo, Google, Brave Search, Kagi, Ecosia, Startpage, Bing, Other.
   - Each tile's note: No tracking / The usual / Own index / Paid, no ads / Plants trees / Google, privately / Microsoft / Any, by search URL.
   - **Nothing is pre-selected. No engine pays for placement.**
-- **Other:** asks for a search URL containing `%s`, then validates it.
+- **Other:** asks for a search URL containing `%s`, then validates it. One typed without a scheme is taken as https; the only error is a missing `%s` ("The address needs %s where the query goes.").
 - **CTA:** disabled until a tile is picked, then reads "Continue with {Engine}".
 
 ## 08 · Skim working
@@ -98,14 +100,14 @@ Later launches restore the last tab, with no animation.
 - **Header:** "Archive" in `screenTitle`, with "Done" at top right.
 - **List:** rows on the mist, grouped by `DayHeader` (Yesterday, Earlier this week…). Each row: favicon, title, site, time.
 - **Actions:** tap a row to restore the tab; swipe to delete.
-- **Search:** the `BottomSearchPill` with "Search archived tabs" searches titles and addresses.
+- **Search:** the `BottomSearchPill` with "Search archived tabs" searches titles and addresses; the pill rides the keyboard.
 - **Retention:** 30 days, then deleted.
 
 ## 10 · Bookmarks
 - **Header:** "Bookmarks", with Edit (top left) and Done.
 - **Folders:** a "Folders" section of `FolderRow`s, then "Recently added", mixing `ListRow`s and `SkimPageRow`s.
 - **Edit mode:** adds "New folder", rename, reorder and delete.
-- **Search:** the `BottomSearchPill` with "Search bookmarks".
+- **Search:** the `BottomSearchPill` with "Search bookmarks"; the pill rides the keyboard.
 
 ## 11 · Settings
 - **Background:** the mist, with grouped boxes (`SettingsGroup`, frosted).
@@ -139,14 +141,15 @@ Every edge state follows one pattern: one plain line saying what happened, and o
 - **Footer:** the `InstallFooter` stays.
 
 ### 14 · Empty list (Archive; same for Bookmarks and Installed)
-- **Layout:** the header stays. A centred block sits on the mist about 300 pt from the top: a 34 pt line icon in `labelOnMist`, a title in 16 pt semibold, and one line in `meta`.
+- **Layout:** the header stays. A centred block sits on the mist with its top at 0.35 of the screen's safe height (about 270 pt on a standard phone), laid over the whole screen rather than under the header: a 34 pt line icon in `labelOnMist`, a title in 16 pt semibold, and one line in `meta`.
 - **No search pill** when there's nothing to search.
+- **A search that matches nothing** shows the same block with "No results" and one line naming the list, while the pill stays to take the query back.
 - **Copy:**
   - Archive: "Nothing archived yet" / "Tabs you leave alone for a day land here, and stay for 30 days."
   - Bookmarks and Installed: see 06.
 
 ### 15 · Page can't load
-- **Layout:** Magpie's own page on `skimBackground` (dark #121316), centred: a 40 pt globe-with-slash line icon in `textTertiary`, a title in 18 pt semibold, one line in `body` `textSecondary`, and an ink capsule "Try again" (paper in dark).
+- **Layout:** Magpie's own page on `skimBackground` (dark #121316), centred: a 40 pt globe-with-slash line icon in `textTertiary`, a title in 18 pt semibold, one line in `body` `textSecondary`, and an ink capsule "Try again" (paper in dark), never under 44 tall.
 - **The bar stays**, at its default tint.
 - **Offline:** the page reloads by itself when the connection returns (`NWPathMonitor`).
 - **Other failures** follow the same layout with different copy (see 06).

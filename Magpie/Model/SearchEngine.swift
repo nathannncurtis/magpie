@@ -68,15 +68,17 @@ struct SearchEngine: Equatable, Identifiable, Sendable {
     static let `default` = builtins[0]
 
     /// The "Other" engine, from a search URL containing `%s`. Nil unless the URL is a valid
-    /// http or https address with the placeholder in it.
+    /// http or https address with the placeholder in it. One typed without a scheme is
+    /// taken as https.
     static func other(template: String) -> SearchEngine? {
         let trimmed = template.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard trimmed.contains("%s") else { return nil }
-        guard let url = url(fromTemplate: trimmed, inserting: "probe") else { return nil }
+        guard trimmed.contains("%s"), !trimmed.contains(where: \.isWhitespace) else { return nil }
+        let full = hasScheme(trimmed) ? trimmed : "https://" + trimmed
+        guard let url = url(fromTemplate: full, inserting: "probe") else { return nil }
         guard url.scheme == "https" || url.scheme == "http", url.host != nil else { return nil }
         return SearchEngine(
             id: "other", displayName: "Other",
-            searchTemplate: trimmed,
+            searchTemplate: full,
             suggestTemplate: nil,
             suggestFormat: nil)
     }
@@ -92,7 +94,48 @@ struct SearchEngine: Equatable, Identifiable, Sendable {
         return Self.url(fromTemplate: suggestTemplate, inserting: query)
     }
 
+    /// The query a results URL holds, when the URL is this engine's results page: the
+    /// text between the template's parts around `%s`, decoded. The encoded query can
+    /// never hold the URL's own separators, so the split point is fixed. The text must
+    /// be fully percent-escaped, and the placeholder itself — raw or encoded — is never
+    /// a query.
+    func resultsQuery(for url: URL) -> String? {
+        guard let placeholder = searchTemplate.range(of: "%s") else { return nil }
+        let address = url.absoluteString
+        let prefix = String(searchTemplate[..<placeholder.lowerBound])
+        let suffix = String(searchTemplate[placeholder.upperBound...])
+        guard
+            address.hasPrefix(prefix),
+            address.hasSuffix(suffix),
+            address.count >= prefix.count + suffix.count
+        else { return nil }
+        let encoded = String(address.dropFirst(prefix.count).dropLast(suffix.count))
+        guard Self.escapesWellFormed(encoded), let query = encoded.removingPercentEncoding
+        else { return nil }
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed != "%s" else { return nil }
+        return trimmed
+    }
+
+    /// Whether every `%` in the text starts a two-digit hex escape.
+    private static func escapesWellFormed(_ text: String) -> Bool {
+        var characters = text.makeIterator()
+        while let character = characters.next() {
+            guard character == "%" else { continue }
+            guard let high = characters.next(), high.isHexDigit,
+                let low = characters.next(), low.isHexDigit
+            else { return false }
+        }
+        return true
+    }
+
     /// Substitutes the encoded query for `%s` in a URL template.
+    /// Whether the text opens with a scheme. A colon followed by digits is a port, as in
+    /// "example.org:8080", not a scheme.
+    private static func hasScheme(_ text: String) -> Bool {
+        text.contains(/^[A-Za-z][A-Za-z0-9+.\-]*:(?!\d)/)
+    }
+
     private static func url(fromTemplate template: String, inserting query: String) -> URL? {
         guard let encoded = query.addingPercentEncoding(withAllowedCharacters: queryAllowed) else {
             return nil

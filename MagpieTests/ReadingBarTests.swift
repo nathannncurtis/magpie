@@ -59,6 +59,12 @@ struct ReadableForegroundTests {
         let faint = Color(hex: 0xFFFFFF, opacity: 0.1)
         #expect(ReadableForeground.foreground(for: faint, scheme: .light) == Palette.onLightPageTint)
     }
+
+    @Test("a white page's tint reads the warm dark in dark too: the glass shows the white page")
+    func whitePageInDark() {
+        let tint = Color.white.opacity(0.55)
+        #expect(ReadableForeground.foreground(for: tint, scheme: .dark) == Palette.onLightPageTint)
+    }
 }
 
 @Suite("TabCount")
