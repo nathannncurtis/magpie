@@ -21,8 +21,12 @@ struct FeaturedModCard: View {
     var body: some View {
         VStack(spacing: 0) {
             preview
+                .accessibilityHidden(true)
             HStack(alignment: .center, spacing: 12) {
                 ModIcon(spec: mod.icon)
+                    .accessibilityHidden(true)
+                // The card's text reads as one line; what trails it stays its own
+                // element, so Get stays reachable.
                 VStack(alignment: .leading, spacing: 1) {
                     Text(mod.name)
                         .font(Typography.rowTitle)
@@ -33,6 +37,7 @@ struct FeaturedModCard: View {
                         .foregroundStyle(Palette.textSecondary)
                         .lineLimit(2)
                 }
+                .accessibilityElement(children: .combine)
                 Spacer(minLength: 0)
                 if installed {
                     InstalledCheck()
@@ -50,7 +55,6 @@ struct FeaturedModCard: View {
         .clipShape(RoundedRectangle(cornerRadius: Metrics.Radius.card, style: .continuous))
         .shadow(color: Palette.tabCardShadow, radius: 15, y: 14)
         .overlay(cardHairline)
-        .accessibilityElement(children: .combine)
         .accessibilityIdentifier("mods.featured")
     }
 

@@ -53,6 +53,9 @@ struct ModRow: View {
     private var row: some View {
         HStack(alignment: .center, spacing: Layout.gap) {
             ModIcon(spec: icon)
+                .accessibilityHidden(true)
+            // The text reads as one line; what trails it stays its own element, so
+            // Get and the on/off switch stay reachable.
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 6) {
                     Text(name)
@@ -76,6 +79,8 @@ struct ModRow: View {
                         .lineLimit(1)
                 }
             }
+            .accessibilityElement(children: .combine)
+            .removeAction(onRemove)
             Spacer(minLength: 0)
             trailingView
         }
@@ -83,7 +88,6 @@ struct ModRow: View {
         // The card's own colour, so the row is opaque: the swipe action under it shows
         // only where a swipe has moved the row aside, never through empty space.
         .background(Palette.card)
-        .accessibilityElement(children: .combine)
         .accessibilityIdentifier("mods.row")
     }
 
@@ -148,6 +152,20 @@ struct ModRow: View {
                     swipeOffset = 0
                 }
             }
+    }
+}
+
+/// The swipe-left action, named for VoiceOver: the gesture itself is invisible to it,
+/// so the row's line carries the action instead.
+private extension View {
+
+    @ViewBuilder
+    func removeAction(_ action: (() -> Void)?) -> some View {
+        if let action {
+            accessibilityAction(named: Text(ModsCopy.remove), action)
+        } else {
+            self
+        }
     }
 }
 
