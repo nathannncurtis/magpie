@@ -77,12 +77,27 @@ struct RootView: View {
                         onOpen: { model.openTab($0) },
                         onNewTab: { model.newTabFromTabs() },
                         onClose: { model.closeTab($0) },
-                        onShowArchive: {},
+                        onShowArchive: { model.showArchive() },
                         pageBackground: { id in model.sessions[id]?.pageBackground },
                         transitionNamespace: cards
                     )
                     .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("tabs.screen")
+                case .archive:
+                    ArchiveScreen(
+                        store: model.store,
+                        onRestore: { model.restoreArchivedTab($0) },
+                        onDone: { model.doneWithArchive() }
+                    )
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("archive.screen")
+                case .bookmarks:
+                    BookmarksScreen(
+                        store: model.bookmarks,
+                        onOpen: { model.openBookmark($0) }
+                    )
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("bookmarks.screen")
                 case nil:
                     // Nothing has started yet: the mist, while the saved tabs load.
                     MistBackground()

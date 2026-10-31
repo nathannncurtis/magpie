@@ -2,8 +2,8 @@
   "sourceLanguage" : "en",
   "strings" : {
     "%lld open" : {
-      "extractionState" : "manual",
       "comment" : "Open-tab count in the tabs screen's bottom row",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "variations" : {
@@ -25,9 +25,21 @@
         }
       }
     },
-    "Archived · %lld" : {
+    "Archive" : {
+      "comment" : "Archive screen title",
       "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archive"
+          }
+        }
+      }
+    },
+    "Archived · %lld" : {
       "comment" : "Archived-tab count on the tabs screen's chip",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "variations" : {
@@ -50,8 +62,8 @@
       }
     },
     "Back" : {
-      "extractionState" : "manual",
       "comment" : "Reading bar button that goes back one page",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -61,9 +73,33 @@
         }
       }
     },
-    "Can't reach %@" : {
+    "Bookmarks" : {
+      "comment" : "Bookmarks screen title",
       "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bookmarks"
+          }
+        }
+      }
+    },
+    "Bookmarks you move here will show up in this list." : {
+      "comment" : "Empty folder message",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bookmarks you move here will show up in this list."
+          }
+        }
+      }
+    },
+    "Can't reach %@" : {
       "comment" : "Page-load failure title naming the host that didn't answer",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -74,8 +110,8 @@
       }
     },
     "Can't reach this page" : {
-      "extractionState" : "manual",
       "comment" : "Page-load failure title when no host is known",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -85,9 +121,81 @@
         }
       }
     },
-    "It didn't answer. Try again in a moment." : {
+    "Cancel" : {
+      "comment" : "Dismisses the folder rename alert",
       "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        }
+      }
+    },
+    "Done" : {
+      "comment" : "Closes the archive, or leaves the bookmarks' edit mode",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
+          }
+        }
+      }
+    },
+    "Earlier this week" : {
+      "comment" : "Archive day group holding the rest of this week",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Earlier this week"
+          }
+        }
+      }
+    },
+    "Edit" : {
+      "comment" : "Enters the bookmarks' edit mode",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit"
+          }
+        }
+      }
+    },
+    "Folder name" : {
+      "comment" : "Placeholder in the folder rename alert",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder name"
+          }
+        }
+      }
+    },
+    "Folders" : {
+      "comment" : "Bookmarks section label over the folders",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folders"
+          }
+        }
+      }
+    },
+    "It didn't answer. Try again in a moment." : {
       "comment" : "Page-load failure line for errors other than being offline",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -98,8 +206,8 @@
       }
     },
     "Menu" : {
-      "extractionState" : "manual",
       "comment" : "Reading bar button that opens the menu",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -109,9 +217,21 @@
         }
       }
     },
-    "New tab" : {
+    "New folder" : {
+      "comment" : "Makes a folder while editing the bookmarks",
       "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New folder"
+          }
+        }
+      }
+    },
+    "New tab" : {
       "comment" : "Tabs screen button that opens the launch search as a new tab",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -121,9 +241,117 @@
         }
       }
     },
-    "Skim" : {
+    "No bookmarks yet" : {
+      "comment" : "Empty bookmarks title",
       "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No bookmarks yet"
+          }
+        }
+      }
+    },
+    "Nothing archived yet" : {
+      "comment" : "Empty archive title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing archived yet"
+          }
+        }
+      }
+    },
+    "Nothing in this folder" : {
+      "comment" : "Empty folder title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing in this folder"
+          }
+        }
+      }
+    },
+    "Recently added" : {
+      "comment" : "Bookmarks section label over the newest saves",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recently added"
+          }
+        }
+      }
+    },
+    "Rename folder" : {
+      "comment" : "Title of the folder rename alert",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename folder"
+          }
+        }
+      }
+    },
+    "Results" : {
+      "comment" : "Bookmarks section label over search matches",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Results"
+          }
+        }
+      }
+    },
+    "Save" : {
+      "comment" : "Applies the folder rename",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
+          }
+        }
+      }
+    },
+    "Search archived tabs" : {
+      "comment" : "Placeholder in the archive's search pill",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search archived tabs"
+          }
+        }
+      }
+    },
+    "Search bookmarks" : {
+      "comment" : "Placeholder in the bookmarks' search pill",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search bookmarks"
+          }
+        }
+      }
+    },
+    "Skim" : {
       "comment" : "The Skim pill at the trailing end of a suggestion row",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -133,9 +361,33 @@
         }
       }
     },
-    "Tabs" : {
+    "Skim page" : {
+      "comment" : "Subtitle of a saved Skim page in no folder",
       "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skim page"
+          }
+        }
+      }
+    },
+    "Skim page · %@" : {
+      "comment" : "Subtitle of a saved Skim page: the page and its folder",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skim page · %@"
+          }
+        }
+      }
+    },
+    "Tabs" : {
       "comment" : "Reading bar button that opens the tab stack",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -145,9 +397,45 @@
         }
       }
     },
-    "Try again" : {
+    "Tabs you leave alone for a day land here, and stay for 30 days." : {
+      "comment" : "Empty archive message",
       "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabs you leave alone for a day land here, and stay for 30 days."
+          }
+        }
+      }
+    },
+    "Tap Bookmark in the menu to keep a page here." : {
+      "comment" : "Empty bookmarks message",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap Bookmark in the menu to keep a page here."
+          }
+        }
+      }
+    },
+    "Today" : {
+      "comment" : "Archive day group holding today",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today"
+          }
+        }
+      }
+    },
+    "Try again" : {
       "comment" : "The page-load failure button",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -157,9 +445,21 @@
         }
       }
     },
-    "You're offline. It'll load when you're back." : {
+    "Yesterday" : {
+      "comment" : "Archive day group holding yesterday",
       "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yesterday"
+          }
+        }
+      }
+    },
+    "You're offline. It'll load when you're back." : {
       "comment" : "Page-load failure line when the network path is down",
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
