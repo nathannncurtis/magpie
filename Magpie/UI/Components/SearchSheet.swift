@@ -104,7 +104,7 @@ struct SearchSheet: View {
             }
         }
         // VoiceOver's two-finger scrub folds the sheet away, as a tap above it does.
-        .accessibilityAction(.escape) { onDismiss() }
+        .accessibilityAction(.escape) { dismiss() }
         .onGeometryChange(for: CGFloat.self) { proxy in
             proxy.safeAreaInsets.bottom
         } action: { inset in
@@ -120,7 +120,7 @@ struct SearchSheet: View {
         Color.clear
             .ignoresSafeArea(edges: .top)
             .contentShape(Rectangle())
-            .onTapGesture(perform: onDismiss)
+            .onTapGesture(perform: dismiss)
             .accessibilityIdentifier("search.scrim")
     }
 
@@ -217,6 +217,13 @@ struct SearchSheet: View {
         }
     }
 
+    /// Folds the sheet away with the keys: the focus goes first, so the keyboard drops on
+    /// the same beat as the glass instead of hanging over the page after it.
+    private func dismiss() {
+        focused = false
+        onDismiss()
+    }
+
     /// Follows a swipe down; a long enough or hard enough drag dismisses.
     private var dismissDrag: some Gesture {
         DragGesture(minimumDistance: 12)
@@ -228,7 +235,7 @@ struct SearchSheet: View {
                 let distance = change.translation.height
                 let fling = change.predictedEndTranslation.height - distance
                 if distance > Layout.dismissDistance || fling > Layout.dismissFling {
-                    onDismiss()
+                    dismiss()
                 } else {
                     withAnimation(Springs.chrome.animation) {
                         dragOffset = 0
