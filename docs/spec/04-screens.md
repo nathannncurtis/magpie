@@ -85,7 +85,7 @@ Later launches restore the last tab, with no animation.
 - **Grid:** `EngineTile`s, two per row, in this fixed order: DuckDuckGo, Google, Brave Search, Kagi, Ecosia, Startpage, Bing, Other.
   - Each tile's note: No tracking / The usual / Own index / Paid, no ads / Plants trees / Google, privately / Microsoft / Any, by search URL.
   - **Nothing is pre-selected. No engine pays for placement.**
-- **Other:** asks for a search URL containing `%s`, then validates it.
+- **Other:** asks for a search URL containing `%s`, then validates it. One typed without a scheme is taken as https; the only error is a missing `%s` ("The address needs %s where the query goes.").
 - **CTA:** disabled until a tile is picked, then reads "Continue with {Engine}".
 
 ## 08 · Skim working

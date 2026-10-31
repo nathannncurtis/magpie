@@ -68,15 +68,17 @@ struct SearchEngine: Equatable, Identifiable, Sendable {
     static let `default` = builtins[0]
 
     /// The "Other" engine, from a search URL containing `%s`. Nil unless the URL is a valid
-    /// http or https address with the placeholder in it.
+    /// http or https address with the placeholder in it. One typed without a scheme is
+    /// taken as https.
     static func other(template: String) -> SearchEngine? {
         let trimmed = template.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard trimmed.contains("%s") else { return nil }
-        guard let url = url(fromTemplate: trimmed, inserting: "probe") else { return nil }
+        guard trimmed.contains("%s"), !trimmed.contains(where: \.isWhitespace) else { return nil }
+        let full = hasScheme(trimmed) ? trimmed : "https://" + trimmed
+        guard let url = url(fromTemplate: full, inserting: "probe") else { return nil }
         guard url.scheme == "https" || url.scheme == "http", url.host != nil else { return nil }
         return SearchEngine(
             id: "other", displayName: "Other",
-            searchTemplate: trimmed,
+            searchTemplate: full,
             suggestTemplate: nil,
             suggestFormat: nil)
     }
@@ -128,6 +130,12 @@ struct SearchEngine: Equatable, Identifiable, Sendable {
     }
 
     /// Substitutes the encoded query for `%s` in a URL template.
+    /// Whether the text opens with a scheme. A colon followed by digits is a port, as in
+    /// "example.org:8080", not a scheme.
+    private static func hasScheme(_ text: String) -> Bool {
+        text.contains(/^[A-Za-z][A-Za-z0-9+.\-]*:(?!\d)/)
+    }
+
     private static func url(fromTemplate template: String, inserting query: String) -> URL? {
         guard let encoded = query.addingPercentEncoding(withAllowedCharacters: queryAllowed) else {
             return nil

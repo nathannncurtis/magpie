@@ -86,6 +86,21 @@ struct SearchEngineTests {
         #expect(SearchEngine.other(template: "  https://example.org/?q=%s  ") != nil)
     }
 
+    @Test("an Other URL typed without a scheme is taken as https")
+    func otherWithoutScheme() {
+        #expect(
+            SearchEngine.other(template: "search.example/?q=%s")?.searchTemplate
+                == "https://search.example/?q=%s")
+        #expect(
+            SearchEngine.other(template: "example.org:8080/find?q=%s")?.searchTemplate
+                == "https://example.org:8080/find?q=%s")
+        #expect(
+            SearchEngine.other(template: "http://example.org/?q=%s")?.searchTemplate
+                == "http://example.org/?q=%s")
+        #expect(SearchEngine.other(template: "search.example/") == nil)
+        #expect(SearchEngine.other(template: "ftp://example.org/?q=%s") == nil)
+    }
+
     @Test("suggest URLs substitute the same way")
     func suggestURLs() {
         let duckduckgo = SearchEngine.builtins[0]

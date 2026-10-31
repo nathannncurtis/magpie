@@ -135,7 +135,7 @@ struct EnginePickerScreen: View {
             .accessibilityIdentifier("picker.otherURL")
 
             if !otherURL.isEmpty && chosenEngine == nil {
-                Text("The address needs %s where the query goes, on http or https.")
+                Text("The address needs %s where the query goes.")
                     .font(Typography.small)
                     .foregroundStyle(Palette.textOnMistSecondary)
                     // In line with the field's text, not its box.

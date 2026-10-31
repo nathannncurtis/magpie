@@ -1633,14 +1633,14 @@
         }
       }
     },
-    "The address needs %s where the query goes, on http or https." : {
+    "The address needs %s where the query goes." : {
       "comment" : "Why an Other engine URL is not accepted",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The address needs %s where the query goes, on http or https."
+            "value" : "The address needs %s where the query goes."
           }
         }
       }
