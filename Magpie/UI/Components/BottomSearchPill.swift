@@ -75,10 +75,8 @@ struct BottomSearchPill: View {
     /// The screen whose foot the pill sits on: the keyboard's frame is in its coordinates.
     @MainActor
     private var footScreen: UIScreen? {
-        UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .first { $0.activationState == .foregroundActive }?
-            .screen
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        return (scenes.first { $0.activationState == .foregroundActive } ?? scenes.first)?.screen
     }
 }
 

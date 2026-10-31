@@ -21,7 +21,7 @@ Later launches restore the last tab, with no animation.
 ## 01 · Launch / search
 - **Background:** the mist.
 - **Sheet:** a `SearchSheet` attached to the keyboard, glass, edge to edge, top corners 38. The field is focused with the keyboard up on arrival.
-- **Suggestions:** up to 3 rows, coming from the chosen engine's suggest API. The first row's Skim pill is primed (ink).
+- **Suggestions:** up to 3 rows, coming from the chosen engine's suggest API. The first row's Skim pill is primed (ink). The rows stagger in once as the list arrives; typing animates the rows it adds or drops, never resetting the list.
 - **Empty field:** show recent searches as rows, or no rows at all. Nothing else.
 - **Submitting:** a query goes to the chosen engine; a URL goes to that site. The Skim pill runs Skim (08).
 - **Opened from a page:** the bar morphs into this sheet and the sheet turns solid (02, 05 · Open search).

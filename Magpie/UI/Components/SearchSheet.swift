@@ -5,8 +5,8 @@ import UIKit
 /// keyboard, reading as one piece.
 ///
 /// On the mist it is glass; opened from a page it is solid `sheetSolid`. The field is focused
-/// with the keyboard up on arrival, rows stagger in 30 ms apart, and a swipe down or a tap
-/// away dismisses.
+/// with the keyboard up on arrival; the rows stagger in 30 ms apart as the list arrives, and
+/// play every later change as a diff. A swipe down or a tap away dismisses.
 struct SearchSheet: View {
 
     /// Layout numbers from the search-sheet spec.
@@ -261,7 +261,9 @@ struct SearchSheet: View {
     }
 
     /// Loads the rows for the field's current text: recent searches while it is empty,
-    /// engine suggestions once there is something to ask about.
+    /// engine suggestions once there is something to ask about. The list's arrival — its
+    /// first rows, or its return from none at all — staggers in; after that the rows stay
+    /// up and each keystroke plays as the diff itself.
     private func reloadRows() async {
         let query = text
         let loaded: [String]
@@ -278,14 +280,22 @@ struct SearchSheet: View {
             visibleRows = rows.count
             return
         }
-        rows = loaded
-        await revealRows()
+        if rows.isEmpty && !loaded.isEmpty {
+            rows = loaded
+            await revealRows()
+            return
+        }
+        withAnimation(rowAnimation) {
+            rows = loaded
+            visibleRows = loaded.count
+        }
     }
 
-    /// Reveals the loaded rows one apart, top to bottom; all at once under Reduce Motion.
+    /// Reveals the arriving rows one apart, top to bottom; all at once under Reduce
+    /// Motion.
     private func revealRows() async {
         guard !reduceMotion else {
-            withAnimation(.easeInOut(duration: 0.2)) {
+            withAnimation(rowAnimation) {
                 visibleRows = rows.count
             }
             return
@@ -293,7 +303,7 @@ struct SearchSheet: View {
         visibleRows = 0
         for index in rows.indices {
             guard !Task.isCancelled else { return }
-            withAnimation(Springs.chrome.animation) {
+            withAnimation(rowAnimation) {
                 visibleRows = index + 1
             }
             guard index < rows.count - 1 else { break }
@@ -303,6 +313,12 @@ struct SearchSheet: View {
                 return
             }
         }
+    }
+
+    /// How a change among the rows plays: the chrome spring, or Reduce Motion's 200 ms
+    /// crossfade.
+    private var rowAnimation: Animation {
+        reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation
     }
 
     /// A query goes to the engine; a URL goes to the site. The keyboard drops first:

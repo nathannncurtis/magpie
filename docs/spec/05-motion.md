@@ -27,7 +27,7 @@ Stagger lists 25–30 ms per item. Content inside a sheet starts 50 ms after the
 - **Trigger:** tap the URL pill.
 - **Morph:** one shape in the `GlassEffectContainer`. The bar widens to the edges, rises, and becomes the search sheet; the keyboard rises with it as one piece. Spring: `chrome`, about 0.5 s.
 - **Fill:** the glass turns fully solid (`sheetSolid`) while it grows. Nothing shows through the open sheet.
-- **Content:** the URL row fades out over 100 ms. The field fades in 50 ms after the morph starts; suggestions stagger 30 ms each.
+- **Content:** the URL row fades out over 100 ms. The field fades in 50 ms after the morph starts; the rows stagger 30 ms each as the list arrives, and every later change animates the rows it adds or drops.
 - **Dismiss:** swipe down or tap the scrim. The sheet shrinks back into the bar on the same spring.
 
 ### 02 · Bar into menu
