@@ -6,7 +6,9 @@ struct SearchField: View {
 
     /// Layout numbers from the search-field spec.
     private enum Layout {
-        static let height: CGFloat = 48
+        /// The field's height at the default size; it grows under the larger
+        /// accessibility sizes rather than clipping to it.
+        static let minHeight: CGFloat = 48
         static let leadingPadding: CGFloat = 16
         static let trailingPadding: CGFloat = 8
         static let contentGap: CGFloat = 10
@@ -28,6 +30,7 @@ struct SearchField: View {
                 .submitLabel(.search)
                 .focused(focus)
                 .onSubmit(onSubmit)
+                .accessibilityLabel(Text(String(localized: "Search")))
                 .accessibilityIdentifier("search.field")
             EngineTag(name: engineName)
         }
@@ -38,7 +41,7 @@ struct SearchField: View {
                 bottom: 0,
                 trailing: Layout.trailingPadding)
         )
-        .frame(height: Layout.height)
+        .frame(minHeight: Layout.minHeight)
         .background(
             Palette.searchFieldFill,
             in: RoundedRectangle(cornerRadius: Metrics.Radius.searchFieldInner, style: .continuous)

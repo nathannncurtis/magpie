@@ -30,6 +30,7 @@ struct SuggestionRow: View {
                     .truncationMode(.middle)
                 Spacer(minLength: Layout.gap)
                 SkimPill(state: skimState, action: onSkim)
+                    .accessibilityLabel(Text(String(localized: "Skim \(text)")))
             }
             .padding(.horizontal, Layout.horizontalPadding)
             .frame(minHeight: Metrics.Spacing.rowSuggestion)

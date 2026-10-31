@@ -27,7 +27,7 @@ Stagger lists 25–30 ms per item. Content inside a sheet starts 50 ms after the
 - **Trigger:** tap the URL pill.
 - **Morph:** one shape in the `GlassEffectContainer`. The bar widens to the edges, rises, and becomes the search sheet; the keyboard rises with it as one piece. Spring: `chrome`, about 0.5 s.
 - **Fill:** the glass turns fully solid (`sheetSolid`) while it grows. Nothing shows through the open sheet.
-- **Content:** the URL row fades out over 100 ms. The field fades in 50 ms after the morph starts; suggestions stagger 30 ms each.
+- **Content:** the URL row fades out over 100 ms. The field fades in 50 ms after the morph starts; the rows stagger 30 ms each as the list arrives, and every later change animates the rows it adds or drops.
 - **Dismiss:** swipe down or tap the scrim. The sheet shrinks back into the bar on the same spring.
 
 ### 02 · Bar into menu
@@ -76,7 +76,7 @@ Stagger lists 25–30 ms per item. Content inside a sheet starts 50 ms after the
 - **Sequence:**
   1. The mist fades up from paper (250 ms).
   2. The mark draws over 700 ms, and the bead drops in at the end (`snap`).
-  3. The mark rises 40–60 pt and fades as the search sheet rises from the bottom (`chrome`).
+  3. The whole stage — paper, mist and mark — fades as the search sheet rises from the bottom (`chrome`), the mark rising 40 pt within it. Under Reduce Motion it is one 200 ms crossfade.
 - **Total:** about 1.9 s. Tapping skips it.
 - **Reduce Motion:** the mark appears whole and the sheet fades in.
 

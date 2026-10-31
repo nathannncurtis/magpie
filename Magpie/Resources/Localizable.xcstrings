@@ -1202,7 +1202,7 @@
       }
     },
     "Search" : {
-      "comment" : "Settings section label; the picker's step label",
+      "comment" : "Settings section label; the picker's step label; the search field's spoken label",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1305,6 +1305,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Skim"
+          }
+        }
+      }
+    },
+    "Skim %@" : {
+      "comment" : "VoiceOver label of the Skim pill in a suggestion row",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skim %@"
           }
         }
       }
