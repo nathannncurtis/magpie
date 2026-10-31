@@ -6,6 +6,10 @@ struct MagpieApp: App {
 
     @State private var model = UITestEnvironment.makeModel()
 
+    /// A link handed over before the saved tabs are in, opened once they are.
+    @State private var pendingURL: URL?
+    @State private var started = false
+
     var body: some Scene {
         WindowGroup {
             RootView()
@@ -14,8 +18,17 @@ struct MagpieApp: App {
                 .task {
                     if UITestEnvironment.isUITesting { await UITestPageServer.shared.start() }
                     await model.start()
+                    started = true
+                    if let url = pendingURL {
+                        pendingURL = nil
+                        model.openFromLaunch(url)
+                    }
                     UITestEnvironment.applySurfaceOverride(to: model)
                     await UITestEnvironment.play(UITestEnvironment.script, on: model)
+                }
+                .onOpenURL { url in
+                    guard url.scheme == "http" || url.scheme == "https" else { return }
+                    if started { model.openFromLaunch(url) } else { pendingURL = url }
                 }
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .active {
