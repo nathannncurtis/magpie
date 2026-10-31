@@ -36,6 +36,9 @@ struct InstallSheet: View {
         case ticked
     }
 
+    /// A held link update to confirm, in place of a pasted link: the sheet shows the
+    /// new version and what it adds, and confirm installs it (04 · 06).
+    var update: PendingModUpdate?
     let onInstall: (ModDraft) -> Void
 
     @State private var linkText = ""
@@ -59,13 +62,15 @@ struct InstallSheet: View {
         VStack(spacing: 0) {
             SheetGrabber()
                 .padding(.bottom, 8)
-            Text(ModsCopy.installFromURL)
+            Text(update == nil ? ModsCopy.installFromURL : ModsCopy.updateAsksForMore)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(Palette.textPrimary)
                 .padding(.bottom, Layout.titleBottom)
-            field
-                .padding(.horizontal, Layout.sideInset)
-                .padding(.bottom, 12)
+            if update == nil {
+                field
+                    .padding(.horizontal, Layout.sideInset)
+                    .padding(.bottom, 12)
+            }
             outcome
             buttons
                 .padding(
@@ -98,6 +103,17 @@ struct InstallSheet: View {
         .onChange(of: linkText) { _, text in
             queueRead(of: text)
         }
+        .onAppear(perform: showUpdate)
+    }
+
+    /// A held update needs no reading: its new version is already in hand.
+    private func showUpdate() {
+        guard let update, let script = update.draft.script else { return }
+        let result = InstallLinkResult.userscript(
+            Userscript(metadata: script, body: update.draft.scriptBody ?? ""))
+        inspectedURL = update.draft.source.url
+        readyResult = result
+        phase = .ready(result)
     }
 
     // MARK: The field
@@ -171,6 +187,12 @@ struct InstallSheet: View {
                 Spacer(minLength: 0)
             }
             permRow(ModsCopy.runsOn, runsOn(result))
+            if let widening = update?.widening, !widening.newSites.isEmpty {
+                permRow(ModsCopy.newSites, widening.newSites.joined(separator: ", "))
+            }
+            if let widening = update?.widening, !widening.newGrants.isEmpty {
+                permRow(ModsCopy.newGrants, widening.newGrants.joined(separator: ", "))
+            }
             permRow(ModsCopy.can, ModsCopy.pagesPermission)
             if let unsupported = unsupportedGrants(result) {
                 permRow(ModsCopy.alsoGrantsLabel, ModsCopy.alsoGrantsValue(unsupported.joined(separator: ", ")))
@@ -271,7 +293,7 @@ struct InstallSheet: View {
                     Image(systemName: "checkmark")
                         .font(.system(size: 15, weight: .semibold))
                 default:
-                    Text(ModsCopy.install)
+                    Text(update == nil ? ModsCopy.install : ModsCopy.update)
                 }
             }
             .frame(maxWidth: .infinity)
@@ -347,7 +369,7 @@ struct InstallSheet: View {
 
     private func install() {
         guard let result = readyResult, result.isInstallable, let url = inspectedURL else { return }
-        guard let draft = ModLinkInstaller.draft(from: result, url: url) else { return }
+        guard let draft = update?.draft ?? ModLinkInstaller.draft(from: result, url: url) else { return }
         let started = Date()
         phase = .installing
         Task { @MainActor in
@@ -362,8 +384,15 @@ struct InstallSheet: View {
             }
             Self.successHaptic()
             try? await Task.sleep(for: .milliseconds(Double(Layout.tickMs)))
-            dismiss()
-            onInstall(draft)
+            // A held update lands before the sheet goes, so the dismissal doesn't read
+            // as a cancel.
+            if update != nil {
+                onInstall(draft)
+                dismiss()
+            } else {
+                dismiss()
+                onInstall(draft)
+            }
         }
     }
 
