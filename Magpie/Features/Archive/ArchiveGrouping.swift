@@ -39,15 +39,15 @@ enum ArchiveGrouping {
         }
 
         var groups: [Group] = []
-        if !today.isEmpty { groups.append(Group(title: title(.today), tabs: today)) }
+        if !today.isEmpty { groups.append(Group(title: title(.today, calendar: calendar), tabs: today)) }
         if !yesterday.isEmpty {
-            groups.append(Group(title: title(.yesterday), tabs: yesterday))
+            groups.append(Group(title: title(.yesterday, calendar: calendar), tabs: yesterday))
         }
         if !earlierThisWeek.isEmpty {
-            groups.append(Group(title: title(.earlierThisWeek), tabs: earlierThisWeek))
+            groups.append(Group(title: title(.earlierThisWeek, calendar: calendar), tabs: earlierThisWeek))
         }
         for month in byMonth.keys.sorted(by: >) {
-            groups.append(Group(title: title(.month(month)), tabs: byMonth[month] ?? []))
+            groups.append(Group(title: title(.month(month), calendar: calendar), tabs: byMonth[month] ?? []))
         }
         return groups
     }
@@ -62,12 +62,14 @@ enum ArchiveGrouping {
         let day = calendar.startOfDay(for: tab.lastActive)
 
         if day >= startOfYesterday {
-            return tab.lastActive.formatted(date: .omitted, time: .shortened)
+            return tab.lastActive.formatted(
+                Date.FormatStyle(date: .omitted, time: .shortened).in(calendar))
         }
         if day >= startOfWeek {
-            return tab.lastActive.formatted(.dateTime.weekday(.abbreviated))
+            return tab.lastActive.formatted(Date.FormatStyle.dateTime.weekday(.abbreviated).in(calendar))
         }
-        return tab.lastActive.formatted(date: .abbreviated, time: .omitted)
+        return tab.lastActive.formatted(
+            Date.FormatStyle(date: .abbreviated, time: .omitted).in(calendar))
     }
 
     private static func monthStart(of day: Date, calendar: Calendar) -> Date {
@@ -75,13 +77,13 @@ enum ArchiveGrouping {
     }
 
     /// The band titles, in the copy's natural case; the list uppercases them.
-    private static func title(_ band: Band) -> String {
+    private static func title(_ band: Band, calendar: Calendar) -> String {
         switch band {
         case .today: String(localized: "Today")
         case .yesterday: String(localized: "Yesterday")
         case .earlierThisWeek: String(localized: "Earlier this week")
         case .month(let start):
-            start.formatted(.dateTime.month(.wide))
+            start.formatted(Date.FormatStyle.dateTime.month(.wide).in(calendar))
         }
     }
 
@@ -102,5 +104,16 @@ enum ArchiveSearch {
         guard !trimmed.isEmpty else { return true }
         return [tab.title, tab.url?.absoluteString ?? "", tab.host ?? ""]
             .contains { $0.localizedStandardContains(trimmed) }
+    }
+}
+
+private extension Date.FormatStyle {
+    /// The style read in the calendar's own zone: the bands are cut in that calendar, so
+    /// the names they carry must come from it too, not from the device's.
+    func `in`(_ calendar: Calendar) -> Self {
+        var style = self
+        style.calendar = calendar
+        style.timeZone = calendar.timeZone
+        return style
     }
 }
