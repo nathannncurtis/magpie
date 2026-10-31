@@ -35,7 +35,7 @@ private let tokens: [TokenSpec] = [
     TokenSpec("teal", Palette.teal, light: 0x0D7A70, dark: 0x5EEAD4),
     TokenSpec("textPrimary", Palette.textPrimary, light: 0x101115, dark: 0xF2F2EE),
     TokenSpec("textSecondary", Palette.textSecondary, light: 0x5B5D64, dark: 0xA3A5AC),
-    TokenSpec("textTertiary", Palette.textTertiary, light: 0x6D6F76, dark: 0x8E9097),
+    TokenSpec("textTertiary", Palette.textTertiary, light: 0x65676E, dark: 0x8E9097),
     TokenSpec("textOnMistSecondary", Palette.textOnMistSecondary, light: 0x3F4B48, dark: 0xA9B9B5),
     TokenSpec("textOnMistSecondaryMeta", Palette.textOnMistSecondaryMeta, light: 0x4F5A57, dark: 0x93A3A0),
     TokenSpec("labelOnMist", Palette.labelOnMist, light: 0x2F5F58, dark: 0x7FB5AB),

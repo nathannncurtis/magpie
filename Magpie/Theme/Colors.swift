@@ -47,7 +47,7 @@ enum Palette {
     /// Secondary text.
     static let textSecondary = dynamic(light: 0x5B5D64, dark: 0xA3A5AC)
     /// Tertiary text.
-    static let textTertiary = dynamic(light: 0x6D6F76, dark: 0x8E9097)
+    static let textTertiary = dynamic(light: 0x65676E, dark: 0x8E9097)
     /// Secondary body text on the mist.
     static let textOnMistSecondary = dynamic(light: 0x3F4B48, dark: 0xA9B9B5)
     /// Secondary meta text on the mist.

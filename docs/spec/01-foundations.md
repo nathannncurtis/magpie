@@ -21,7 +21,7 @@ Light `teal` was darkened from #0D7F74 to pass WCAG AA (4.5:1) on paper and the 
 |---|---|---|
 | `textPrimary` | #101115 | #F2F2EE |
 | `textSecondary` | #5B5D64 | #A3A5AC |
-| `textTertiary` | #6D6F76 | #8E9097 |
+| `textTertiary` | #65676E | #8E9097 |
 | `textOnMistSecondary` | #3F4B48 (body) / #4F5A57 (meta) | #A9B9B5 / #93A3A0 |
 | `labelOnMist` (uppercase section labels) | #2F5F58 | #7FB5AB |
 | `separator` | #101115 @ 7% | #FFFFFF @ 7% |
