@@ -10,7 +10,10 @@ Put these values in one `Theme` file: a Swift enum of `Color` / `Font` / `CGFloa
 | `onInk` | #F6F5F1 | #101115 | Text and icons on `ink` |
 | `paper` | #F6F5F1 | #121316 | Brand paper |
 | `sheen` | linear 135°: #0D9488 → #10B981 (55%) → #6EE7B7 | same | The collected thing only (see README) |
-| `teal` | #0D7F74 | #5EEAD4 | Text accents: "Get", "Done" on paper screens, the swipe-to-restore background |
+| `onSheen` | #101115 | #101115 | Numbers and glyphs on `sheen`: the citation badge number, the installed check |
+| `teal` | #0D7A70 | #5EEAD4 | Text accents: "Get", "Done" on paper screens, the swipe-to-restore background |
+
+Light `teal` was darkened from #0D7F74 to pass WCAG AA (4.5:1) on paper and the Get fill; `onSheen` replaces white on the sheen, which fell short of AA.
 
 ## Neutrals
 
@@ -18,7 +21,7 @@ Put these values in one `Theme` file: a Swift enum of `Color` / `Font` / `CGFloa
 |---|---|---|
 | `textPrimary` | #101115 | #F2F2EE |
 | `textSecondary` | #5B5D64 | #A3A5AC |
-| `textTertiary` | #8A8C93 | #8E9097 |
+| `textTertiary` | #6D6F76 | #8E9097 |
 | `textOnMistSecondary` | #3F4B48 (body) / #4F5A57 (meta) | #A9B9B5 / #93A3A0 |
 | `labelOnMist` (uppercase section labels) | #2F5F58 | #7FB5AB |
 | `separator` | #101115 @ 7% | #FFFFFF @ 7% |
@@ -34,6 +37,8 @@ Put these values in one `Theme` file: a Swift enum of `Color` / `Font` / `CGFloa
 | `pageTintGlass` (default reading-bar tint when the site gives no colour) | #FFF6EE @ 55% | #2C241E @ 55% |
 | `warningBackground` / `warningText` / `warningStrong` | #FBEFE6 / #6B3A22 / #4A2412 | #E39272 @ 14% / #F0C3AE / #FFD9C7 |
 | `scrim` behind sheets | #101816 @ 18–22% | #000000 @ 32% |
+
+Light `textTertiary` was darkened from #8A8C93 to pass WCAG AA (4.5:1) on paper, card, skim, the sheet and the mist.
 
 ## The mist
 

@@ -129,7 +129,7 @@ Photos come only from the source pages' `og:image` or largest article image. The
 
 **Citation digits**: inside a claim the digits are the circled-digit glyphs (1–10; anything higher in brackets), links a finger follows while reading rather than buttons it aims at, so they carry no 44 pt target of their own — the source card itself is the target. They take `teal` in light (the sheen's green falls short of contrast on the skim paper) and the sheen's mid green in dark, and scale with Dynamic Type beside the claim's `body` text. Tapping one scrolls to its source card.
 
-**CitationBadge**: the 17 pt `sheen` circle with the source number in white, 10 pt semibold, on a source card's site line.
+**CitationBadge**: the 17 pt `sheen` circle with the source number in `onSheen`, 10 pt semibold, on a source card's site line.
 
 **SourceCard**: solid card, 200 wide, radius 18, padding 8.
 - Contents: a thumbnail (84 tall, radius 12), then the site line (favicon, `CitationBadge` and host in `tag`), then the title in `meta` semibold.
@@ -186,7 +186,7 @@ Photos come only from the source pages' `og:image` or largest article image. The
 
 **GetButton**: a capsule with padding 6 × 16, reading "Get" in `meta` bold `teal` on a #EEF0EE fill (dark: white at 10% fill, #5EEAD4 text). The capsule carries an invisible 44 pt target.
 
-**InstalledCheck**: a 30 pt `sheen` circle with a white checkmark. It pops with the snap spring (05) when an install lands — on a directory row or the featured card — and stays still on a revisit.
+**InstalledCheck**: a 30 pt `sheen` circle with an `onSheen` checkmark. It pops with the snap spring (05) when an install lands — on a directory row or the featured card — and stays still on a revisit.
 
 **InstallFooter**: a glass capsule pill, 52 tall, reading "Install from URL" with a link icon.
 
