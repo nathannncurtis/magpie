@@ -14,7 +14,7 @@ Each component is one SwiftUI view in `UI/Components/`. Sizes are in points. "Da
 - Icon colour: the page tint's readable foreground. The default is #3A2E26 on the warm tint, and the dark default is #F2F2EE.
 - **States:** full; **slim** while scrolling (05 · Chrome on scroll); **••• pressed**, which fills that button with `ink` at 8–10% while the menu is open.
 
-**CircleButton**: a 48 × 48 hit area (minimum 44) holding a 20 pt symbol, with no background of its own.
+**CircleButton**: a 48 × 48 hit area (minimum 44) holding a 20 pt symbol, with no background of its own. A disabled button keeps its place and its hit area, at 35% opacity.
 
 **URLPill**: shows the host only ("quietweb.org"), in `row` medium, centred. It is 48 tall in the full bar and 30 in the slim bar. A lock icon appears only on errors; HTTPS is assumed. Tapping it opens search.
 
