@@ -187,9 +187,12 @@ struct SettingsScaffold<Trailing: View, Content: View>: View {
             MistBackground()
                 .ignoresSafeArea()
             VStack(spacing: 0) {
+                // The row stays 36 tall; the 44 pt targets in it spill 4 pt over its
+                // edges, so it rides above what follows to keep the spill tappable.
                 topRow
                     .padding(.horizontal, 16)
                     .frame(height: 36)
+                    .zIndex(1)
                 ScrollView {
                     Text(title)
                         .font(Typography.screenTitle)
@@ -212,14 +215,15 @@ struct SettingsScaffold<Trailing: View, Content: View>: View {
                 Button {
                     dismiss()
                 } label: {
-                    // The glyph holds its place in the 36 pt bar; the 44 pt target
-                    // around it spills over harmlessly.
                     Image(systemName: "chevron.backward")
                         .font(.system(.callout, weight: .medium))
                         .foregroundStyle(Palette.textPrimary)
                         .frame(width: 44, height: 44)
                         .contentShape(.rect)
                 }
+                // The 44 pt target grows left over the row's inset, so the glyph holds
+                // the place the 36 pt bar gave it instead of shifting with the frame.
+                .padding(.leading, -4)
                 .accessibilityLabel("Back")
                 .accessibilityIdentifier("settings.back")
             }

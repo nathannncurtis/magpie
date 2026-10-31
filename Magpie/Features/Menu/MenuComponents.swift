@@ -4,8 +4,8 @@ import SwiftUI
 /// the groups and their rows. The icon square and the chevron come from Settings'
 /// pieces, so the two screens read as one.
 ///
-/// The menu's numbers: rows 50 tall, groups inset 14 with radius 20, tiles 64 tall with
-/// radius 18, gaps 8 between tiles and 10 between groups.
+/// The menu's numbers: rows 50 tall, groups inset 14 with radius 20, tiles at least 64
+/// tall with radius 18, gaps 8 between tiles and 10 between groups.
 
 /// The menu's grabber: 38 by 5, the ink at 18%.
 struct MenuGrabber: View {
@@ -43,10 +43,10 @@ struct MenuTileFace<Icon: View>: View {
             icon()
             Text(title)
                 .font(Typography.tileLabel)
-                .lineLimit(1)
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: Metrics.Menu.tileHeight)
+        .frame(minHeight: Metrics.Menu.tileHeight)
         .background(
             RoundedRectangle(cornerRadius: Metrics.Radius.tileSmall, style: .continuous)
                 .fill(Palette.menuTile)
@@ -179,9 +179,9 @@ private struct MenuRowFace<Trailing: View>: View {
 }
 
 /// A menu row whose whole face flips the switch at its end (03 · Menu): the system
-/// `Toggle`, tinted `ink`, carrying the row's icon square and label as its own label, so
-/// a tap anywhere from the icon to the switch flips it. `.divided()` draws the hairline
-/// above it, as on the other rows.
+/// `Toggle`, tinted `toggleOn`, carrying the row's icon square and label as its own
+/// label, so a tap anywhere from the icon to the switch flips it. `.divided()` draws
+/// the hairline above it, as on the other rows.
 struct MenuToggleRow: View {
     let icon: SettingsIcon
     let title: String
@@ -195,7 +195,7 @@ struct MenuToggleRow: View {
                 .contentShape(.rect)
         }
         .toggleStyle(.switch)
-        .tint(Palette.ink)
+        .tint(Palette.toggleOn)
         .padding(.horizontal, 14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .overlay(alignment: .top) {

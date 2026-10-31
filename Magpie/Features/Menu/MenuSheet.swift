@@ -182,7 +182,11 @@ struct MenuSheet: View {
         .accessibilityValue(
             model.currentPageIsBookmarked ? Text(String(localized: "Saved")) : Text("")
         )
-        // The long press has no VoiceOver gesture of its own; this action stands in.
+        // The default action does what a tap does; the long press has no VoiceOver
+        // gesture of its own, so a named action stands in for it.
+        .accessibilityAction {
+            toggleBookmark()
+        }
         .accessibilityAction(
             named: Text(String(localized: "Open bookmarks"))
         ) {
