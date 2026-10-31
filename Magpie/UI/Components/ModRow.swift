@@ -8,6 +8,8 @@ struct ModRow: View {
     /// What sits at the row's trailing edge.
     enum Trailing {
         case get(action: () -> Void)
+        /// The mark while the mod's file is fetched and checked (05 · 06).
+        case fetching
         case installed(pops: Bool)
         case toggle(isOn: Binding<Bool>)
     }
@@ -18,6 +20,8 @@ struct ModRow: View {
         static let verticalPadding: CGFloat = 11
         static let swipeOpenWidth: CGFloat = 92
         static let swipeTrigger: CGFloat = 56
+        /// The mark the row carries while its install runs.
+        static let spinner: CGFloat = 24
     }
 
     let icon: ModIconSpec
@@ -98,6 +102,10 @@ struct ModRow: View {
         switch trailing {
         case .get(let action):
             GetButton(action: action)
+        case .fetching:
+            MarkSpinner(size: Layout.spinner)
+                .accessibilityElement()
+                .accessibilityLabel(Text(ModsCopy.installing))
         case .installed(let pops):
             InstalledCheck(pops: pops)
         case .toggle(let isOn):

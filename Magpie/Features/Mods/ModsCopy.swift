@@ -15,8 +15,16 @@ enum ModsCopy {
     static var popularThisWeek: String { String(localized: "Popular this week") }
     static var get: String { String(localized: "Get") }
     static var installed: String { String(localized: "Installed") }
+    static var installing: String { String(localized: "Installing") }
     static var installFromURL: String { String(localized: "Install from URL") }
     static var notReviewed: String { String(localized: "Not reviewed") }
+
+    /// The one line under the popular card when a directory install does not land;
+    /// Get is the way to try again.
+    // COPY: review — 06 has this line to write.
+    static func installFailedLine(_ name: String) -> String {
+        String(localized: "\(name) didn't install. Tap Get to try again.")
+    }
 
     /// The line under the installed card.
     static var swipeHint: String {

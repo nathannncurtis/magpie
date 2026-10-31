@@ -4,8 +4,16 @@ import SwiftUI
 /// then the mod itself (03 · Featured mod card).
 struct FeaturedModCard: View {
 
+    /// Layout numbers from the board.
+    private enum Layout {
+        /// The mark the card carries while its install runs (05 · 06).
+        static let mark: CGFloat = 24
+    }
+
     let mod: DirectoryMod
     var installed: Bool
+    /// The mod's file is being fetched and checked, so Get gives way to the mark.
+    var fetching = false
     var onGet: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
@@ -28,6 +36,10 @@ struct FeaturedModCard: View {
                 Spacer(minLength: 0)
                 if installed {
                     InstalledCheck()
+                } else if fetching {
+                    MarkSpinner(size: Layout.mark)
+                        .accessibilityElement()
+                        .accessibilityLabel(Text(ModsCopy.installing))
                 } else {
                     GetButton(action: onGet)
                 }
