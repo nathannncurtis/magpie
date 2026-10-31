@@ -1,14 +1,13 @@
 import SwiftUI
 
-/// A stack of source favicons, overlapping: the pages a Skim page was read from. A host
-/// that has given its icon shows it; the others show the letter tile.
+/// A stack of source favicons, overlapping: the pages a Skim page was read from. The
+/// Skim models carry each source as a host and no further, so every tile stands as the
+/// host's letter tile.
 ///
 /// Each tile carries a 2 pt ring in the colour behind it, so the tiles read as one
 /// stack; on a row the colour behind is the mist.
 struct FaviconStack: View {
     let hosts: [String]
-    /// The icon bytes each host has given, by host.
-    var faviconData: [String: Data] = [:]
     var size: CGFloat = 18
     /// The ring around each tile, in the colour behind the stack; the mist's
     /// ring when none is given.
@@ -22,7 +21,7 @@ struct FaviconStack: View {
     var body: some View {
         HStack(spacing: -StackMetrics.overlap) {
             ForEach(Array(hosts.enumerated()), id: \.offset) { _, host in
-                ListFavicon(host: host, data: faviconData[host], size: size)
+                ListFavicon(host: host, size: size)
                     .overlay(
                         RoundedRectangle(
                             cornerRadius: ListFavicon.faviconRadius(size) + StackMetrics.ring / 2,

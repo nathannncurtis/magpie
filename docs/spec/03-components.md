@@ -98,7 +98,7 @@ The sheet **hugs its content**: 14 pt between the last group and the bar, never 
 **TabStack**: cards sit side by side on the mist, 14 pt apart, with the current card centred and its neighbours peeking in from the screen edges.
 - Bottom row, inset 16 from the sides and 34 above the bottom: `ArchivedChip` ("Archived · 12") on the left, the count ("3 open", `small`, `labelOnMist`) in the middle, and `PlusButton` on the right.
 
-**ArchivedChip**: glass capsule, 46 tall, padding 0 × 16, with an `archivebox` icon and the label in `row` semibold.
+**ArchivedChip**: glass capsule, at least 46 tall (growing with Dynamic Type), padding 0 × 16, with an `archivebox` icon and the label in `row` semibold.
 
 **PlusButton**: 54 × 54 ink glass circle (paper in dark) with a 22 pt plus.
 
@@ -159,7 +159,7 @@ Photos come only from the source pages' `og:image` or largest article image. The
 **SkimPageRow**: like ListRow, but the leading 26 pt tile is the mark on `ink` (radius 7) and the trailing element is a `FaviconStack` of its sources at 18 pt. The subtitle reads "Skim page · Kitchen".
 
 **BottomSearchPill**
-- Glass capsule, 54 tall, inset 14 from the sides and 26 above the bottom (see 01 Spacing).
+- Glass capsule, at least 54 tall (growing with Dynamic Type), inset 14 from the sides and 26 above the bottom (see 01 Spacing).
 - Contents: a search icon and the placeholder in `row` `textOnMistSecondary`.
 - Focused, it lifts itself clear of the keyboard, keeping its 26 pt foot clearance above the keys.
 - The list behind it uses the soft scroll-edge effect.
