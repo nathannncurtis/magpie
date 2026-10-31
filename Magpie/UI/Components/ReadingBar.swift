@@ -144,8 +144,9 @@ struct ReadingBar: View {
             }
             URLPill(
                 host: host, collapse: progress, showsWarning: showsWarning, isPrivate: isPrivate,
-                action: onAddressTap)
-                .accessibilityIdentifier("bar.url")
+                action: onAddressTap
+            )
+            .accessibilityIdentifier("bar.url")
             side {
                 CircleButton(action: onTabsTap) { TabCount(count: tabCount) }
                     .accessibilityLabel(Text(tabsLabel))

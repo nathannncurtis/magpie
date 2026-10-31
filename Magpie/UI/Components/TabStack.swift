@@ -231,11 +231,12 @@ struct TabStack: View {
             // carries the words; the label keeps out of VoiceOver's way.
             TabLabel(
                 title: tab.displayTitle, host: tab.host, faviconData: tab.faviconData,
-                isPrivate: tab.isPrivate)
-                .frame(width: window.width, height: labelSlot, alignment: .bottomLeading)
-                .position(x: window.midX, y: window.maxY - labelSlot / 2)
-                .zIndex(200)
-                .accessibilityHidden(true)
+                isPrivate: tab.isPrivate
+            )
+            .frame(width: window.width, height: labelSlot, alignment: .bottomLeading)
+            .position(x: window.midX, y: window.maxY - labelSlot / 2)
+            .zIndex(200)
+            .accessibilityHidden(true)
         }
     }
 
