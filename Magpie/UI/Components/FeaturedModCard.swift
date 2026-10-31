@@ -41,15 +41,20 @@ struct FeaturedModCard: View {
                 }
                 .accessibilityElement(children: .combine)
                 Spacer(minLength: 0)
-                if installed {
-                    InstalledCheck(pops: pops)
-                } else if fetching {
-                    MarkSpinner(size: Layout.mark)
-                        .accessibilityElement()
-                        .accessibilityLabel(Text(ModsCopy.installing))
-                } else {
-                    GetButton(action: onGet)
+                Group {
+                    if installed {
+                        InstalledCheck(pops: pops)
+                    } else if fetching {
+                        MarkSpinner(size: Layout.mark)
+                            .accessibilityElement()
+                            .accessibilityLabel(Text(ModsCopy.installing))
+                    } else {
+                        GetButton(action: onGet)
+                    }
                 }
+                // One slot for all three, about Get's width, so the line beside it
+                // never rewraps as an install lands.
+                .frame(minWidth: 60, alignment: .trailing)
             }
             .padding(EdgeInsets(top: 12, leading: 14, bottom: 14, trailing: 14))
         }

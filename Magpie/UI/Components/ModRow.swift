@@ -12,6 +12,10 @@ struct ModRow: View {
         case fetching
         case installed(pops: Bool)
         case toggle(isOn: Binding<Bool>)
+
+        var isToggle: Bool {
+            if case .toggle = self { true } else { false }
+        }
     }
 
     /// Layout numbers from the board.
@@ -22,6 +26,10 @@ struct ModRow: View {
         static let swipeTrigger: CGFloat = 56
         /// The mark the row carries while its install runs.
         static let spinner: CGFloat = 24
+        /// The slot Get, the spinner and the check share, about Get's own width: the
+        /// check is narrower, and without the slot the summary would rewrap and the
+        /// row change height the moment an install lands.
+        static let actionSlot: CGFloat = 60
     }
 
     let icon: ModIconSpec
@@ -83,6 +91,7 @@ struct ModRow: View {
             .removeAction(onRemove)
             Spacer(minLength: 0)
             trailingView
+                .frame(minWidth: trailing.isToggle ? nil : Layout.actionSlot, alignment: .trailing)
         }
         .padding(.vertical, Layout.verticalPadding)
         // The card's own colour, so the row is opaque: the swipe action under it shows
