@@ -230,7 +230,8 @@ struct ReadingScreen: View {
                             .webViewOnScrollGeometryChange(
                                 for: ScrollSnapshot.self,
                                 of: ScrollSnapshot.init,
-                                action: { _, new in scrollDidChange(new) })
+                                action: { _, new in scrollDidChange(new) }
+                            )
                             // A tab opened over this one swaps the view out with an
                             // animation; the root waits for it to let the page go
                             // before drawing the page unseen in a view of its own.
