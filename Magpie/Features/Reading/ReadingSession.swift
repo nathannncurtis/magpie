@@ -84,6 +84,10 @@ final class ReadingSession {
     /// made, so every line names the page it belongs to.
     @ObservationIgnored var logTag = "tab=----"
 
+    /// Whether a reading screen's web view holds this page — the current tab's, or one
+    /// still on its way out after the screen moved to another tab.
+    var isOnReadingScreen = false
+
     /// The standing wait for the page's first layout, while a capture is held back.
     @ObservationIgnored private var layoutWatch: Task<Void, Never>?
     /// Whether the root is drawing this page unseen, in the window, for its picture. A

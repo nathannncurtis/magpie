@@ -116,7 +116,7 @@ enum UITestEnvironment {
     }
 
     /// Plays the script against the model: `open:` submits an address as from the launch
-    /// sheet, `wait:` pauses, `tabs` shows the tabs screen.
+    /// sheet, `wait:` pauses, `tabs` shows the tabs screen, `mods` the mods screen.
     @MainActor
     static func play(_ steps: [String], on model: AppModel) async {
         for step in steps {
@@ -128,6 +128,9 @@ enum UITestEnvironment {
             } else if step == "tabs" {
                 SnapshotLog.event("script tabs")
                 model.showTabs()
+            } else if step == "mods" {
+                SnapshotLog.event("script mods")
+                model.showMods()
             } else if step.hasPrefix("card:"), let index = Int(step.dropFirst(5)),
                 model.store.tabs.indices.contains(index)
             {

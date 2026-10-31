@@ -260,7 +260,8 @@ final class AppModel {
     /// stops drawing a page that is out of the window, so a tab left before its page drew
     /// would never get one; the root keeps these in the window, unseen, until it lands.
     /// A page can be in only one web view at a time, so the tab a reading screen shows —
-    /// up, or on its way in or out — is never kept here.
+    /// up, or on its way in or out — is never kept here, nor a page whose reading view
+    /// has yet to let it go.
     var pagesStillDrawing: [ReadingSession] {
         let readingUp: Bool = {
             if case .reading = surface { return true }
@@ -269,7 +270,7 @@ final class AppModel {
         let shown = readingUp ? store.currentTabID : nil
         return store.tabs.compactMap { tab in
             guard tab.id != shown, tab.snapshot == nil, let session = sessions[tab.id],
-                session.failure == nil
+                session.failure == nil, !session.isOnReadingScreen
             else { return nil }
             return session
         }
