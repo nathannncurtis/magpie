@@ -62,10 +62,12 @@ final class TabStore {
         title: String = "",
         faviconURL: URL? = nil,
         faviconData: Data? = nil,
+        isPrivate: Bool = false,
         now: Date
     ) -> Tab {
         let tab = Tab(
-            url: url, title: title, faviconURL: faviconURL, faviconData: faviconData, lastActive: now)
+            url: url, title: title, faviconURL: faviconURL, faviconData: faviconData, lastActive: now,
+            isPrivate: isPrivate)
         tabs.append(tab)
         currentTabID = tab.id
         saveIndex()
@@ -140,12 +142,23 @@ final class TabStore {
     func close(_ id: Tab.ID) {
         guard let i = tabs.firstIndex(where: { $0.id == id }) else { return }
         let wasCurrent = currentTabID == id
+        let wasPrivate = tabs[i].isPrivate
         tabs.remove(at: i)
         if wasCurrent {
             currentTabID = tabs.indices.contains(i) ? tabs[i].id : tabs.last?.id
         }
+        if wasPrivate {
+            // Nothing of it was ever on disk.
+            saveIndex()
+            return
+        }
         forgetSnapshot(for: id)
         saveIndex()
+    }
+
+    /// Whether any private tab is open.
+    var hasPrivateTabs: Bool {
+        tabs.contains(where: \.isPrivate)
     }
 
     /// Moves the tab to a new place in the stack.
@@ -161,8 +174,10 @@ final class TabStore {
 
     /// Stores the tab's page snapshot, in memory and as its own file. A nil clears it.
     func setSnapshot(_ data: Data?, for id: Tab.ID) {
-        guard tabIndex(id) != nil else { return }
+        guard let i = tabIndex(id) else { return }
         applySnapshot(data, for: id)
+        // A private tab's picture lives in memory only.
+        guard !tabs[i].isPrivate else { return }
         scheduleSnapshotWrite(data, for: id)
     }
 
@@ -181,8 +196,9 @@ final class TabStore {
     @discardableResult
     func archiveStale(now: Date, after: TimeInterval?) -> [Tab.ID] {
         guard let after else { return [] }
+        // Private tabs never reach the archive: it is written to disk.
         let stale = tabs.filter {
-            $0.id != currentTabID && now.timeIntervalSince($0.lastActive) >= after
+            !$0.isPrivate && $0.id != currentTabID && now.timeIntervalSince($0.lastActive) >= after
         }
         guard !stale.isEmpty else { return [] }
         let ids = stale.map(\.id)
@@ -252,9 +268,12 @@ final class TabStore {
             stripped.snapshot = nil
             return stripped
         }
+        // Private tabs never reach the disk; a private current tab is written as none.
+        let saved = tabs.filter { !$0.isPrivate }
+        let current = saved.contains { $0.id == currentTabID } ? currentTabID : nil
         return TabIndex(
-            openTabs: tabs.map(strip),
-            currentTabID: currentTabID,
+            openTabs: saved.map(strip),
+            currentTabID: current,
             archivedTabs: archivedTabs.map(strip))
     }
 

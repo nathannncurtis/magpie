@@ -30,6 +30,20 @@ struct MagpieApp: App {
                     guard url.scheme == "http" || url.scheme == "https" else { return }
                     if started { model.openFromLaunch(url) } else { pendingURL = url }
                 }
+                // The app switcher keeps a picture of the screen on disk; with a
+                // private tab open, that picture is the mist.
+                .overlay {
+                    if scenePhase != .active, model.store.hasPrivateTabs {
+                        ZStack {
+                            MistBackground()
+                            Image(systemName: "eye.slash")
+                                .font(.largeTitle)
+                                .foregroundStyle(Palette.ink)
+                        }
+                        .ignoresSafeArea()
+                        .accessibilityHidden(true)
+                    }
+                }
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .active {
                         model.refreshArchive()

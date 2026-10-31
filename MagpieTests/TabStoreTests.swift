@@ -263,6 +263,33 @@ struct TabStoreTests {
         #expect(await persistence.loadSnapshot(for: old.id) == nil)
     }
 
+    // MARK: Private tabs
+
+    @Test("a private tab is never written: not in the index, no snapshot")
+    func privateTabNeverWritten() async throws {
+        let persistence = InMemoryTabPersistence()
+        let store = TabStore(persistence: persistence)
+        let open = store.newTab(title: "Open", now: date(0))
+        let hidden = store.newTab(title: "Hidden", isPrivate: true, now: date(0))
+        store.setSnapshot(Data([7]), for: hidden.id)
+        await store.flushWrites()
+
+        let index = try #require(await persistence.loadIndex())
+        #expect(index.openTabs.map(\.id) == [open.id])
+        #expect(index.currentTabID == nil)
+        #expect(await persistence.loadSnapshot(for: hidden.id) == nil)
+        #expect(store.hasPrivateTabs)
+    }
+
+    @Test("a private tab is never archived")
+    func privateTabNeverArchived() {
+        let store = TabStore()
+        store.newTab(title: "Hidden", isPrivate: true, now: date(0))
+        let archived = store.archiveStale(now: date(10 * 86_400), after: 86_400)
+        #expect(archived.isEmpty)
+        #expect(store.archivedTabs.isEmpty)
+    }
+
     // MARK: Restore
 
     @Test("restoring brings an archived tab back as the current tab")

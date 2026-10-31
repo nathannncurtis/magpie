@@ -211,6 +211,13 @@ final class ModValueRelay: NSObject, WKScriptMessageHandler {
         // Mods run in the main frame only, in their own world.
         guard message.frameInfo.isMainFrame, message.world.name == worldName else { return }
         guard let (key, value) = Self.entry(from: message.body) else { return }
+        let fromPrivatePage = message.webView?.configuration.websiteDataStore.isPersistent == false
+        store(value, forKey: key, modID: modID, fromPrivatePage: fromPrivatePage)
+    }
+
+    /// A private tab's page keeps its values for itself: nothing it sets is saved.
+    func store(_ value: String, forKey key: String, modID: String, fromPrivatePage: Bool) {
+        guard !fromPrivatePage else { return }
         values?.storeValue(value, forKey: key, modID: modID)
     }
 
