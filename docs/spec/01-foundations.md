@@ -29,6 +29,7 @@ Put these values in one `Theme` file: a Swift enum of `Color` / `Font` / `CGFloa
 | `fill` (ghost buttons, inset tiles) | #101115 @ 6% | #FFFFFF @ 7% |
 | `emojiTile` | #EEECE6 | #FFFFFF @ 7% |
 | `tag` (engine tag in field) | #F1F0EB | #FFFFFF @ 8% |
+| `toggleOn` (a switched-on toggle) | #101115 | #5EEAD4 |
 | `toggleOff` | #DADAD4 | #FFFFFF @ 16% |
 | `pageTintGlass` (default reading-bar tint when the site gives no colour) | #FFF6EE @ 55% | #2C241E @ 55% |
 | `warningBackground` / `warningText` / `warningStrong` | #FBEFE6 / #6B3A22 / #4A2412 | #E39272 @ 14% / #F0C3AE / #FFD9C7 |

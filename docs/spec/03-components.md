@@ -82,7 +82,7 @@ The sheet **hugs its content**: 14 pt between the last group and the bar, never 
 
 **IconSquare**: 30 × 30, radius 9, `ink` fill with a `onInk` 16 pt icon. Dark: paper fill with ink icon.
 
-**Toggle**: the system `Toggle` with `.tint(ink)`. In dark the tint is paper, and the knob turns ink if the API allows; if not, keep the system knob. The whole row flips the switch, not just the knob.
+**Toggle**: the system `Toggle` tinted `toggleOn` — `ink` in light, `teal` in dark, where the system knob's white would vanish on the near-white ink track. The whole row flips the switch, not just the knob.
 
 ## Tabs
 

@@ -68,10 +68,11 @@ enum Palette {
     static let emojiTile = dynamic(light: 0xEEECE6, dark: 0xFFFFFF, darkOpacity: 0.07)
     /// The engine tag inside the search field.
     static let tag = dynamic(light: 0xF1F0EB, dark: 0xFFFFFF, darkOpacity: 0.08)
+    /// A switched-on toggle: `ink` in light, `teal` in dark, where the system knob's
+    /// white would vanish on the near-white ink track.
+    static let toggleOn = dynamic(light: 0x101115, dark: 0x5EEAD4)
     /// A toggle in its off state.
     static let toggleOff = dynamic(light: 0xDADAD4, dark: 0xFFFFFF, darkOpacity: 0.16)
-    /// A toggle's knob.
-    static let toggleKnob = dynamic(light: 0xFFFFFF, dark: 0x101115)
     /// The default reading-bar tint when the site gives no colour.
     static let pageTintGlass = dynamic(
         light: 0xFFF6EE, lightOpacity: 0.55, dark: 0x2C241E, darkOpacity: 0.55)

@@ -213,9 +213,9 @@ struct CookieDots: Shape {
 }
 
 /// A row whose whole face flips the switch at its end (03 · Settings): the system
-/// `Toggle`, tinted `ink`, carrying the row's icon square and label as its own label, so
-/// a tap anywhere from the icon to the switch flips it. `.divided()` draws the hairline
-/// above it, as on the other rows.
+/// `Toggle`, tinted `toggleOn`, carrying the row's icon square and label as its own
+/// label, so a tap anywhere from the icon to the switch flips it. `.divided()` draws
+/// the hairline above it, as on the other rows.
 struct SettingsToggleRow: View {
     let icon: SettingsIcon
     let title: String
@@ -229,7 +229,7 @@ struct SettingsToggleRow: View {
                 .contentShape(.rect)
         }
         .toggleStyle(.switch)
-        .tint(Palette.ink)
+        .tint(Palette.toggleOn)
         .padding(.horizontal, 14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .overlay(alignment: .top) {
