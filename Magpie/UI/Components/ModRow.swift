@@ -43,6 +43,9 @@ struct ModRow: View {
     var onRemove: (() -> Void)? = nil
 
     @State private var swipeOffset: CGFloat = 0
+    /// The tag's size, scaling with Dynamic Type.
+    @ScaledMetric(relativeTo: .caption2) private var tagSize: CGFloat = 10
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack(alignment: .trailing) {
@@ -105,7 +108,7 @@ struct ModRow: View {
 
     private var notReviewedTag: some View {
         Text(String(localized: "Not reviewed"))
-            .font(.system(size: 10, weight: .semibold))
+            .font(.system(size: tagSize, weight: .semibold))
             .foregroundStyle(Palette.warningText)
             .padding(.horizontal, 6)
             .padding(.vertical, 3)
@@ -126,6 +129,7 @@ struct ModRow: View {
             InstalledCheck(pops: pops)
         case .toggle(let isOn):
             ModSwitch(isOn: isOn)
+                .accessibilityLabel(Text(name))
         }
     }
 
@@ -160,7 +164,7 @@ struct ModRow: View {
                 if value.translation.width < -Layout.swipeTrigger {
                     onRemove?()
                 }
-                withAnimation(Springs.settle.animation) {
+                withAnimation(reduceMotion ? nil : Springs.settle.animation) {
                     swipeOffset = 0
                 }
             }
@@ -194,10 +198,11 @@ private struct ModSwitch: View {
 
     @Binding var isOn: Bool
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Button {
-            withAnimation(Springs.settle.animation) {
+            withAnimation(reduceMotion ? nil : Springs.settle.animation) {
                 isOn.toggle()
             }
         } label: {
@@ -210,6 +215,10 @@ private struct ModSwitch: View {
                     .padding(Layout.inset)
             }
             .frame(width: Layout.width, height: Layout.height)
+            // A 44 pt hit target; the negative padding keeps the layout the board's.
+            .padding(.vertical, 7)
+            .contentShape(.rect)
+            .padding(.vertical, -7)
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(.isToggle)

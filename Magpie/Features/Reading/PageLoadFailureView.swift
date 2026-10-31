@@ -20,11 +20,15 @@ struct PageLoadFailureView: View {
     private static let buttonPaddingH: CGFloat = 22
     private static let buttonHeight: CGFloat = 44
 
+    /// The title's size, scaling with Dynamic Type.
+    @ScaledMetric(relativeTo: .headline) private var titleSize = Self.titleSize
+
     var body: some View {
         VStack(spacing: Self.gap) {
             GlobeWithSlash()
+                .accessibilityHidden(true)
             Text(failure.title)
-                .font(.system(size: Self.titleSize, weight: .semibold))
+                .font(.system(size: titleSize, weight: .semibold))
                 .foregroundStyle(Palette.textPrimary)
                 .padding(.top, Self.titleGap)
                 .multilineTextAlignment(.center)

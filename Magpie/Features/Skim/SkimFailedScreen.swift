@@ -87,7 +87,7 @@ struct SkimFailedScreen: View {
                     // The ink flips light in dark; the label flips with it.
                     .foregroundStyle(Palette.onInk)
                     .frame(maxWidth: .infinity)
-                    .frame(height: Layout.ctaHeight)
+                    .frame(minHeight: Layout.ctaHeight)  // grows with Dynamic Type
                     .contentShape(.capsule)
             }
             .buttonStyle(.glassProminent)

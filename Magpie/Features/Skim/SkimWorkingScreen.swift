@@ -108,7 +108,7 @@ struct SkimWorkingScreen: View {
                 .font(Typography.buttonBar)
                 .foregroundStyle(Palette.textPrimary)
                 .frame(maxWidth: .infinity)
-                .frame(height: Metrics.Bar.skimControlHeight)
+                .frame(minHeight: Metrics.Bar.skimControlHeight)  // grows with Dynamic Type
                 .contentShape(.capsule)
         }
         .buttonStyle(.plain)
