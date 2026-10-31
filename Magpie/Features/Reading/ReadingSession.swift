@@ -199,6 +199,9 @@ final class ReadingSession {
     /// The URL the session last asked to load. Its host is what a failure names, so a
     /// failure always has one even when the page never got far enough to have a URL.
     private(set) var requestedURL: URL?
+    /// The address the last failure was loading. A load that fails before it commits
+    /// leaves the page on the one before, so reloading would bring that back instead.
+    private var failedURL: URL?
     private var loadTask: Task<Void, Never>?
     /// The site the icon link was last read for.
     private var iconHost: String?
@@ -323,11 +326,14 @@ final class ReadingSession {
         startLoad { self.page.load(url) }
     }
 
-    /// Reloads the current page: "Try again", or the connection coming back. A load
-    /// that failed before it committed leaves the page with no URL to reload — that
-    /// one opens the address the session was last asked for again.
+    /// Reloads the current page: "Try again", or the connection coming back. After a
+    /// failure it opens the address that failed: the page itself still holds the one
+    /// before, or no URL at all.
     func retry() {
-        if page.url != nil {
+        if failure != nil, let url = failedURL {
+            requestedURL = url
+            startLoad { self.page.load(url) }
+        } else if page.url != nil {
             startLoad { self.page.reload() }
         } else if let url = requestedURL {
             startLoad { self.page.load(url) }
@@ -417,6 +423,7 @@ final class ReadingSession {
             underlying = error
         }
         var offline = false
+        failedURL = (underlying as? URLError)?.failingURL ?? requestedURL ?? page.url
         if let urlError = underlying as? URLError {
             offline = [
                 .notConnectedToInternet, .networkConnectionLost, .dataNotAllowed,
