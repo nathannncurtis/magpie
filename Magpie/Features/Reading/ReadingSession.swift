@@ -253,11 +253,9 @@ final class ReadingSession {
     /// The site's icon link, for the tab's card and labels. Falls back to the touch icon
     /// a page declares for elsewhere; "" when the page declares none.
     private static let pageIconScript = #"""
-        (() => {
-            const icon = document.querySelector("link[rel~='icon']")
-                || document.querySelector("link[rel='apple-touch-icon']");
-            return icon ? icon.href : "";
-        })()
+        const icon = document.querySelector("link[rel~='icon']")
+            || document.querySelector("link[rel='apple-touch-icon']");
+        return icon ? icon.href : new URL("/favicon.ico", location.href).href;
         """#
 
     /// Starts the session: the first load, then the standing watch on navigation events.
@@ -360,6 +358,10 @@ final class ReadingSession {
                         "load done \(self.logTag) progress=\(self.page.estimatedProgress) "
                             + "url=\(self.page.url?.absoluteString ?? "nil")")
                     self.loadWatch = nil
+                    // A first load can finish before the navigation watch subscribes;
+                    // the page colour and icon are read here too.
+                    await self.refreshPageBackground()
+                    await self.readPageIcon()
                     self.settle()
                     return
                 }

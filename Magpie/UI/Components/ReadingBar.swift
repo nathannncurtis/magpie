@@ -174,7 +174,7 @@ struct ReadingBar: View {
         content()
             .frame(width: CircleButtonLayout.hitSize)
             .opacity(1 - progress)
-            .frame(width: CircleButtonLayout.hitSize * fold)
+            .frame(width: CircleButtonLayout.hitSize * (1 - fold))
             .clipped()
             .allowsHitTesting(progress < 0.5)
     }

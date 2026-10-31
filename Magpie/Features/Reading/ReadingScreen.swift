@@ -261,6 +261,12 @@ struct ReadingScreen: View {
 
     private func scrollDidChange(_ snapshot: ScrollSnapshot) {
         guard !reduceMotion else { return }
+        // A page moves itself while it loads — layout, restored positions — and none of
+        // that is the reader scrolling: the bar holds, and the reading starts after.
+        if session?.page.isLoading ?? true {
+            chrome.forgetOffset()
+            return
+        }
         let step = chrome.scrollDidChange(offsetY: snapshot.offsetY, atEndOfPage: snapshot.atEnd)
         guard step != .unchanged else { return }
         apply(step)
