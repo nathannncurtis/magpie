@@ -41,6 +41,7 @@ The sheet's top corners are 38. On the mist it is glass; opened from a page, it 
 - 46 tall, horizontal padding 12, gap 12.
 - Contents: a `magnifyingglass` icon at 16 in `textTertiary`, then the suggestion in `row`, then a trailing `SkimPill`.
 - Tapping the row searches; tapping the pill runs Skim for that query.
+- VoiceOver reads the row as the query alone, with a named "Skim" action in place of the pill.
 
 **SkimPill**
 - Capsule; padding 6 × 11; text `small` semibold reading "Skim", with a 13 pt mark.

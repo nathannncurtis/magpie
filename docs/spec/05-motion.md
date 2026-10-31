@@ -28,14 +28,14 @@ Stagger lists 25–30 ms per item. Content inside a sheet starts 50 ms after the
 - **Morph:** one shape in the `GlassEffectContainer`. The bar widens to the edges, rises, and becomes the search sheet; the keyboard rises with it as one piece. Spring: `chrome`, about 0.5 s.
 - **Fill:** the glass turns fully solid (`sheetSolid`) while it grows. Nothing shows through the open sheet.
 - **Content:** the URL row fades out over 100 ms. The field fades in 50 ms after the morph starts; the rows stagger 30 ms each as the list arrives, and every later change animates the rows it adds or drops.
-- **Dismiss:** swipe down or tap the scrim. The sheet shrinks back into the bar on the same spring.
+- **Dismiss:** swipe down or tap the scrim; VoiceOver's two-finger scrub does the same. The whole sheet follows the swipe down, glass and all, and shrinks back into the bar on the same spring.
 
 ### 02 · Bar into menu
 - **Trigger:** tap •••.
 - **Morph:** same as 01, but the bar row stays pinned at the base and never moves. The menu grows up from it and hugs its content. Spring: `chrome`; fill turns solid.
 - **Content:** groups stagger in from the bottom up, 25 ms apart, rising 12 pt as they fade in.
 - **••• state:** shows the pressed fill while the menu is open.
-- **Dismiss:** tap •••, swipe down, or tap the page. The whole sheet follows the swipe down, glass and all, and shrinks back into the bar on the same spring.
+- **Dismiss:** tap •••, swipe down, or tap the page; VoiceOver's two-finger scrub does the same. The whole sheet follows the swipe down, glass and all, and shrinks back into the bar on the same spring.
 
 ### 03 · Tab stack
 - **Trigger:** tap the tab count.

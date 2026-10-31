@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// One suggestion, or one recent search: a search icon, the text, and the Skim offer.
-/// Tapping the row searches; tapping the pill runs Skim for the same words.
+/// Tapping the row searches; tapping the pill runs Skim for the same words. To VoiceOver
+/// the row is the query alone, with Skim as a named action standing in for the pill.
 struct SuggestionRow: View {
 
     /// Layout numbers from the suggestion-row spec.
@@ -30,13 +31,32 @@ struct SuggestionRow: View {
                     .truncationMode(.middle)
                 Spacer(minLength: Layout.gap)
                 SkimPill(state: skimState, action: onSkim)
-                    .accessibilityLabel(Text(String(localized: "Skim \(text)")))
+                    // The row is the element; the pill's tap is its Skim action below,
+                    // so the pill itself stays out of the tree.
+                    .accessibilityHidden(true)
             }
             .padding(.horizontal, Layout.horizontalPadding)
             .frame(minHeight: Metrics.Spacing.rowSuggestion)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(Text(text))
+        .modifier(SkimAction(state: skimState, action: onSkim))
+    }
+}
+
+/// The row's stand-in for the pill's tap, present only while the pill is on screen: a
+/// named action, so VoiceOver reads the query once and still reaches Skim.
+private struct SkimAction: ViewModifier {
+    let state: SkimPill.State
+    let action: () -> Void
+
+    func body(content: Content) -> some View {
+        if state != .hidden {
+            content.accessibilityAction(named: Text(String(localized: "Skim"))) { action() }
+        } else {
+            content
+        }
     }
 }
 

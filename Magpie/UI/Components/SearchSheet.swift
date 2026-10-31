@@ -92,7 +92,6 @@ struct SearchSheet: View {
         VStack(spacing: 0) {
             tapAway
             sheetBody
-                .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .background {
             // Over a page, the whole page dims evenly, edge to edge behind the sheet; the
@@ -104,6 +103,8 @@ struct SearchSheet: View {
                     .opacity(fillSettled ? 1 : 0)
             }
         }
+        // VoiceOver's two-finger scrub folds the sheet away, as a tap above it does.
+        .accessibilityAction(.escape) { onDismiss() }
         .onGeometryChange(for: CGFloat.self) { proxy in
             proxy.safeAreaInsets.bottom
         } action: { inset in
@@ -125,7 +126,10 @@ struct SearchSheet: View {
 
     /// The sheet hugs its content and rides the keyboard: the tail is exactly the keyboard's
     /// height (the home indicator's once it is away), so the rows sit on the keys and the
-    /// surface runs on behind them to the bottom edge.
+    /// surface runs on behind them to the bottom edge. Every bottom safe area is ignored,
+    /// so the glass reaches the physical edge even with the keys away; the drag offset
+    /// rides outside the surface, so the glass follows the finger instead of the rows
+    /// sliding under it.
     @ViewBuilder
     private var sheetBody: some View {
         VStack(spacing: 0) {
@@ -141,6 +145,9 @@ struct SearchSheet: View {
                 namespace: morphNamespace,
                 fillSettled: fillSettled)
         )
+        .offset(y: dragOffset)
+        .gesture(dismissDrag)
+        .ignoresSafeArea(edges: .bottom)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("search.sheet")
     }
@@ -162,8 +169,6 @@ struct SearchSheet: View {
                 .padding(.bottom, Layout.rowListBottomPadding)
         }
         .frame(maxWidth: .infinity)
-        .offset(y: dragOffset)
-        .gesture(dismissDrag)
         .onAppear {
             // Under onboarding the sheet arrives already covered; the field waits.
             if !focusSuspended {
@@ -277,7 +282,9 @@ struct SearchSheet: View {
         }
         guard !Task.isCancelled else { return }
         if loaded == rows {
-            visibleRows = rows.count
+            withAnimation(rowAnimation) {
+                visibleRows = rows.count
+            }
             return
         }
         if rows.isEmpty && !loaded.isEmpty {

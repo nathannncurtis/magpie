@@ -92,13 +92,15 @@ struct MenuSheet: View {
         }
     }
 
-    /// The area above the sheet: a tap there folds the sheet away.
+    /// The area above the sheet: a tap there folds the sheet away, and so does
+    /// VoiceOver's two-finger scrub.
     private var tapAway: some View {
         Color.clear
             .ignoresSafeArea(edges: .top)
             .contentShape(Rectangle())
             .onTapGesture(perform: onDismiss)
             .accessibilityIdentifier("menu.scrim")
+            .accessibilityAction(.escape) { onDismiss() }
     }
 
     /// The sheet hugs its content and runs on to the bottom edge of the screen, with the
