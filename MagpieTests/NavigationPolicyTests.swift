@@ -16,16 +16,18 @@ struct NavigationPolicyTests {
         #expect(decide(url, link: true) == .allow)
     }
 
-    @Test("pages never reach data: or file: at the top level",
-          arguments: ["data:text/html,<h1>hi</h1>", "file:///etc/passwd"])
+    @Test(
+        "pages never reach data: or file: at the top level",
+        arguments: ["data:text/html,<h1>hi</h1>", "file:///etc/passwd"])
     func topLevelLocal(url: String) {
         #expect(decide(url) == .cancel)
         #expect(decide(url, link: true) == .cancel)
         #expect(decide(url, main: false) == .allow)
     }
 
-    @Test("other apps open only from a tapped link",
-          arguments: ["tel:+15551234567", "mailto:a@b.c", "sms:123", "maps:?q=x", "itms-apps://x", "someapp://y"])
+    @Test(
+        "other apps open only from a tapped link",
+        arguments: ["tel:+15551234567", "mailto:a@b.c", "sms:123", "maps:?q=x", "itms-apps://x", "someapp://y"])
     func handOff(url: String) {
         #expect(decide(url, link: true) == .handOff)
         #expect(decide(url) == .cancel)

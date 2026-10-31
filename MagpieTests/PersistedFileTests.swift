@@ -94,8 +94,9 @@ struct PersistedFileTests {
         try Data("[{".utf8).write(to: directory.appending(component: "mods.json"))
 
         #expect(io.loadMods().isEmpty)
-        #expect(FileManager.default.fileExists(
-            atPath: directory.appending(component: "mods.json.corrupt").path))
+        #expect(
+            FileManager.default.fileExists(
+                atPath: directory.appending(component: "mods.json.corrupt").path))
         #expect(io.loadValues(modID: "m") == ["k": "v"])
     }
 }

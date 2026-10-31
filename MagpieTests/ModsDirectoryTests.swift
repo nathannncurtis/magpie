@@ -106,8 +106,12 @@ struct ModsDirectoryTests {
         #expect(!make("link-abc", good, digest).isWellFormed)
         #expect(!make("x", URL(string: "http://mods.example.com/x.user.js")!, digest).isWellFormed)
         #expect(!make("x", good, "0").isWellFormed)
-        #expect(make("x", good, digest).draft(body: "// ==UserScript==\n// @match *://a.com/*\n// ==/UserScript==\n") != nil)
-        #expect(make("../x", good, digest).draft(body: "// ==UserScript==\n// @match *://a.com/*\n// ==/UserScript==\n") == nil)
+        #expect(
+            make("x", good, digest).draft(body: "// ==UserScript==\n// @match *://a.com/*\n// ==/UserScript==\n") != nil
+        )
+        #expect(
+            make("../x", good, digest).draft(body: "// ==UserScript==\n// @match *://a.com/*\n// ==/UserScript==\n")
+                == nil)
     }
 
     @Test("a changed file is refused")

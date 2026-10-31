@@ -168,7 +168,8 @@ struct ReadingScreen: View {
             },
             onTabsTap: onTabsTap,
             onMenuTap: closeMenu,
-            onDismiss: closeMenu)
+            onDismiss: closeMenu
+        )
         .background {
             // Esc folds the menu back, as a tap away does.
             Button(String(localized: "Close Menu"), action: closeMenu)

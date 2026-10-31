@@ -399,7 +399,8 @@ struct BlockingChunkingTests {
     @Test("a set over WebKit's per-list cap splits into lists that each fit")
     func overTheRealCap() {
         let cap = FilterListConverter.webKitRuleListLimit
-        let text = (0..<(cap + 10)).map { "||host\($0).example^" }.joined(separator: "\n")
+        let text =
+            (0..<(cap + 10)).map { "||host\($0).example^" }.joined(separator: "\n")
             + "\n@@||ok.example^"
         let chunks = FilterListConverter.ruleChunks(from: [FilterListConverter.convert(text)])
         #expect(chunks.count == 2)
