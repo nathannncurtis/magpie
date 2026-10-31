@@ -202,6 +202,13 @@ final class ModValueRelay: NSObject, WKScriptMessageHandler {
         guard let mod = body["mod"] as? String else { return }
         guard let key = body["key"] as? String else { return }
         guard let value = body["value"] as? String else { return }
-        values?.storeValue(value, forKey: key, modID: mod)
+        let fromPrivatePage = message.webView?.configuration.websiteDataStore.isPersistent == false
+        store(value, forKey: key, modID: mod, fromPrivatePage: fromPrivatePage)
+    }
+
+    /// A private tab's page keeps its values for itself: nothing it sets is saved.
+    func store(_ value: String, forKey key: String, modID: String, fromPrivatePage: Bool) {
+        guard !fromPrivatePage else { return }
+        values?.storeValue(value, forKey: key, modID: modID)
     }
 }

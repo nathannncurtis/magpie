@@ -204,10 +204,13 @@ struct TabStack: View {
     /// The card as one line for VoiceOver: its title, then the site it is on. The title
     /// alone is kept when the host is all it has.
     private func accessibilityName(for tab: Tab) -> String {
-        guard let host = tab.host, !host.isEmpty, host != tab.displayTitle else {
-            return tab.displayTitle
+        let name: String
+        if let host = tab.host, !host.isEmpty, host != tab.displayTitle {
+            name = "\(tab.displayTitle), \(host)"
+        } else {
+            name = tab.displayTitle
         }
-        return "\(tab.displayTitle), \(host)"
+        return tab.isPrivate ? String(localized: "\(name), private") : name
     }
 
     /// A label rides above its own card, aligned to its leading edge and clipped by the
@@ -226,11 +229,14 @@ struct TabStack: View {
             // One line, tail-truncated inside its window: a peeking label folds into an
             // ellipsis at the screen's edge instead of cutting through a glyph. The card
             // carries the words; the label keeps out of VoiceOver's way.
-            TabLabel(title: tab.displayTitle, host: tab.host, faviconData: tab.faviconData)
-                .frame(width: window.width, height: labelSlot, alignment: .bottomLeading)
-                .position(x: window.midX, y: window.maxY - labelSlot / 2)
-                .zIndex(200)
-                .accessibilityHidden(true)
+            TabLabel(
+                title: tab.displayTitle, host: tab.host, faviconData: tab.faviconData,
+                isPrivate: tab.isPrivate
+            )
+            .frame(width: window.width, height: labelSlot, alignment: .bottomLeading)
+            .position(x: window.midX, y: window.maxY - labelSlot / 2)
+            .zIndex(200)
+            .accessibilityHidden(true)
         }
     }
 

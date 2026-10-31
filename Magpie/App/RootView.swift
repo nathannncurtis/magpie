@@ -45,11 +45,12 @@ struct RootView: View {
                 ) {
                     LaunchScreen(
                         engine: model.engine,
-                        skimEnabled: model.offersSkim,
+                        skimEnabled: model.offersSkim && !model.searchIsPrivate,
                         suggestionsEnabled: model.suggestionsEnabled,
                         focusSuspended: coversOverLaunch,
+                        isPrivate: model.launchIsPrivate,
                         suggestions: model.suggestions,
-                        recents: model.recents,
+                        recents: model.searchRecents,
                         initialText: model.searchPrefill ?? "",
                         onSkim: { model.startSkim(query: $0) },
                         onOpen: { model.openFromLaunch($0) },
@@ -61,14 +62,15 @@ struct RootView: View {
                     session: model.currentSession,
                     tabID: model.store.currentTabID,
                     tabCount: model.store.tabs.count,
+                    isPrivate: model.currentIsPrivate,
                     isSearchOpen: searchOpen,
                     engine: model.engine,
-                    skimEnabled: model.offersSkim,
-                    skimRunsHere: model.skimAvailable,
+                    skimEnabled: model.offersSkim && !model.searchIsPrivate,
+                    skimRunsHere: model.skimAvailable && !model.currentIsPrivate,
                     suggestionsEnabled: model.suggestionsEnabled,
                     focusSuspended: coversOverLaunch,
                     suggestions: model.suggestions,
-                    recents: model.recents,
+                    recents: model.searchRecents,
                     onSkim: { model.startSkim(query: $0) },
                     chromeNamespace: chrome,
                     cardNamespace: cards,
@@ -85,8 +87,8 @@ struct RootView: View {
                 // by them is the wrong size to arm captures at; the sheet over the
                 // page is the piece that rides the keys.
                 .ignoresSafeArea(.keyboard, edges: searchOpen ? [] : .bottom)
-                .onAppear { model.readingScreenMounted = true }
-                .onDisappear { model.readingScreenMounted = false }
+                .onAppear { model.readingScreenAppeared() }
+                .onDisappear { model.readingScreenDisappeared() }
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("reading.screen")
             case .tabs:
@@ -94,6 +96,7 @@ struct RootView: View {
                     store: model.store,
                     onOpen: { model.openTab($0) },
                     onNewTab: { model.newTabFromTabs() },
+                    onNewPrivateTab: { model.newPrivateTab() },
                     onClose: { model.closeTab($0) },
                     onShowArchive: { model.showArchive() },
                     pageBackground: { id in model.sessions[id]?.pageBackground },

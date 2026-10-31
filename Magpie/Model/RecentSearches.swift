@@ -41,3 +41,19 @@ actor RecentSearches: RecentSearchStoring {
         queries = []
     }
 }
+
+/// Recents as a private tab's search sees them: the saved searches still show, and
+/// nothing typed is kept.
+struct PrivateRecents: RecentSearchStoring {
+    let base: any RecentSearchStoring
+
+    func recent(limit: Int) async -> [String] {
+        await base.recent(limit: limit)
+    }
+
+    func record(_ query: String) async {}
+
+    func removeAll() async {
+        await base.removeAll()
+    }
+}
