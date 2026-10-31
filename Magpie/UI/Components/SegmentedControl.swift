@@ -1,14 +1,17 @@
 import SwiftUI
 
 /// A two-way segmented control on glass: a 38 pt capsule track (taller under Dynamic
-/// Type), 3 pt inset, and the selected segment a solid card thumb with a small shadow
-/// (03 · Segmented control).
+/// Type), 3 pt inset, and the selected segment a solid card thumb with a small shadow.
+/// Each segment's tap target holds at 44 tall, taller than the track itself (03 ·
+/// Segmented control).
 struct SegmentedControl: View {
 
     /// Layout numbers from the board.
     private enum Layout {
         static let height: CGFloat = 38
         static let inset: CGFloat = 3
+        /// The least a segment offers a finger, per the board's tap-target floor.
+        static let hitHeight: CGFloat = 44
     }
 
     /// The segments' labels, in order.
@@ -27,8 +30,8 @@ struct SegmentedControl: View {
                 segment(index)
             }
         }
-        .padding(Layout.inset)
-        .frame(minHeight: trackHeight)
+        .padding(.horizontal, Layout.inset)
+        .frame(height: trackHeight)
         .glassEffect(.regular, in: .capsule)
     }
 
@@ -52,6 +55,10 @@ struct SegmentedControl: View {
                             .matchedGeometryEffect(id: "segment.thumb", in: thumb)
                     }
                 }
+                // The hit area, standing taller than the track it sits on: the frame is
+                // centred in the track, so the visuals stay the board's and a finger
+                // still gets its 44 pt.
+                .frame(minHeight: Layout.hitHeight)
                 .contentShape(Capsule())
         }
         .buttonStyle(.plain)

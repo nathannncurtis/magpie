@@ -151,7 +151,7 @@ Photos come only from the source pages' `og:image` or largest article image. The
 
 **DayHeader**: the `label` style in `labelOnMist`: "YESTERDAY", "EARLIER THIS WEEK".
 
-**FolderRow**: a 28 × 24 folder glyph tinted per folder, then the name, the count and a chevron. Each folder glyph is a two-tone tinted folder (back panel dark, front panel light). The user picks a tint from 6 presets. Defaults, as on the board (dark / light):
+**FolderRow**: a 28 × 24 folder glyph tinted per folder, then the name, the count and a chevron. The row is at least 44 tall. Each folder glyph is a two-tone tinted folder (back panel dark, front panel light). The user picks a tint from 6 presets. Defaults, as on the board (dark / light):
 - Kitchen: orange #F08A2A / #FFC27A
 - Reading: blue #2F6BDF / #7FB0FA
 - Work: sage #5E7550 / #9FB38E
@@ -166,7 +166,7 @@ Photos come only from the source pages' `og:image` or largest article image. The
 
 ## Mods
 
-**SegmentedControl**: glass capsule, 38 tall, inset 3 inside the capsule. Segments: "Directory" and "Installed · N". The selected segment is solid `card` with a small shadow (dark: white at 16%).
+**SegmentedControl**: glass capsule, 38 tall, inset 3 inside the capsule. Segments: "Directory" and "Installed · N". The selected segment is solid `card` with a small shadow (dark: white at 16%). Each segment's tap target is at least 44 tall, standing taller than the track itself.
 
 **FeaturedModCard**: solid card, radius 24.
 - On top, a 150 pt preview showing what the mod does. For Google Answer Box, this is the drawn mini Google result with the answer card ringed.
