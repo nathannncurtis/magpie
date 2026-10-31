@@ -278,7 +278,24 @@ final class AppModel {
 
     /// Whether a reading screen is in the hierarchy, set by the screen itself: it stays
     /// through its leaving transition, after the surface has already moved on.
-    var readingScreenMounted = false
+    var readingScreenMounted: Bool { readingScreenHolds > 0 }
+    private var readingScreenHolds = 0
+
+    /// How long a web view that has left the screen keeps its page from every other web
+    /// view: longer than any transition it can leave with. A page in two web views at
+    /// once is a WebKit trap.
+    static let webViewReleaseDelay = Duration.seconds(1)
+
+    func readingScreenAppeared() { readingScreenHolds += 1 }
+
+    /// The screen's disappearance can come while it is still animating out, its web
+    /// view still holding the page; the hold outlasts the transition.
+    func readingScreenDisappeared() {
+        Task { [weak self] in
+            try? await Task.sleep(for: Self.webViewReleaseDelay)
+            self?.readingScreenHolds -= 1
+        }
+    }
 
     /// The tab's page session, made on demand and kept in step with the tab. Every page
     /// carries the mods' configuration, so the installed scripts run on each; a reused
