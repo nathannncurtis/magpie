@@ -71,12 +71,12 @@ struct URLPill: View {
 
 #Preview("Full") {
     URLPill(host: "quietweb.org") {}
-        .foregroundStyle(Color(hex: 0x3A2E26))
+        .foregroundStyle(Palette.onLightPageTint)
         .padding(20)
 }
 
 #Preview("Slim") {
     URLPill(host: "quietweb.org", collapse: 1) {}
-        .foregroundStyle(Color(hex: 0x3A2E26))
+        .foregroundStyle(Palette.onLightPageTint)
         .padding(20)
 }

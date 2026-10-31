@@ -85,7 +85,7 @@ struct FeaturedModCard: View {
         Group {
             if colorScheme == .dark {
                 RoundedRectangle(cornerRadius: Metrics.Radius.card, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.07), lineWidth: 0.5)
+                    .strokeBorder(Palette.separator, lineWidth: 0.5)
             }
         }
     }
