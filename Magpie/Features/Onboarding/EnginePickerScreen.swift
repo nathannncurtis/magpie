@@ -9,6 +9,10 @@ struct EnginePickerScreen: View {
 
     @State private var picked: PickableEngine?
     @State private var otherURL = ""
+    /// The bottom inset, read before the layout goes full-bleed: the container ignores
+    /// the bottom safe area, and inside it the inset can no longer be read.
+    @State private var bottomInset: CGFloat = 0
+    @FocusState private var otherFieldFocused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -51,10 +55,23 @@ struct EnginePickerScreen: View {
                 action: save
             )
             .padding(.horizontal, 16)
-            .padding(.bottom, 26)
+            .padding(.bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset))
             .padding(.top, 12)
             .accessibilityIdentifier("picker.continue")
         }
+        .onGeometryChange(for: CGFloat.self) {
+            $0.safeAreaInsets.bottom
+        } action: { inset in
+            // The keys swell the bottom inset while Other's field is focused; the
+            // resting edge is what the CTA is seated from, and it keeps its place
+            // above the keys either way.
+            guard !otherFieldFocused else { return }
+            bottomInset = inset
+        }
+        // The CTA measures from the physical bottom edge (01 · Bottom controls): the
+        // container runs on under the home indicator and the padding seats it above
+        // that edge, while the keys still lift the field.
+        .ignoresSafeArea(.container, edges: .bottom)
     }
 
     private var tileColumns: [GridItem] {
@@ -98,6 +115,7 @@ struct EnginePickerScreen: View {
             .keyboardType(.URL)
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled()
+            .focused($otherFieldFocused)
             .padding(.horizontal, 14)
             .padding(.vertical, 11)
             .background(

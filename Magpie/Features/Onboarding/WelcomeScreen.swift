@@ -6,6 +6,10 @@ import SwiftUI
 struct WelcomeScreen: View {
     var onGetStarted: () -> Void
 
+    /// The bottom inset, read while the layout still respects it: the button's layer
+    /// runs on under the home indicator, where the inset can no longer be read.
+    @State private var bottomInset: CGFloat = 0
+
     private enum WelcomeMetrics {
         /// Where the block's top sits below the safe-area top, as a share of the
         /// height on hand: about 176 pt on a standard phone, holding its place on any
@@ -14,7 +18,7 @@ struct WelcomeScreen: View {
     }
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .bottom) {
             GeometryReader { geo in
                 VStack(spacing: 0) {
                     Color.clear.frame(height: geo.size.height * WelcomeMetrics.topFraction)
@@ -34,6 +38,9 @@ struct WelcomeScreen: View {
                 .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
             }
 
+            // The button measures from the physical bottom edge (01 · Bottom controls),
+            // the way the reading bar does: its layer runs on under the home indicator
+            // and the padding, read off the inset first, seats it above that edge.
             VStack(spacing: 12) {
                 PrimaryCTA(title: "Get started", action: onGetStarted)
                     .accessibilityIdentifier("welcome.start")
@@ -41,9 +48,14 @@ struct WelcomeScreen: View {
                     .font(Typography.small)
                     .foregroundStyle(Palette.textOnMistSecondary)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             .padding(.horizontal, 16)
-            .padding(.bottom, 26)
+            .padding(.bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset))
+            .ignoresSafeArea(edges: .bottom)
+        }
+        .onGeometryChange(for: CGFloat.self) {
+            $0.safeAreaInsets.bottom
+        } action: {
+            bottomInset = $0
         }
     }
 }
