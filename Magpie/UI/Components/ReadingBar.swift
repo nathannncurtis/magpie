@@ -17,32 +17,22 @@ enum ReadableForeground {
         luminance(tint, scheme: scheme) >= lightTintLuminance
     }
 
-    /// The tint's relative luminance, WCAG-style, as resolved under the appearance. A
-    /// tint that is not opaque — the bar's page tints sit at 0.55 — is composited over a
-    /// nominal glass base first, so the foreground is chosen for the colour the glass
-    /// actually shows, not the tint at full strength.
+    /// The tint's relative luminance, WCAG-style, as resolved under the appearance. The
+    /// tint's own opacity is left out: the glass sits over the page the tint was taken
+    /// from, so what shows through it is that same colour, not a fixed material base.
     static func luminance(_ tint: Color, scheme: ColorScheme) -> Double {
         let style: UIUserInterfaceStyle = scheme == .dark ? .dark : .light
         let traits = UITraitCollection(userInterfaceStyle: style)
-        guard
-            let tintChannels = Self.channels(
-                of: UIColor(tint).resolvedColor(with: traits)),
-            let baseChannels = Self.channels(
-                of: UIColor(glassBase).resolvedColor(with: traits))
-        else { return 0 }
-        let opacity = Double(tintChannels.alpha)
-        let red = Double(tintChannels.red) * opacity + Double(baseChannels.red) * (1 - opacity)
-        let green = Double(tintChannels.green) * opacity + Double(baseChannels.green) * (1 - opacity)
-        let blue = Double(tintChannels.blue) * opacity + Double(baseChannels.blue) * (1 - opacity)
-        func linear(_ channel: Double) -> Double {
-            channel <= 0.03928 ? channel / 12.92 : pow((channel + 0.055) / 1.055, 2.4)
+        guard let channels = Self.channels(of: UIColor(tint).resolvedColor(with: traits)) else {
+            return 0
         }
-        return 0.2126 * linear(red) + 0.7152 * linear(green) + 0.0722 * linear(blue)
+        func linear(_ channel: CGFloat) -> Double {
+            let value = Double(channel)
+            return value <= 0.03928 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
+        }
+        return 0.2126 * linear(channels.red) + 0.7152 * linear(channels.green)
+            + 0.0722 * linear(channels.blue)
     }
-
-    /// The nominal base the glass reads at under no tint of its own: the solid-card
-    /// colour, the closest token to the untinted material.
-    private static let glassBase = Palette.card
 
     /// One colour's straight sRGB channels, or nil where they can't be read.
     private static func channels(
@@ -95,8 +85,12 @@ struct ReadingBar: View {
 
     /// The bar's heights follow the type size, as its text does — the pill's host text
     /// is what sets them.
-    @ScaledMetric(relativeTo: .subheadline) private var fullHeight = Metrics.Bar.readingHeight
-    @ScaledMetric(relativeTo: .subheadline) private var slimHeight = Metrics.Bar.readingSlimHeight
+    @ScaledMetric(relativeTo: .subheadline) private var scaledFullHeight = Metrics.Bar.readingHeight
+    @ScaledMetric(relativeTo: .subheadline) private var scaledSlimHeight = Metrics.Bar.readingSlimHeight
+    /// The heights grow with the type size and never drop below the board's at the
+    /// smaller sizes.
+    private var fullHeight: CGFloat { max(Metrics.Bar.readingHeight, scaledFullHeight) }
+    private var slimHeight: CGFloat { max(Metrics.Bar.readingSlimHeight, scaledSlimHeight) }
 
     /// How much further in from the screen sides the slim pill sits, past the full bar's
     /// inset (the motion board's 110, minus the 12 it already has).
