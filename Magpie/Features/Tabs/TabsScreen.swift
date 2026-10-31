@@ -8,6 +8,8 @@ struct TabsScreen: View {
     let store: TabStore
     var onOpen: (Tab.ID) -> Void
     var onNewTab: () -> Void
+    /// The + button's long press: a tab that keeps nothing.
+    var onNewPrivateTab: () -> Void = {}
     var onClose: (Tab.ID) -> Void
     var onShowArchive: () -> Void
     /// The page's own sampled colour, for the space below a short page's picture.
@@ -65,6 +67,12 @@ struct TabsScreen: View {
                 .accessibilityIdentifier("tabs.openCount")
             Spacer()
             PlusButton(action: onNewTab)
+                .contextMenu {
+                    Button(action: onNewPrivateTab) {
+                        Label(String(localized: "New private tab"), systemImage: "eye.slash")
+                    }
+                }
+                .accessibilityAction(named: Text(String(localized: "New private tab")), onNewPrivateTab)
                 .accessibilityIdentifier("tabs.plus")
         }
         .padding(.horizontal, ScreenMetrics.rowInset)

@@ -13,6 +13,8 @@ struct ReadingScreen: View {
     let session: ReadingSession?
     let tabID: Tab.ID?
     var tabCount: Int
+    /// Whether the tab is private: its bar and menu say so.
+    var isPrivate = false
     var isSearchOpen: Bool
     var engine: SearchEngine
     /// Whether the search sheet over the page shows its Skim pill.
@@ -155,6 +157,7 @@ struct ReadingScreen: View {
             tabCount: tabCount,
             canGoBack: session?.canGoBack ?? false,
             showsWarning: session?.failure != nil,
+            isPrivate: isPrivate,
             skimOffered: skimRunsHere,
             barBottomEdge: bottomEdge,
             morphNamespace: chromeNamespace,
@@ -194,6 +197,7 @@ struct ReadingScreen: View {
             isSlim: collapse >= 1,
             collapse: collapse,
             showsWarning: session?.failure != nil,
+            isPrivate: isPrivate,
             tint: barTint,
             glassNamespace: chromeNamespace,
             onBack: { session?.goBack() },

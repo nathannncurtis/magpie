@@ -23,6 +23,9 @@ struct Tab: Identifiable, Codable, Equatable, Sendable {
     var archivedAt: Date?
     /// The page snapshot shown on the tab card. Never part of the index.
     var snapshot: Data? = nil
+    /// A private tab: never written to disk, never archived, and its pages keep their
+    /// cookies and storage in memory only. Not coded, so it can never be saved.
+    var isPrivate = false
 
     init(
         id: ID = ID(),
@@ -31,7 +34,8 @@ struct Tab: Identifiable, Codable, Equatable, Sendable {
         faviconURL: URL? = nil,
         faviconData: Data? = nil,
         lastActive: Date,
-        archivedAt: Date? = nil
+        archivedAt: Date? = nil,
+        isPrivate: Bool = false
     ) {
         self.id = id
         self.url = url
@@ -40,6 +44,7 @@ struct Tab: Identifiable, Codable, Equatable, Sendable {
         self.faviconData = faviconData
         self.lastActive = lastActive
         self.archivedAt = archivedAt
+        self.isPrivate = isPrivate
     }
 
     /// The host without its www prefix, for labels and favicon fallbacks.
