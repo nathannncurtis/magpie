@@ -112,11 +112,8 @@ struct FileSystemModStoreIO: ModStoreIO {
     }
 
     func loadMods() -> [InstalledMod] {
-        guard
-            let data = try? Data(contentsOf: directory.appending(component: "mods.json")),
-            let mods = try? JSONDecoder().decode([InstalledMod].self, from: data)
-        else { return [] }
-        return mods
+        PersistedFile.decode([InstalledMod].self, from: directory.appending(component: "mods.json"))
+            ?? []
     }
 
     func save(mods: [InstalledMod]) {
@@ -141,11 +138,7 @@ struct FileSystemModStoreIO: ModStoreIO {
     }
 
     func loadValues(modID: String) -> [String: String] {
-        guard
-            let data = try? Data(contentsOf: valuesURL(for: modID)),
-            let values = try? JSONDecoder().decode([String: String].self, from: data)
-        else { return [:] }
-        return values
+        PersistedFile.decode([String: String].self, from: valuesURL(for: modID)) ?? [:]
     }
 
     func save(values: [String: String], modID: String) {
