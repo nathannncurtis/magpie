@@ -90,6 +90,7 @@ The sheet **hugs its content**: 14 pt between the last group and the bar, never 
 - A live snapshot of the page, radius 26, at 62% of the screen scale.
 - Ring: 5 pt of white at 38%, plus a 0.75 pt outer hairline of white at 75%, plus the soft shadow. Dark: white at 6% and 16%.
 - Above each card: a `TabLabel` (16 pt favicon plus the title in caption semibold, one line, truncated).
+- VoiceOver: the card speaks as one element (title, host, button, with a Close Tab action); the face inside is a single named element — the picture the UI tests wait on — never a bare second stop.
 - Gestures:
   - fling up to close (see 05)
   - tap to open

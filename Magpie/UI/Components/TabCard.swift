@@ -62,12 +62,18 @@ struct TabCard: View {
                         width: size.width,
                         height: size.width * image.size.height / image.size.width
                     )
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityIdentifier("tabs.card.snapshot")
             }
+            // The whole face is one element, named, so the picture is never a bare stop
+            // beside the card's own words; the identifier stays for the UI tests, which
+            // wait on the picture inside the card the stack marks.
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(String(localized: "Page picture")))
+            .accessibilityIdentifier("tabs.card.snapshot")
             .onAppear { Self.logFit(tab: tab, image: image, card: size) }
         } else {
             placeholder
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(Text(String(localized: "Page picture")))
         }
     }
 
