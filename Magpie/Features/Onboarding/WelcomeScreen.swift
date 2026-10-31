@@ -49,6 +49,7 @@ struct WelcomeScreen: View {
                     .foregroundStyle(Palette.textOnMistSecondary)
             }
             .padding(.horizontal, 16)
+            .readableWidth()
             .padding(.bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset))
             .ignoresSafeArea(edges: .bottom)
         }

@@ -68,6 +68,7 @@ struct ModsScreen: View {
                     )
                 )
                 .padding(.horizontal, Layout.segmentInset)
+                .readableWidth()
                 .padding(.bottom, 10)
                 ScrollView {
                     Group {
@@ -77,6 +78,7 @@ struct ModsScreen: View {
                         }
                     }
                     .padding(.horizontal, Layout.contentInset)
+                    .readableWidth()
                     .padding(.bottom, scrollBottom)
                 }
             }
@@ -86,6 +88,7 @@ struct ModsScreen: View {
                 Spacer()
                 InstallFooter(action: { showingInstallSheet = true })
                     .padding(.horizontal, Layout.footerInset)
+                    .readableWidth()
                     .padding(
                         .bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset))
             }

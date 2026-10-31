@@ -192,17 +192,21 @@ struct SettingsScaffold<Trailing: View, Content: View>: View {
                 topRow
                     .padding(.horizontal, 16)
                     .frame(height: 36)
+                    .readableWidth()
                     .zIndex(1)
                 ScrollView {
-                    Text(title)
-                        .font(Typography.screenTitle)
-                        .foregroundStyle(Palette.textPrimary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 22)
-                        .padding(.bottom, 10)
-                    content()
-                    Color.clear.frame(height: 32)
+                    VStack {
+                        Text(title)
+                            .font(Typography.screenTitle)
+                            .foregroundStyle(Palette.textPrimary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 22)
+                            .padding(.bottom, 10)
+                        content()
+                        Color.clear.frame(height: 32)
+                    }
+                    .readableWidth()
                 }
             }
         }

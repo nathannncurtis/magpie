@@ -47,6 +47,7 @@ struct SkimWorkingScreen: View {
                         .foregroundStyle(Palette.textPrimary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, Metrics.Spacing.insetText)
+                        .readableWidth()
                         .opacity(titleArrived && !exiting ? 1 : 0)
                     Color.clear.frame(height: Layout.statusGap)
                     status

@@ -42,6 +42,7 @@ struct SkimFailedScreen: View {
                         .foregroundStyle(Palette.textPrimary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, Metrics.Spacing.insetText)
+                        .readableWidth()
                     Color.clear.frame(height: Layout.lineGap)
                     Text(line)
                         .font(Typography.meta)
@@ -49,6 +50,7 @@ struct SkimFailedScreen: View {
                         .multilineTextAlignment(.center)
                         .lineSpacing(2)
                         .padding(.horizontal, Layout.lineInset)
+                        .readableWidth()
                     Spacer(minLength: 0)
                 }
                 .frame(width: geo.size.width, height: geo.size.height)
