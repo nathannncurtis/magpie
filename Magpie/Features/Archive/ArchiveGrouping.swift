@@ -1,7 +1,8 @@
 import Foundation
 
 /// Groups archived tabs into the list's day bands: Today, Yesterday, Earlier this week,
-/// then one band per month, newest first. Rows are grouped and timed by when the tab was
+/// then one band per month, newest first; a month outside the current year carries its
+/// year ("October 2025"), one inside it doesn't ("October"). Rows are grouped and timed by when the tab was
 /// last read, so the archive reads like a history of being there.
 enum ArchiveGrouping {
 
@@ -39,15 +40,15 @@ enum ArchiveGrouping {
         }
 
         var groups: [Group] = []
-        if !today.isEmpty { groups.append(Group(title: title(.today, calendar: calendar), tabs: today)) }
+        if !today.isEmpty { groups.append(Group(title: title(.today, now: now, calendar: calendar), tabs: today)) }
         if !yesterday.isEmpty {
-            groups.append(Group(title: title(.yesterday, calendar: calendar), tabs: yesterday))
+            groups.append(Group(title: title(.yesterday, now: now, calendar: calendar), tabs: yesterday))
         }
         if !earlierThisWeek.isEmpty {
-            groups.append(Group(title: title(.earlierThisWeek, calendar: calendar), tabs: earlierThisWeek))
+            groups.append(Group(title: title(.earlierThisWeek, now: now, calendar: calendar), tabs: earlierThisWeek))
         }
         for month in byMonth.keys.sorted(by: >) {
-            groups.append(Group(title: title(.month(month), calendar: calendar), tabs: byMonth[month] ?? []))
+            groups.append(Group(title: title(.month(month), now: now, calendar: calendar), tabs: byMonth[month] ?? []))
         }
         return groups
     }
@@ -76,14 +77,19 @@ enum ArchiveGrouping {
         calendar.dateInterval(of: .month, for: day)?.start ?? day
     }
 
-    /// The band titles, in the copy's natural case; the list uppercases them.
-    private static func title(_ band: Band, calendar: Calendar) -> String {
+    /// The band titles, in the copy's natural case; the list uppercases them. A month band
+    /// names its year only when it isn't the current one, in the locale's own order.
+    private static func title(_ band: Band, now: Date, calendar: Calendar) -> String {
         switch band {
         case .today: String(localized: "Today")
         case .yesterday: String(localized: "Yesterday")
         case .earlierThisWeek: String(localized: "Earlier this week")
         case .month(let start):
-            start.formatted(Date.FormatStyle.dateTime.month(.wide).in(calendar))
+            if calendar.isDate(start, equalTo: now, toGranularity: .year) {
+                start.formatted(Date.FormatStyle.dateTime.month(.wide).in(calendar))
+            } else {
+                start.formatted(Date.FormatStyle.dateTime.month(.wide).year().in(calendar))
+            }
         }
     }
 

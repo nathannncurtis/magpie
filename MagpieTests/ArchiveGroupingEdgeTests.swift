@@ -110,7 +110,7 @@ struct ArchiveGroupingEdgeTests {
 
         let groups = ArchiveGrouping.groups(of: tabs, now: now, calendar: calendar)
 
-        #expect(groups.map(\.title) == ["Yesterday", "Earlier this week", "December", "November"])
+        #expect(groups.map(\.title) == ["Yesterday", "Earlier this week", "December 2026", "November 2026"])
     }
 
     @Test("a tab read after now, as when the clock is set back, still reads as Today")
