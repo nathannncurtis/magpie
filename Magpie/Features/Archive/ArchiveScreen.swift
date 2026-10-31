@@ -49,21 +49,13 @@ struct ArchiveScreen: View {
                     .padding(.top, ScreenMetrics.titleTop)
                     .padding(.bottom, ScreenMetrics.titleBottom)
                     .accessibilityIdentifier("archive.title")
-                if store.archivedTabs.isEmpty {
-                    EmptyListState(
-                        icon: "archivebox",
-                        title: String(localized: "Nothing archived yet"),
-                        message: String(
-                            localized: "Tabs you leave alone for a day land here, and stay for 30 days.")
-                    )
-                    .ignoresSafeArea(edges: .top)
-                    .accessibilityIdentifier("archive.empty")
-                } else if archived.isEmpty {
-                    noResults
-                } else {
+                if !store.archivedTabs.isEmpty && !archived.isEmpty {
                     list
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            emptyBlock
+                .padding(.bottom, bottomInset)
             if !store.archivedTabs.isEmpty {
                 BottomSearchPill(
                     placeholder: String(localized: "Search archived tabs"),
@@ -88,6 +80,25 @@ struct ArchiveScreen: View {
         .ignoresSafeArea(.container, edges: .bottom)
     }
 
+    /// The quiet block over the screen: nothing archived, or a search that matches
+    /// nothing. It lays over the whole screen so its share of the height is the
+    /// screen's, not the leftover under the header; the padding holds the layer to
+    /// the safe height, the screen's bottom being full-bleed for the pill.
+    @ViewBuilder
+    private var emptyBlock: some View {
+        if store.archivedTabs.isEmpty {
+            EmptyListState(
+                icon: "archivebox",
+                title: String(localized: "Nothing archived yet"),
+                message: String(
+                    localized: "Tabs you leave alone for a day land here, and stay for 30 days.")
+            )
+            .accessibilityIdentifier("archive.empty")
+        } else if archived.isEmpty {
+            noResults
+        }
+    }
+
     /// What a search shows when it matches nothing: the pill stays, to take the query back.
     private var noResults: some View {
         EmptyListState(
@@ -95,7 +106,6 @@ struct ArchiveScreen: View {
             title: String(localized: "No results"),
             message: String(localized: "Nothing in the archive matches that search.")
         )
-        .ignoresSafeArea(edges: .top)
         .accessibilityIdentifier("archive.results.empty")
     }
 
