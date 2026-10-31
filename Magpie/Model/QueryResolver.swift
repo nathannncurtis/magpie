@@ -22,7 +22,7 @@ enum QueryResolver {
             switch scheme {
             case "http", "https", "ftp":
                 guard let url = URL(string: trimmed), !(url.host ?? "").isEmpty else {
-                    return .search(trimmed)
+                    return .search(searchText(trimmed))
                 }
                 return .url(url)
             case "about":
@@ -30,13 +30,33 @@ enum QueryResolver {
                 if trimmed.lowercased() == "about:blank", let blank = URL(string: "about:blank") {
                     return .url(blank)
                 }
-                return .search(trimmed)
+                return .search(searchText(trimmed))
             default:
                 // javascript:, data:, file: and unknown schemes are never opened.
-                return .search(trimmed)
+                return .search(searchText(trimmed))
             }
         }
-        return .search(trimmed)
+        return .search(searchText(trimmed))
+    }
+
+    /// Pasted multi-line text searches as one line: each run of whitespace holding a line
+    /// break or tab becomes a single space. Plain spaces are left as typed.
+    private static func searchText(_ text: String) -> String {
+        guard text.contains(where: { $0.isNewline || $0 == "\t" }) else { return text }
+        var result = ""
+        var run = ""
+        for character in text {
+            if character.isWhitespace {
+                run.append(character)
+                continue
+            }
+            if !run.isEmpty {
+                result += run.contains(where: { $0.isNewline || $0 == "\t" }) ? " " : run
+                run = ""
+            }
+            result.append(character)
+        }
+        return result
     }
 
     /// The URL for input that names a host without a scheme: `quietweb.org`, `localhost:8080`,
@@ -103,8 +123,8 @@ enum QueryResolver {
     /// Whether `host` reads as a machine name: localhost, an IPv4 or bracketed IPv6 literal,
     /// or dot-separated labels ending in an alphabetic tail at least two characters long.
     private static func isValidHost(_ host: String) -> Bool {
-        guard !host.isEmpty else { return false }
-        if host == "localhost" { return true }
+        guard !host.isEmpty, host.count <= 253 else { return false }
+        if host.lowercased() == "localhost" { return true }
         if isIPv4(host) { return true }
         if host.hasPrefix("["), host.hasSuffix("]"), host.dropFirst().dropLast().contains(":") {
             return true
@@ -118,9 +138,9 @@ enum QueryResolver {
         return labels.allSatisfy(isValidLabel)
     }
 
-    /// A DNS label: letters or digits with inner hyphens. IDN labels count.
+    /// A DNS label: up to 63 letters or digits with inner hyphens. IDN labels count.
     private static func isValidLabel(_ label: String) -> Bool {
-        guard !label.isEmpty, !label.hasPrefix("-"), !label.hasSuffix("-") else { return false }
+        guard !label.isEmpty, label.count <= 63, !label.hasPrefix("-"), !label.hasSuffix("-") else { return false }
         return label.allSatisfy { $0.isLetter || $0.isNumber || $0 == "-" }
     }
 
