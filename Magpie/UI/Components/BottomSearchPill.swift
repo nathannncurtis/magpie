@@ -10,7 +10,9 @@ struct BottomSearchPill: View {
 
     /// The pill's height at the default size, growing with Dynamic Type the way its
     /// field's text does.
-    @ScaledMetric(relativeTo: .subheadline) private var height = PillMetrics.height
+    @ScaledMetric(relativeTo: .subheadline) private var scaledHeight = PillMetrics.height
+    /// Grows with the type size, never below the board's height at the smaller sizes.
+    private var height: CGFloat { max(PillMetrics.height, scaledHeight) }
 
     private enum PillMetrics {
         static let height: CGFloat = Metrics.Bar.bottomSearchPillHeight

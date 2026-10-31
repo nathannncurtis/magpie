@@ -7,7 +7,9 @@ struct ArchivedChip: View {
 
     /// The chip's height at the default size, growing with Dynamic Type the way its
     /// label does.
-    @ScaledMetric(relativeTo: .subheadline) private var height = ChipMetrics.height
+    @ScaledMetric(relativeTo: .subheadline) private var scaledHeight = ChipMetrics.height
+    /// Grows with the type size, never below the board's height at the smaller sizes.
+    private var height: CGFloat { max(ChipMetrics.height, scaledHeight) }
 
     private enum ChipMetrics {
         static let height: CGFloat = 46

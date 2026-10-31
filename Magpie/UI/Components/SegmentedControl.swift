@@ -19,7 +19,9 @@ struct SegmentedControl: View {
     @Binding var selection: Int
 
     /// The track's height, growing with Dynamic Type the way its labels do.
-    @ScaledMetric(relativeTo: .footnote) private var trackHeight = Layout.height
+    @ScaledMetric(relativeTo: .footnote) private var scaledTrackHeight = Layout.height
+    /// Grows with the type size, never below the board's height at the smaller sizes.
+    private var trackHeight: CGFloat { max(Layout.height, scaledTrackHeight) }
 
     @Namespace private var thumb
     @Environment(\.colorScheme) private var colorScheme
