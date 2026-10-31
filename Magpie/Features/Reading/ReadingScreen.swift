@@ -187,6 +187,7 @@ struct ReadingScreen: View {
             collapse: collapse,
             showsLock: session?.failure != nil,
             tint: barTint,
+            glassNamespace: chromeNamespace,
             onBack: { session?.goBack() },
             onAddressTap: {
                 expandBar()
