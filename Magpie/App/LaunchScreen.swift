@@ -11,6 +11,8 @@ struct LaunchScreen: View {
     var suggestionsEnabled: Bool = true
     /// While a full screen (Settings, onboarding) covers the launch sheet.
     var focusSuspended: Bool = false
+    /// The search opens a private tab: the screen says so above the sheet.
+    var isPrivate: Bool = false
     let suggestions: any SuggestionProviding
     let recents: any RecentSearchStoring
     /// Text the field opens with: the Skim query bar's edit.
@@ -42,6 +44,16 @@ struct LaunchScreen: View {
                 onDismiss: onDismiss
             )
             .offset(y: arrived ? 0 : Self.riseDistance)
+            if isPrivate {
+                Label(String(localized: "Private tab"), systemImage: "eye.slash")
+                    .font(Typography.rowTitle)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .glassEffect(.regular, in: Capsule())
+                    .padding(.top, 8)
+                    .frame(maxHeight: .infinity, alignment: .top)
+                    .accessibilityIdentifier("launch.private")
+            }
         }
         // A full screen over the launch takes it out of the window, and a rise started
         // there never lands: the sheet rises once nothing covers it.

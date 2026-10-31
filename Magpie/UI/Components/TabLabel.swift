@@ -7,6 +7,8 @@ struct TabLabel: View {
     let title: String
     let host: String?
     let faviconData: Data?
+    /// A private tab: the eye with a slash stands where the favicon would.
+    var isPrivate = false
 
     private enum LabelMetrics {
         static let favicon: CGFloat = 16
@@ -27,7 +29,12 @@ struct TabLabel: View {
 
     @ViewBuilder
     private var favicon: some View {
-        if let image = faviconData.flatMap(UIImage.init(data:)) {
+        if isPrivate {
+            Image(systemName: "eye.slash")
+                .font(.system(size: LabelMetrics.favicon * 0.75, weight: .semibold))
+                .foregroundStyle(Palette.textPrimary)
+                .frame(width: LabelMetrics.favicon, height: LabelMetrics.favicon)
+        } else if let image = faviconData.flatMap(UIImage.init(data:)) {
             Image(uiImage: image)
                 .resizable()
                 .scaledToFill()

@@ -37,6 +37,18 @@
         }
       }
     },
+    "%@, private" : {
+      "comment" : "Spoken address pill of a private tab: the site name, then that it is private",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, private"
+          }
+        }
+      }
+    },
     "%lld days" : {
       "comment" : "Archive interval step in days",
       "extractionState" : "manual",
@@ -853,6 +865,18 @@
         }
       }
     },
+    "New private tab" : {
+      "comment" : "Long-press action on the tabs screen's + button: a tab that keeps no history, cookies or snapshot",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New private tab"
+          }
+        }
+      }
+    },
     "New tab" : {
       "comment" : "Tabs screen button that opens the launch search as a new tab",
       "extractionState" : "manual",
@@ -1137,6 +1161,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Popular this week"
+          }
+        }
+      }
+    },
+    "Private" : {
+      "comment" : "Menu tile that opens the launch search for a private tab",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private"
+          }
+        }
+      }
+    },
+    "Private tab" : {
+      "comment" : "Label above the launch search when the search opens a private tab",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private tab"
           }
         }
       }

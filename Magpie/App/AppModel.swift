@@ -69,6 +69,39 @@ final class AppModel {
     /// Text the search sheet opens with: the Skim query bar's edit.
     var searchPrefill: String?
 
+    // MARK: Private tabs
+
+    /// Whether the launch search submits into a private tab.
+    private(set) var launchIsPrivate = false
+
+    /// The website data every private tab shares while any is open: cookies and storage
+    /// in memory only, dropped with the last private tab so the next one starts clean.
+    @ObservationIgnored private var privateDataStore: WKWebsiteDataStore?
+
+    /// Whether the tab on screen is private.
+    var currentIsPrivate: Bool {
+        store.currentTab?.isPrivate ?? false
+    }
+
+    /// Whether the search up now belongs to a private tab: the launch search opened for
+    /// one, or the sheet over a private page.
+    var searchIsPrivate: Bool {
+        surface == .launchSearch ? launchIsPrivate : currentIsPrivate
+    }
+
+    /// The recents the search reads and writes: a private search keeps nothing.
+    var searchRecents: any RecentSearchStoring {
+        searchIsPrivate ? PrivateRecents(base: recents) : recents
+    }
+
+    /// The menu's Private tile, or the +'s long press: the launch search, submitting into a
+    /// private tab.
+    func newPrivateTab() {
+        searchPrefill = nil
+        launchIsPrivate = true
+        surface = .launchSearch
+    }
+
     /// Nil until `start` has loaded the saved tabs: the app shows the mist while that
     /// happens, and the restored surface lands with nothing animating.
     private(set) var surface: Surface?
@@ -287,9 +320,15 @@ final class AppModel {
             refireSettleIfPictureless(tab, session: session)
             return session
         }
+        var configuration = modInjector.pageConfiguration()
+        if tab.isPrivate {
+            let store = privateDataStore ?? .nonPersistent()
+            privateDataStore = store
+            configuration.websiteDataStore = store
+        }
         let session = ReadingSession(
             url: tab.url ?? Self.blankPage,
-            pageConfiguration: modInjector.pageConfiguration())
+            pageConfiguration: configuration)
         session.logTag = "tab=\(tab.id.uuidString.prefix(4))"
         session.viewportSize = restingPageSize
         sessions[tab.id] = session
@@ -371,7 +410,8 @@ final class AppModel {
     /// back onto the tab, and left to the letter tile when the site has none to give.
     private func fetchTabFavicon(for id: Tab.ID, at url: URL?) {
         let tab = store.tabs.first { $0.id == id } ?? store.archivedTabs.first { $0.id == id }
-        guard tab?.faviconData == nil else { return }
+        // A private tab fetches nothing on the side: the shared session would cache it.
+        guard tab?.faviconData == nil, tab?.isPrivate != true else { return }
         fetchFavicon(
             at: url,
             stillCurrent: { [store] in
@@ -546,7 +586,8 @@ final class AppModel {
 
     /// A submitted search or address from the launch sheet: a new tab, opened on the spot.
     func openFromLaunch(_ url: URL, now: Date = .now) {
-        let tab = store.newTab(url: url, now: now)
+        let tab = store.newTab(url: url, isPrivate: launchIsPrivate, now: now)
+        launchIsPrivate = false
         _ = ensureSession(for: tab)
         searchPrefill = nil
         surface = .reading(searchOpen: false)
@@ -624,6 +665,7 @@ final class AppModel {
     /// The + on the tabs screen: the launch search, which submits into a new tab.
     func newTabFromTabs() {
         searchPrefill = nil
+        launchIsPrivate = false
         surface = .launchSearch
     }
 
@@ -631,6 +673,7 @@ final class AppModel {
     func dismissLaunchSearch() {
         guard !store.tabs.isEmpty else { return }
         searchPrefill = nil
+        launchIsPrivate = false
         surface = .tabs
     }
 
@@ -640,6 +683,10 @@ final class AppModel {
         sessionTasks[id] = nil
         sessions[id] = nil
         store.close(id)
+        if !store.hasPrivateTabs {
+            // The last private tab gone: its cookies and storage go with it.
+            privateDataStore = nil
+        }
         if store.tabs.isEmpty {
             surface = .launchSearch
         }

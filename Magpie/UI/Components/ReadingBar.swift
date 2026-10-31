@@ -70,6 +70,8 @@ struct ReadingBar: View {
     var collapse: CGFloat?
     /// Whether the page failed to load: the URL pill's warning triangle.
     var showsWarning = false
+    /// Whether the page belongs to a private tab.
+    var isPrivate = false
     /// The page tint the glass takes.
     var tint = Palette.pageTintGlass
     /// Names the bar's glass shape so a later pass can morph it into the search sheet
@@ -140,7 +142,9 @@ struct ReadingBar: View {
                     .accessibilityLabel(Text("Back"))
                     .accessibilityIdentifier("bar.back")
             }
-            URLPill(host: host, collapse: progress, showsWarning: showsWarning, action: onAddressTap)
+            URLPill(
+                host: host, collapse: progress, showsWarning: showsWarning, isPrivate: isPrivate,
+                action: onAddressTap)
                 .accessibilityIdentifier("bar.url")
             side {
                 CircleButton(action: onTabsTap) { TabCount(count: tabCount) }

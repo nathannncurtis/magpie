@@ -14,6 +14,9 @@ struct URLPill: View {
     /// Whether the error triangle shows.
     var showsWarning = false
 
+    /// Whether the page belongs to a private tab: an eye with a slash leads the host.
+    var isPrivate = false
+
     let action: () -> Void
 
     /// The pill's height in the full bar.
@@ -36,8 +39,9 @@ struct URLPill: View {
     /// when the page can't load.
     private var spokenLabel: String {
         let name = host.isEmpty ? String(localized: "Address") : host
-        guard showsWarning else { return name }
-        return String(localized: "\(name), can't load")
+        if showsWarning { return String(localized: "\(name), can't load") }
+        if isPrivate { return String(localized: "\(name), private") }
+        return name
     }
 
     var body: some View {
@@ -47,6 +51,11 @@ struct URLPill: View {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: Self.warningSize, weight: .medium))
                         .imageScale(.medium)
+                } else if isPrivate {
+                    Image(systemName: "eye.slash")
+                        .font(.system(size: Self.warningSize, weight: .medium))
+                        .imageScale(.medium)
+                        .accessibilityIdentifier("bar.private")
                 }
                 ZStack {
                     text(Typography.row.weight(.medium)).opacity(1 - collapse)
