@@ -125,13 +125,9 @@ struct SettingsScreen: View {
     private func toggleRow(
         icon: SettingsIcon, title: String, id: String, isDivided: Bool, isOn: Binding<Bool>
     ) -> some View {
-        SettingsRow(icon: icon, title: title, isDivided: isDivided) {
-            Toggle(title, isOn: isOn)
-                .toggleStyle(SettingsToggleStyle())
-                .labelsHidden()
-                .accessibilityLabel(title)
-                .accessibilityIdentifier(id)
-        }
+        SettingsToggleRow(icon: icon, title: title, isOn: isOn)
+            .divided(isDivided)
+            .accessibilityIdentifier(id)
     }
 
     private func rowValue(_ text: String) -> some View {

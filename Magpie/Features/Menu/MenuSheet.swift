@@ -238,11 +238,10 @@ struct MenuSheet: View {
                     get: { model.blocker.blocksCookieBanners },
                     set: { model.blocker.blocksCookieBanners = $0 }))
 
-            MenuRow(icon: .symbol("archivebox"), title: "Archive inactive tabs") {
-                MenuArchiveValue(
-                    interval: model.preferences.archiveInterval,
-                    choose: { model.preferences.archiveInterval = $0 })
-            }
+            MenuArchiveRow(
+                interval: model.preferences.archiveInterval,
+                choose: { model.preferences.archiveInterval = $0 }
+            )
             .divided()
             .accessibilityIdentifier("menu.archive")
         }
@@ -282,13 +281,9 @@ struct MenuSheet: View {
     private func toggleRow(
         icon: SettingsIcon, title: String, id: String, isDivided: Bool, isOn: Binding<Bool>
     ) -> some View {
-        MenuRow(icon: icon, title: title, isDivided: isDivided) {
-            Toggle(title, isOn: isOn)
-                .toggleStyle(SettingsToggleStyle())
-                .labelsHidden()
-                .accessibilityLabel(title)
-                .accessibilityIdentifier(id)
-        }
+        MenuToggleRow(icon: icon, title: title, isOn: isOn)
+            .divided(isDivided)
+            .accessibilityIdentifier(id)
     }
 
     // MARK: The pinned bar row

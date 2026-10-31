@@ -1,9 +1,8 @@
 import SwiftUI
 
 /// The pieces Settings and its pages are built from (03 · Settings): the grouped box,
-/// its rows, the icon square, and the toggle as the boards draw it. The icon square,
-/// the toggle and the chevron are the menu's too; the menu's groups and rows are its
-/// own.
+/// its rows, the icon square, and the toggle row. The icon square and the chevron are
+/// the menu's too; the menu's groups, rows and toggle rows are its own.
 struct SettingsGroup<Content: View>: View {
     @ViewBuilder var content: () -> Content
 
@@ -66,18 +65,11 @@ struct SettingsRow<Trailing: View>: View {
     }
 
     private var inner: some View {
-        HStack(spacing: 12) {
-            IconSquare(icon: icon)
-            Text(title)
-                .font(Typography.row)
-                .foregroundStyle(Palette.textPrimary)
-            Spacer(minLength: 12)
-            trailing()
-        }
-        .frame(minHeight: Metrics.Spacing.rowSettings)
-        .padding(.horizontal, 14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .contentShape(.rect)
+        SettingsRowFace(icon: icon, title: title, trailing: trailing)
+            .frame(minHeight: Metrics.Spacing.rowSettings)
+            .padding(.horizontal, 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(.rect)
     }
 
     /// Draws the hairline above this row.
@@ -92,6 +84,25 @@ struct SettingsRow<Trailing: View>: View {
         var copy = self
         copy.onTap = action
         return copy
+    }
+}
+
+/// What a Settings row's face holds: the icon square, the label, then what trails. The
+/// plain row and the toggle row wear it alike.
+private struct SettingsRowFace<Trailing: View>: View {
+    let icon: SettingsIcon
+    let title: String
+    @ViewBuilder var trailing: () -> Trailing
+
+    var body: some View {
+        HStack(spacing: 12) {
+            IconSquare(icon: icon)
+            Text(title)
+                .font(Typography.row)
+                .foregroundStyle(Palette.textPrimary)
+            Spacer(minLength: 12)
+            trailing()
+        }
     }
 }
 
@@ -201,28 +212,41 @@ struct CookieDots: Shape {
     }
 }
 
-/// The switch as the boards draw it: an ink track when on, `toggleOff` when not, and a
-/// knob that flips colour with the scheme. The row carries the label; the switch draws
-/// alone, so the style leaves the label out.
-struct SettingsToggleStyle: ToggleStyle {
-    @Environment(\.colorScheme) private var colorScheme
+/// A row whose whole face flips the switch at its end (03 · Settings): the system
+/// `Toggle`, tinted `ink`, carrying the row's icon square and label as its own label, so
+/// a tap anywhere from the icon to the switch flips it. `.divided()` draws the hairline
+/// above it, as on the other rows.
+struct SettingsToggleRow: View {
+    let icon: SettingsIcon
+    let title: String
+    let isOn: Binding<Bool>
+    var isDivided = false
 
-    func makeBody(configuration: Configuration) -> some View {
-        Capsule()
-            .fill(configuration.isOn ? AnyShapeStyle(Palette.ink) : AnyShapeStyle(Palette.toggleOff))
-            .frame(width: 50, height: 30)
-            .overlay {
-                Circle()
-                    .fill(Palette.toggleKnob)
-                    .frame(width: 26, height: 26)
-                    .offset(x: configuration.isOn ? 10 : -10)
-                    .shadow(
-                        color: colorScheme == .light ? .black.opacity(0.25) : .clear,
-                        radius: 2, y: 1)
+    var body: some View {
+        Toggle(isOn: isOn) {
+            SettingsRowFace(icon: icon, title: title) { EmptyView() }
+                .frame(minHeight: Metrics.Spacing.rowSettings)
+                .contentShape(.rect)
+        }
+        .toggleStyle(.switch)
+        .tint(Palette.ink)
+        .padding(.horizontal, 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .overlay(alignment: .top) {
+            if isDivided {
+                Rectangle()
+                    .fill(Palette.separatorOnMist)
+                    .frame(height: 0.5)
             }
-            .animation(.easeInOut(duration: 0.15), value: configuration.isOn)
-            .contentShape(.rect)
-            .onTapGesture { configuration.isOn.toggle() }
+        }
+        .accessibilityLabel(title)
+    }
+
+    /// Draws the hairline above this row.
+    func divided(_ divided: Bool = true) -> Self {
+        var copy = self
+        copy.isDivided = divided
+        return copy
     }
 }
 
