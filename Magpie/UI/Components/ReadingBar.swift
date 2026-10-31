@@ -134,14 +134,22 @@ struct ReadingBar: View {
         .glassEffect(.regular.tint(tint), in: .capsule)
     }
 
-    /// Wraps a side button: its width collapses and it fades as the bar slims.
+    /// Wraps a side button: it fades as the bar slims, and its slot folds away only
+    /// once the button has stopped taking taps — the tap target never shrinks under a
+    /// finger mid-collapse. The folding slot clips the visuals alone.
     private func side<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         content()
             .frame(width: CircleButtonLayout.hitSize)
-            .frame(width: CircleButtonLayout.hitSize * (1 - progress))
-            .clipped()
             .opacity(1 - progress)
+            .frame(width: CircleButtonLayout.hitSize * fold)
+            .clipped()
             .allowsHitTesting(progress < 0.5)
+    }
+
+    /// How far the button's slot has folded, 0 to 1: the hit frame holds at full width
+    /// while the button can still take a tap, then the slot folds to nothing.
+    private var fold: CGFloat {
+        progress < 0.5 ? 0 : (progress - 0.5) * 2
     }
 }
 

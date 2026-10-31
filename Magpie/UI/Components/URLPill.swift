@@ -19,6 +19,9 @@ struct URLPill: View {
     private static let fullHeight: CGFloat = 48
     /// The pill's height in the slim pill.
     private static let slimHeight: CGFloat = 30
+    /// The least the pill's tap target measures, whatever its visual height: the slim
+    /// pill looks 30 tall and must still take a full-size tap.
+    private static let minHitHeight: CGFloat = 44
     /// The lock glyph, only shown on errors.
     private static let lockSize: CGFloat = 13
     /// The gap between the lock and the host.
@@ -41,7 +44,7 @@ struct URLPill: View {
                     text(Typography.meta.weight(.medium)).opacity(collapse)
                 }
             }
-            .frame(height: height)
+            .frame(minHeight: max(Self.minHitHeight, height))
             .frame(maxWidth: .infinity)
             .contentShape(.rect)
         }
