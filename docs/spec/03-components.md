@@ -103,7 +103,7 @@ The sheet **hugs its content**: 14 pt between the last group and the bar, never 
 ## Skim
 
 **SkimQueryBar**
-- Glass capsule, 42 tall, inset 14 from the sides, 58 from the top (just under the status bar).
+- Glass capsule, 42 tall, inset 14 from the sides, 4 pt below the status bar's bottom edge (58 pt from the top on the board's phone), so it sits just under the status bar on any device.
 - Contents: a search icon, the query, then a trailing tag of the mark plus "Skim" in caption semibold.
 - Tapping it edits the query.
 

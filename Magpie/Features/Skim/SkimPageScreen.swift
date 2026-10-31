@@ -18,8 +18,9 @@ struct SkimPageScreen: View {
         static let clearDelay: UInt64 = 350_000_000
         /// How far apart the page's pieces arrive.
         static let itemGap: UInt64 = 70_000_000
-        /// Where the mist tier's content starts below the top edge.
-        static let mistTop: CGFloat = 112
+        /// How far below the floating query bar the mist tier's content starts: the
+        /// board's 112 pt from the top, measured from the bar instead of the edge.
+        static let belowQueryBar: CGFloat = 12
         static let mistBottom: CGFloat = 6
         static let sourcesTop: CGFloat = 22
         static let sourcesBottom: CGFloat = 8
@@ -31,6 +32,10 @@ struct SkimPageScreen: View {
     @State private var step = 0
     @State private var shareURL: URL?
     @State private var bottomInset: CGFloat = 0
+    /// The query bar's top edge in screen coordinates, so the mist tier's content
+    /// can start below the bar wherever the status bar puts it. The first frame
+    /// carries the board phone's value; the read corrects it on the first layout.
+    @State private var queryBarTop: CGFloat = 58
 
     var body: some View {
         GlassEffectContainer {
@@ -53,7 +58,12 @@ struct SkimPageScreen: View {
                 }
                 SkimQueryBar(query: page.query, onEdit: onEditQuery)
                     .padding(.horizontal, Metrics.Spacing.insetFloating)
-                    .padding(.top, 58)
+                    .padding(.top, SkimQueryBar.topGap)
+                    .onGeometryChange(for: CGFloat.self) {
+                        $0.frame(in: .global).minY
+                    } action: {
+                        queryBarTop = $0
+                    }
                     .modifier(Arrived(shown: step >= barsStep, drop: -12))
             }
         }
@@ -120,7 +130,7 @@ struct SkimPageScreen: View {
                 MistBackground(fadesIntoPage: true)
                     .frame(height: Metrics.Mist.fadeHeight)
                 VStack(spacing: 0) {
-                    Color.clear.frame(height: Layout.mistTop)
+                    Color.clear.frame(height: mistContentTop)
                     SkimHeader(
                         title: page.title,
                         hosts: page.sources.map(\.host),
@@ -132,6 +142,13 @@ struct SkimPageScreen: View {
             }
             .modifier(Arrived(shown: step >= headerStep))
         }
+    }
+
+    /// Where the mist tier's content starts, measured from the physical top the
+    /// scroll lays out in: under the query bar and its clearance, wherever the
+    /// status bar has pushed the bar to.
+    private var mistContentTop: CGFloat {
+        queryBarTop + Metrics.Bar.skimQueryHeight + Layout.belowQueryBar
     }
 
     private var sources: some View {

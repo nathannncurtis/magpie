@@ -1,6 +1,26 @@
 import SwiftUI
 import _WebKit_SwiftUI
 
+// MARK: - Working scene
+
+/// Where the Skim working scene puts its mark, shared with the failed scene so the
+/// still mark stands where the drawing one left off. The place is a share of the
+/// screen's height, not a fixed offset, so it holds on any device: on the board's
+/// 844 pt phone, 0.344 of the height is the board's 290 pt.
+enum SkimScene {
+
+    /// The mark's side.
+    static let markSize: CGFloat = 96
+
+    /// The mark's top edge, as a share of the screen's height.
+    static let markTopShare: CGFloat = 0.344
+
+    /// The mark's top edge on a screen of the given height.
+    static func markTop(in height: CGFloat) -> CGFloat {
+        markTopShare * height
+    }
+}
+
 // MARK: - Query bar
 
 /// The Skim page's floating query bar (03 · Skim): glass, the search icon, the
@@ -10,11 +30,14 @@ struct SkimQueryBar: View {
     let query: String
     let onEdit: () -> Void
 
+    /// The gap between the status bar's bottom edge and the bar's top. The bar sits
+    /// inside the safe area, so it rides just under the status bar on any device —
+    /// 58 pt from the top on the board's 54 pt status bar.
+    static let topGap: CGFloat = 4
+
     private enum Layout {
         static let height = Metrics.Bar.skimQueryHeight
         static let inset = Metrics.Spacing.insetFloating
-        /// Just under the status bar.
-        static let fromTop: CGFloat = 58
         static let gap: CGFloat = 9
         static let sidePadding: CGFloat = 14
         static let iconSize: CGFloat = 15

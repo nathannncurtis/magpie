@@ -11,10 +11,9 @@ struct SkimFailedScreen: View {
     let onRetry: () -> Void
 
     private enum Layout {
-        static let markSize: CGFloat = 96
-        static let queryTop: CGFloat = 62
-        static let queryLineHeight: CGFloat = 16
-        static let markTop: CGFloat = 290
+        /// The query as typed sits this far below the status bar, inside the safe
+        /// area, so it holds on any device.
+        static let queryBelowStatusBar: CGFloat = 8
         static let stillMark: Double = 0.55
         static let titleGap: CGFloat = 18
         static let lineGap: CGFloat = 14
@@ -29,32 +28,39 @@ struct SkimFailedScreen: View {
         ZStack {
             MistBackground()
                 .ignoresSafeArea()
+            // The still mark stands where the working scene drew it: a share of the
+            // screen's height from the physical top, so it holds on any device.
+            GeometryReader { geo in
+                VStack(spacing: 0) {
+                    Color.clear.frame(height: SkimScene.markTop(in: geo.size.height))
+                    Mark(size: SkimScene.markSize)
+                        .foregroundStyle(Palette.textPrimary)
+                        .opacity(Layout.stillMark)
+                    Color.clear.frame(height: Layout.titleGap)
+                    Text(displayQuery)
+                        .font(Typography.skimWorkingTitle)
+                        .foregroundStyle(Palette.textPrimary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, Metrics.Spacing.insetText)
+                    Color.clear.frame(height: Layout.lineGap)
+                    Text(line)
+                        .font(Typography.meta)
+                        .foregroundStyle(Palette.textOnMistSecondary)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(2)
+                        .padding(.horizontal, Layout.lineInset)
+                    Spacer(minLength: 0)
+                }
+                .frame(width: geo.size.width, height: geo.size.height)
+            }
+            .ignoresSafeArea(edges: .top)
             VStack(spacing: 0) {
-                Color.clear.frame(height: Layout.queryTop)
                 Text(query)
                     .font(Typography.small)
                     .foregroundStyle(Palette.textOnMistSecondary)
-                Color.clear.frame(
-                    height: Layout.markTop - Layout.queryTop - Layout.queryLineHeight)
-                Mark(size: Layout.markSize)
-                    .foregroundStyle(Palette.textPrimary)
-                    .opacity(Layout.stillMark)
-                Color.clear.frame(height: Layout.titleGap)
-                Text(displayQuery)
-                    .font(Typography.skimWorkingTitle)
-                    .foregroundStyle(Palette.textPrimary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, Metrics.Spacing.insetText)
-                Color.clear.frame(height: Layout.lineGap)
-                Text(line)
-                    .font(Typography.meta)
-                    .foregroundStyle(Palette.textOnMistSecondary)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(2)
-                    .padding(.horizontal, Layout.lineInset)
+                    .padding(.top, Layout.queryBelowStatusBar)
                 Spacer(minLength: 0)
             }
-            .ignoresSafeArea(edges: .top)
             VStack {
                 Spacer()
                 footer
