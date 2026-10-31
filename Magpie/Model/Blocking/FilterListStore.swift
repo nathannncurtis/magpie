@@ -209,7 +209,7 @@ actor FilterListStore {
 
     /// Downloads every list now, stale or not: the Settings page's "Update now".
     func refreshNow() async {
-        await download(lists, now: clock())
+        await download(allLists, now: clock())
         await rebuildSets()
     }
 
@@ -247,11 +247,14 @@ actor FilterListStore {
                 record.lastUpdated = now
                 state.lists[list.id] = record
             case .updated(let data, let etag, let lastModified):
-                write(data, to: rawURL(for: list))
                 let conversion = FilterListConverter.convert(
                     String(decoding: data, as: UTF8.self),
                     vocabulary: await vocabulary()
                 )
+                // A 200 that converts to nothing (a captive portal page, an emptied file) is
+                // a failed update: the last good list stays, and the next refresh retries.
+                guard conversion.stats.emitted > 0 else { continue }
+                write(data, to: rawURL(for: list))
                 if let stored = try? JSONEncoder().encode(StoredFilterRules.from(conversion)) {
                     write(stored, to: convertedURL(for: list))
                 }

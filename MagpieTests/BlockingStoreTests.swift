@@ -313,6 +313,27 @@ struct BlockingStoreTests {
         #expect(await store.ruleLists(for: .adsAndTrackers).count == 1)
     }
 
+    @Test("a 200 that converts to no rules keeps the last good list")
+    func emptyResponseKeepsLastGood() async {
+        BlockingStubURLProtocol.reset()
+        let compiler = BlockingFakeCompiler()
+        let clock = BlockingClock(Self.epoch)
+        let ads = Self.list(id: "one", url: "https://one.example/filters.txt", ruleSet: .adsAndTrackers)
+        let store = makeStore(lists: [ads], compiler: compiler, clock: clock)
+        stubBodies([ads.url.absoluteString: Self.adsBody])
+        await store.refreshIfNeeded()
+        let rawBefore = await store.rawText(for: ads)
+
+        clock.now = Self.epoch.addingTimeInterval(FilterListStore.refreshInterval + 60)
+        stubBodies([ads.url.absoluteString: "<html><body>Sign in to Wi-Fi</body></html>"], etag: "portal")
+        await store.refreshIfNeeded()
+
+        #expect(await store.rawText(for: ads) == rawBefore)
+        #expect(await store.lastUpdated(for: ads) == Self.epoch)
+        #expect(compiler.removed.isEmpty)
+        #expect(await store.ruleLists(for: .adsAndTrackers).count == 1)
+    }
+
     @Test("a failed compile keeps the previous set in place")
     func compileFailureKeepsPrevious() async {
         BlockingStubURLProtocol.reset()
