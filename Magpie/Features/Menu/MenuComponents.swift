@@ -4,8 +4,8 @@ import SwiftUI
 /// the groups and their rows. The icon square and the chevron come from Settings'
 /// pieces, so the two screens read as one.
 ///
-/// The menu's numbers: rows 50 tall, groups inset 14 with radius 20, tiles 64 tall with
-/// radius 18, gaps 8 between tiles and 10 between groups.
+/// The menu's numbers: rows 50 tall, groups inset 14 with radius 20, tiles at least 64
+/// tall with radius 18, gaps 8 between tiles and 10 between groups.
 
 /// The menu's grabber: 38 by 5, the ink at 18%.
 struct MenuGrabber: View {
@@ -43,10 +43,10 @@ struct MenuTileFace<Icon: View>: View {
             icon()
             Text(title)
                 .font(Typography.tileLabel)
-                .lineLimit(1)
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: Metrics.Menu.tileHeight)
+        .frame(minHeight: Metrics.Menu.tileHeight)
         .background(
             RoundedRectangle(cornerRadius: Metrics.Radius.tileSmall, style: .continuous)
                 .fill(Palette.menuTile)
