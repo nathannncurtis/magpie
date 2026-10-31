@@ -83,6 +83,8 @@ final class ContentBlocker {
     private let defaults: UserDefaults
     /// Every live page's controller. Weak, so a page that goes away drops itself out.
     private var controllers: [WeakController] = []
+    /// Bumped by every apply, so a slower, older apply can't land over a newer one.
+    private var applyGenerations: [ObjectIdentifier: Int] = [:]
 
     init(store: any RuleSetProviding, defaults: UserDefaults = .standard) {
         self.store = store
@@ -131,6 +133,7 @@ final class ContentBlocker {
     /// Stops tracking a page's controller; its lists go away with the page.
     func detach(_ controller: AnyObject) {
         controllers.removeAll { $0.value == nil || $0.value === controller }
+        applyGenerations[ObjectIdentifier(controller)] = nil
     }
 
     private func reapply() {
@@ -155,10 +158,19 @@ final class ContentBlocker {
         if appliesModLists {
             sets.append(.mods)
         }
-        controller.removeAllRules()
+        // Gather first, then swap in one step: an apply that suspends between removing and
+        // adding could interleave with a newer one (a toggle flipped mid-refresh) and leave
+        // a switched-off set, or a set twice, on the page. Only the newest apply lands.
+        let key = ObjectIdentifier(controller)
+        let generation = (applyGenerations[key] ?? 0) + 1
+        applyGenerations[key] = generation
+        var lists: [CompiledRuleList] = []
         for set in sets {
-            controller.apply(await store.ruleLists(for: set))
+            lists += await store.ruleLists(for: set)
         }
+        guard applyGenerations[key] == generation else { return }
+        controller.removeAllRules()
+        controller.apply(lists)
     }
 
     private func liveControllers() -> [any ContentRuleApplying] {
