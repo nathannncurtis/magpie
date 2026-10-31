@@ -385,6 +385,18 @@
         }
       }
     },
+    "Close tab" : {
+      "comment" : "Tab card: VoiceOver action that closes the tab",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close tab"
+          }
+        }
+      }
+    },
     "Continue" : {
       "comment" : "The engine picker's CTA before anything is picked",
       "extractionState" : "manual",
@@ -853,6 +865,18 @@
         }
       }
     },
+    "No bookmarks match that search." : {
+      "comment" : "A bookmarks search that matched nothing",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No bookmarks match that search."
+          }
+        }
+      }
+    },
     "No bookmarks yet" : {
       "comment" : "Empty bookmarks title",
       "extractionState" : "manual",
@@ -861,6 +885,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No bookmarks yet"
+          }
+        }
+      }
+    },
+    "No results" : {
+      "comment" : "A list search that matched nothing, in Archive and Bookmarks",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No results"
           }
         }
       }
@@ -933,6 +969,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nothing archived yet"
+          }
+        }
+      }
+    },
+    "Nothing in the archive matches that search." : {
+      "comment" : "An archive search that matched nothing",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing in the archive matches that search."
           }
         }
       }

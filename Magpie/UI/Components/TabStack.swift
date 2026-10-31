@@ -110,6 +110,9 @@ struct TabStack: View {
     /// Whether the neighbours have slid in beside the current card.
     @State private var neighboursArrived = false
 
+    /// The label's slot, growing with Dynamic Type the way its caption title does.
+    @ScaledMetric(relativeTo: .caption) private var labelSlot: CGFloat = StackMetrics.labelSlotHeight
+
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -172,6 +175,11 @@ struct TabStack: View {
             namespace: namespace
         )
         .accessibilityElement(children: .contain)
+        .accessibilityLabel(Text(accessibilityName(for: tab)))
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction(named: Text(String(localized: "Close tab"))) {
+            onClose(tab.id)
+        }
         .accessibilityIdentifier(tab.id == currentID ? "tabs.card.current" : "tabs.card.neighbour")
         .position(x: frame.midX + neighbourOffset(from: index - current, stride: stride), y: frame.midY + lift)
         .zIndex(Double(100 - abs(index - current)))
@@ -193,6 +201,15 @@ struct TabStack: View {
         return CGFloat(current > 0 ? 1 : -1) * stride * StackMetrics.neighbourSlide
     }
 
+    /// The card as one line for VoiceOver: its title, then the site it is on. The title
+    /// alone is kept when the host is all it has.
+    private func accessibilityName(for tab: Tab) -> String {
+        guard let host = tab.host, !host.isEmpty, host != tab.displayTitle else {
+            return tab.displayTitle
+        }
+        return "\(tab.displayTitle), \(host)"
+    }
+
     /// A label rides above its own card, aligned to its leading edge and clipped by the
     /// screen with it when it peeks; it never spills onto the current card's label.
     @ViewBuilder
@@ -206,15 +223,14 @@ struct TabStack: View {
             ).minX
             let window = StackLayout.labelWindow(
                 card: card, nextCardLeading: nextLeading, containerWidth: size.width)
-            // Natural width, hard-cut at the window's edge — a peeking label's text runs
-            // off the screen with its card rather than folding into an ellipsis.
+            // One line, tail-truncated inside its window: a peeking label folds into an
+            // ellipsis at the screen's edge instead of cutting through a glyph. The card
+            // carries the words; the label keeps out of VoiceOver's way.
             TabLabel(title: tab.displayTitle, host: tab.host, faviconData: tab.faviconData)
-                .fixedSize(horizontal: true, vertical: false)
-                .frame(width: window.width, alignment: .leading)
-                .clipped()
-                .frame(height: window.height, alignment: .bottomLeading)
-                .position(x: window.midX, y: window.midY)
+                .frame(width: window.width, height: labelSlot, alignment: .bottomLeading)
+                .position(x: window.midX, y: window.maxY - labelSlot / 2)
                 .zIndex(200)
+                .accessibilityHidden(true)
         }
     }
 

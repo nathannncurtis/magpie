@@ -96,7 +96,8 @@ final class TabStore {
     }
 
     /// Brings the tab in step with its page: where it is, what it's called, its site's own
-    /// icon, and when it was last read. Nothing without a page behind it moves it.
+    /// icon, and when it was last read. A new icon address drops the bytes the old one
+    /// left behind. Nothing without a page behind it moves it.
     func update(id: Tab.ID, url: URL?, title: String, faviconURL: URL?, now: Date) {
         guard let i = tabs.firstIndex(where: { $0.id == id }) else { return }
         let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -111,10 +112,26 @@ final class TabStore {
         }
         if let faviconURL, tabs[i].faviconURL != faviconURL {
             tabs[i].faviconURL = faviconURL
+            tabs[i].faviconData = nil
             changed = true
         }
         guard changed else { return }
         tabs[i].lastActive = now
+        saveIndex()
+    }
+
+    /// The site's icon onto the tab, open or archived: the bytes the card's label and the
+    /// archive rows show in place of the letter tile. They land in the index with the tab.
+    func setFavicon(_ data: Data, for id: Tab.ID) {
+        if let i = tabs.firstIndex(where: { $0.id == id }) {
+            guard tabs[i].faviconData != data else { return }
+            tabs[i].faviconData = data
+        } else if let i = archivedTabs.firstIndex(where: { $0.id == id }) {
+            guard archivedTabs[i].faviconData != data else { return }
+            archivedTabs[i].faviconData = data
+        } else {
+            return
+        }
         saveIndex()
     }
 
