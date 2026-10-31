@@ -4,7 +4,8 @@ import Foundation
 enum HostFormatter {
 
     /// The display form of a URL's host: bare, lowercased, a leading `www.` stripped and
-    /// IDN labels in unicode. An empty string when there is no host.
+    /// IDN labels in unicode. A label mixing scripts, the stuff of lookalike hosts, stays
+    /// in punycode. An empty string when there is no host.
     static func host(for url: URL?) -> String {
         guard let raw = url?.host, !raw.isEmpty else { return "" }
         let host = raw.lowercased()
@@ -14,9 +15,51 @@ enum HostFormatter {
             .split(separator: ".", omittingEmptySubsequences: false)
             .map { label -> String in
                 guard label.hasPrefix("xn--") else { return String(label) }
-                return Punycode.decodeLabel(String(label.dropFirst(4))) ?? String(label)
+                guard let decoded = Punycode.decodeLabel(String(label.dropFirst(4))),
+                    IDNScript.isSingleScript(decoded)
+                else { return String(label) }
+                return decoded
             }
             .joined(separator: ".")
+    }
+}
+
+/// A coarse script check for IDN labels: a label shows in unicode only when its letters
+/// come from one script, allowing ASCII alongside Han, kana and Hangul as those
+/// languages mix them. A letter from a script not listed keeps the label in punycode.
+enum IDNScript {
+
+    private enum Script { case latin, greek, cyrillic, armenian, hebrew, arabic, thai, cjk }
+
+    static func isSingleScript(_ label: String) -> Bool {
+        var scripts: Set<Script> = []
+        var hasASCIILetter = false
+        for scalar in label.unicodeScalars {
+            let v = scalar.value
+            if v < 0x80 {
+                if scalar.properties.isAlphabetic { hasASCIILetter = true }
+                continue
+            }
+            guard let script = script(of: v) else { return false }
+            scripts.insert(script)
+        }
+        if scripts.count > 1 { return false }
+        guard let only = scripts.first, hasASCIILetter else { return true }
+        return only == .latin || only == .cjk
+    }
+
+    private static func script(of v: UInt32) -> Script? {
+        switch v {
+        case 0x00C0...0x024F, 0x1E00...0x1EFF: .latin
+        case 0x0370...0x03FF, 0x1F00...0x1FFF: .greek
+        case 0x0400...0x052F: .cyrillic
+        case 0x0530...0x058F: .armenian
+        case 0x0590...0x05FF: .hebrew
+        case 0x0600...0x06FF, 0x0750...0x077F: .arabic
+        case 0x0E00...0x0E7F: .thai
+        case 0x3040...0x30FF, 0x3400...0x4DBF, 0x4E00...0x9FFF, 0xAC00...0xD7AF: .cjk
+        default: nil
+        }
     }
 }
 

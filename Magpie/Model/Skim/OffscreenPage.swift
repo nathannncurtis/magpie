@@ -9,7 +9,9 @@ enum OffscreenPage {
     private static func make() -> WebPage {
         var configuration = WebPage.Configuration()
         configuration.websiteDataStore = .nonPersistent()
-        return WebPage(configuration: configuration)
+        return WebPage(
+            configuration: configuration,
+            navigationDecider: PageNavigationDecider(allowsHandOff: false))
     }
 
     /// Loads `url`, waits for it to finish, then runs `script` in the page and
