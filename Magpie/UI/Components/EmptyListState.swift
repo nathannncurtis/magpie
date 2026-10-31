@@ -1,15 +1,18 @@
 import SwiftUI
 
 /// An empty list's quiet block on the mist: a line icon, a title, one line of way
-/// forward. No search pill sits under it — there is nothing to search.
+/// forward. No search pill sits under it — there is nothing to search. It goes in a
+/// layer over the whole screen, not under the header, so its share of the height is
+/// the screen's, not the leftover.
 struct EmptyListState: View {
     let icon: String
     let title: String
     let message: String
 
     private enum EmptyMetrics {
-        /// Where the block's top sits, as a share of the height on hand: about 300 pt
-        /// on a standard phone, holding its place on any height.
+        /// Where the block's top sits, as a share of the height on hand — the screen's
+        /// safe height, when the layer is held to it: about 270 pt on a standard phone,
+        /// holding its place on any height.
         static let topFraction: CGFloat = 0.35
         static let icon: CGFloat = 34
         static let titleGap: CGFloat = 8
