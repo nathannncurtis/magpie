@@ -14,6 +14,10 @@ struct EmptyListState: View {
         /// safe height, when the layer is held to it: about 270 pt on a standard phone,
         /// holding its place on any height.
         static let topFraction: CGFloat = 0.35
+        /// The least the top sits below the safe top: under the list headers (about
+        /// 96 pt) with room to spare, for when the keys leave only a short height and
+        /// the share alone would tuck the block against the title.
+        static let minTop: CGFloat = 124
         static let icon: CGFloat = 34
         static let titleGap: CGFloat = 8
         static let messageGap: CGFloat = 6
@@ -38,7 +42,7 @@ struct EmptyListState: View {
             }
             .padding(.horizontal, EmptyMetrics.sideInset)
             .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
-            .padding(.top, geo.size.height * EmptyMetrics.topFraction)
+            .padding(.top, max(geo.size.height * EmptyMetrics.topFraction, EmptyMetrics.minTop))
         }
         .accessibilityElement(children: .combine)
     }
