@@ -58,6 +58,9 @@ final class ReadingSession {
     private(set) var failure: PageLoadFailure?
     /// The page's own background, when it sets one and declares no theme colour.
     private(set) var pageBackground: Color?
+    /// The colour at the top of what the reader sees: what shows under the status bar,
+    /// read at load and wherever the reader comes to rest. Nil until read.
+    private(set) var topColour: Color?
     /// The site's own icon, when the page declares one.
     private(set) var pageIconURL: URL?
     /// Whether the network path is up.
@@ -232,6 +235,23 @@ final class ReadingSession {
         return m ? m[1] + "," + m[2] + "," + m[3] : "";
         """#
 
+    /// Reads the background behind the top centre of the viewport, as "r,g,b": the
+    /// nearest opaque background from the element there up through its ancestors; ""
+    /// when none is opaque.
+    private static let topColourScript = #"""
+        const rgb = (s) => {
+            const m = s && s.match(/^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)$/);
+            return (!m || m[4] === undefined || parseFloat(m[4]) !== 0) ? m : null;
+        };
+        let el = document.elementFromPoint(window.innerWidth / 2, 1);
+        while (el) {
+            const m = rgb(getComputedStyle(el).backgroundColor);
+            if (m) { return m[1] + "," + m[2] + "," + m[3]; }
+            el = el.parentElement;
+        }
+        return "";
+        """#
+
     init(url: URL, pageConfiguration: WebPage.Configuration? = nil) {
         initialURL = url
         requestedURL = url
@@ -286,6 +306,7 @@ final class ReadingSession {
                     }
                     if event == .finished {
                         await refreshPageBackground()
+                        await refreshTopColour()
                         await readPageIcon()
                         settle()
                     }
@@ -352,6 +373,7 @@ final class ReadingSession {
     ) {
         failure = nil
         pageBackground = nil
+        topColour = nil
         // The page being left does not keep speaking for the one arriving: its icon
         // goes with it, read afresh once the new page has settled.
         pageIconURL = nil
@@ -432,6 +454,7 @@ final class ReadingSession {
         failure = PageLoadFailure(
             host: HostFormatter.host(for: requestedURL ?? page.url), isOffline: offline)
         pageBackground = nil
+        topColour = nil
         // The failure page takes the web view's place in the hierarchy, so the
         // session's hold on it is dropped here too — a detached view held alive keeps
         // its accessibility line open. The probe re-finds it when a load lands.
@@ -458,6 +481,18 @@ final class ReadingSession {
             let text = result as? String
         else { return }
         pageBackground = PageBackgroundColor.parse(text)
+    }
+
+    /// Reads the colour under the status bar; a page with no opaque background there
+    /// leaves the strip's own colour to stand.
+    func refreshTopColour() async {
+        guard failure == nil, page.url != nil else { return }
+        guard
+            let result = try? await page.callJavaScript(
+                Self.topColourScript, contentWorld: .defaultClient),
+            let text = result as? String
+        else { return }
+        topColour = PageBackgroundColor.parse(text)
     }
 
     /// Reads the site's icon link from the page once per site, so the tab's card and

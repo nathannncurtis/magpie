@@ -154,7 +154,7 @@ struct ReadingScreen: View {
             host: session?.failure?.host ?? HostFormatter.host(for: session?.page.url),
             tabCount: tabCount,
             canGoBack: session?.canGoBack ?? false,
-            showsLock: session?.failure != nil,
+            showsWarning: session?.failure != nil,
             skimOffered: skimRunsHere,
             barBottomEdge: bottomEdge,
             morphNamespace: chromeNamespace,
@@ -193,7 +193,7 @@ struct ReadingScreen: View {
             canGoBack: session?.canGoBack ?? false,
             isSlim: collapse >= 1,
             collapse: collapse,
-            showsLock: session?.failure != nil,
+            showsWarning: session?.failure != nil,
             tint: barTint,
             glassNamespace: chromeNamespace,
             onBack: { session?.goBack() },
@@ -281,7 +281,17 @@ struct ReadingScreen: View {
     /// colour at full strength, solid rather than glass, so the screen still reads edge
     /// to edge with the page starting below the inset. Paper when the page has no colour
     /// of its own to lend.
-    private var topEdgeFill: Color {
+    private var topEdgeFill: Color { Self.topEdgeFill(for: session) }
+
+    /// What sits under the status bar, for its ink: the colour read at the top of the
+    /// page as it rests, else the strip's own.
+    static func statusBarFill(for session: ReadingSession?) -> Color {
+        if let session, session.failure == nil, let top = session.topColour { return top }
+        return topEdgeFill(for: session)
+    }
+
+    /// The strip's colour: the page's theme colour, else its background, else paper.
+    static func topEdgeFill(for session: ReadingSession?) -> Color {
         guard let session, session.failure == nil else { return Palette.paper }
         if let themeColor = session.page.themeColor {
             return themeColor
@@ -313,6 +323,7 @@ struct ReadingScreen: View {
             try? await Task.sleep(for: Self.sizeSettleDelay)
             guard !Task.isCancelled, let session else { return }
             session.captureOpportunity()
+            await session.refreshTopColour()
         }
     }
 

@@ -7,6 +7,7 @@ import WebKit
 struct RootView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var colorScheme
 
     /// The bar and the search sheet morph as one glass shape.
     @Namespace private var chrome
@@ -148,6 +149,14 @@ struct RootView: View {
         .fullScreenCover(isPresented: settingsBinding) {
             SettingsScreen(opening: model.settingsPage)
         }
+        .statusBarInk(statusBarInk)
+    }
+
+    /// Over a page the status bar sits on the page's own colours, so its ink follows what
+    /// is under it; everywhere else, and under a full screen, it is the system's.
+    private var statusBarInk: StatusBarInk {
+        guard case .reading = model.surface, !coversOverLaunch else { return .automatic }
+        return .over(ReadingScreen.statusBarFill(for: model.currentSession), scheme: colorScheme)
     }
 
     private var onboardingUp: Binding<Bool> {
