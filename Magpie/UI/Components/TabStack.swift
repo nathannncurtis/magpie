@@ -48,6 +48,16 @@ enum StackLayout {
             width: max(trailing - leading, StackMetrics.labelMinWidth),
             height: StackMetrics.labelSlotHeight)
     }
+
+    /// How far a card and its label sit above their rest: the flying card's flight,
+    /// else the dragged card's travel. A label takes its card's lift, so it leaves with it.
+    static func lift<ID: Equatable>(
+        for id: ID, flying: ID?, flyOffset: CGFloat, dragging: ID?, drag: CGFloat
+    ) -> CGFloat {
+        if flying == id { return flyOffset }
+        if dragging == id { return drag }
+        return 0
+    }
 }
 
 /// The stack's fixed measurements, in points.
@@ -159,14 +169,6 @@ struct TabStack: View {
         _ tab: Tab, index: Int, current: Int, size: CGSize, stride: CGFloat
     ) -> some View {
         let frame = StackLayout.cardFrame(offset: index - current, container: size, drag: horizontalDrag)
-        let lift: CGFloat
-        if flyingID == tab.id {
-            lift = flyOffset
-        } else if dragCardID == tab.id {
-            lift = verticalDrag
-        } else {
-            lift = 0
-        }
         return TabCard(
             tab: tab,
             snapshot: tab.snapshot ?? snapshots[tab.id],
@@ -181,7 +183,10 @@ struct TabStack: View {
             onClose(tab.id)
         }
         .accessibilityIdentifier(tab.id == currentID ? "tabs.card.current" : "tabs.card.neighbour")
-        .position(x: frame.midX + neighbourOffset(from: index - current, stride: stride), y: frame.midY + lift)
+        .position(
+            x: frame.midX + neighbourOffset(from: index - current, stride: stride),
+            y: frame.midY + lift(for: tab.id)
+        )
         .zIndex(Double(100 - abs(index - current)))
         .onTapGesture {
             guard flyingID == nil else { return }
@@ -193,6 +198,11 @@ struct TabStack: View {
                 }
             }
         }
+    }
+
+    private func lift(for id: Tab.ID) -> CGFloat {
+        StackLayout.lift(
+            for: id, flying: flyingID, flyOffset: flyOffset, dragging: dragCardID, drag: verticalDrag)
     }
 
     /// How far out a card sits while the neighbours have yet to slide in.
@@ -211,7 +221,9 @@ struct TabStack: View {
     }
 
     /// A label rides above its own card, aligned to its leading edge and clipped by the
-    /// screen with it when it peeks; it never spills onto the current card's label.
+    /// screen with it when it peeks; it never spills onto the current card's label. It
+    /// lifts with its card, so a closed tab's label flies off with it instead of fading
+    /// out over the label sliding into its place.
     @ViewBuilder
     private func label(
         _ tab: Tab, index: Int, current: Int, size: CGSize, stride: CGFloat
@@ -228,7 +240,7 @@ struct TabStack: View {
             // carries the words; the label keeps out of VoiceOver's way.
             TabLabel(title: tab.displayTitle, host: tab.host, faviconData: tab.faviconData)
                 .frame(width: window.width, height: labelSlot, alignment: .bottomLeading)
-                .position(x: window.midX, y: window.maxY - labelSlot / 2)
+                .position(x: window.midX, y: window.maxY - labelSlot / 2 + lift(for: tab.id))
                 .zIndex(200)
                 .accessibilityHidden(true)
         }

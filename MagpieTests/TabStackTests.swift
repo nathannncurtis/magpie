@@ -95,4 +95,11 @@ struct StackLayoutTests {
         #expect(approximately(window.minX, 14))
         #expect(approximately(window.maxX, min(card.maxX, nextLeading - 6)))
     }
+
+    @Test("a card and its label lift by the flight, else the drag, else not at all")
+    func liftFollowsTheCard() {
+        #expect(StackLayout.lift(for: 1, flying: 1, flyOffset: -900, dragging: nil, drag: 0) == -900)
+        #expect(StackLayout.lift(for: 1, flying: nil, flyOffset: 0, dragging: 1, drag: -120) == -120)
+        #expect(StackLayout.lift(for: 2, flying: 1, flyOffset: -900, dragging: 1, drag: -120) == 0)
+    }
 }
