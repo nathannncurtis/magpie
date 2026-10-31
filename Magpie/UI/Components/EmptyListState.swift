@@ -24,6 +24,9 @@ struct EmptyListState: View {
         static let sideInset: CGFloat = 40
     }
 
+    /// The title's size, scaling with Dynamic Type.
+    @ScaledMetric(relativeTo: .headline) private var titleSize: CGFloat = 16
+
     var body: some View {
         GeometryReader { geo in
             VStack(spacing: EmptyMetrics.messageGap) {
@@ -31,9 +34,11 @@ struct EmptyListState: View {
                     .font(.system(size: EmptyMetrics.icon, weight: .medium))
                     .foregroundStyle(Palette.labelOnMist)
                     .padding(.bottom, EmptyMetrics.titleGap - EmptyMetrics.messageGap)
+                    .accessibilityHidden(true)
                 Text(title)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: titleSize, weight: .semibold))
                     .foregroundStyle(Palette.textPrimary)
+                    .multilineTextAlignment(.center)
                 Text(message)
                     .font(Typography.meta)
                     .foregroundStyle(Palette.textOnMistSecondary)
