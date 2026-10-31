@@ -1,5 +1,4 @@
 import SwiftUI
-import _WebKit_SwiftUI
 
 // MARK: - Working scene
 
@@ -43,6 +42,9 @@ struct SkimQueryBar: View {
         static let iconSize: CGFloat = 15
         static let markSize: CGFloat = 12
         static let tagGap: CGFloat = 5
+        /// The touch target the bar carries: the 44 pt minimum, invisible. The glass
+        /// capsule stays 42; the target is the taller frame around it.
+        static let hitSide: CGFloat = 44
     }
 
     var body: some View {
@@ -67,12 +69,13 @@ struct SkimQueryBar: View {
             .padding(.horizontal, Layout.sidePadding)
             .frame(height: Layout.height)
             .frame(maxWidth: .infinity)
+            .glassEffect(.regular, in: .capsule)
+            .frame(minHeight: Layout.hitSide)
             .contentShape(.capsule)
         }
         .buttonStyle(.plain)
         .foregroundStyle(Palette.textPrimary)
         .accessibilityIdentifier("skim.queryBar")
-        .glassEffect(.regular, in: .capsule)
     }
 }
 
@@ -316,6 +319,10 @@ struct SkimSectionRow: View {
         static let dotLift: CGFloat = 2
     }
 
+    /// The citation digit rides inline with the claim's `body` text, so it scales
+    /// with Dynamic Type the way that text does.
+    @ScaledMetric(relativeTo: .subheadline) private var dotSize = Layout.dotSize
+
     var body: some View {
         HStack(alignment: .top, spacing: Layout.gap) {
             RoundedRectangle(cornerRadius: Layout.radius, style: .continuous)
@@ -342,7 +349,7 @@ struct SkimSectionRow: View {
     /// a circled digit in the sheen's solid mid tone — itself the link that
     /// taps to its source. These stay inside the text: they are links a finger
     /// follows while reading, not buttons it aims at, so they carry no 44 pt
-    /// target (the source cards' dots do).
+    /// target (the source card itself is the target).
     private var claim: Text {
         var text = AttributedString()
         var term = AttributedString(section.term)
@@ -353,10 +360,10 @@ struct SkimSectionRow: View {
         text += rest
         for citation in section.citations {
             var space = AttributedString(Self.thinSpace)
-            space.font = .system(size: Layout.dotSize)
+            space.font = .system(size: dotSize)
             text += space
             var dot = AttributedString(Self.dotGlyph(for: citation))
-            dot.font = .system(size: Layout.dotSize)
+            dot.font = .system(size: dotSize)
             // The sheen's green falls short of contrast on the light skim paper;
             // there the text accent's teal stands in for it.
             dot.foregroundColor = colorScheme == .dark ? Palette.sheenMid : Palette.teal
@@ -388,8 +395,8 @@ struct SkimSectionRow: View {
     }
 }
 
-/// The source's number on the sheen (03 · CitationDot): the 17 pt circle itself,
-/// for the places it sits inside a line and is not tapped on its own.
+/// The source's number on the sheen (03 · Skim): the 17 pt circle on a source
+/// card's site line, where the card around it is what taps.
 struct CitationBadge: View {
 
     let number: Int
@@ -407,40 +414,6 @@ struct CitationBadge: View {
             .background(Circle().fill(Palette.sheen))
             .contentShape(Circle())
             .accessibilityLabel(Text("Source \(number)"))
-    }
-}
-
-/// A citation dot (03 · Skim). Tapping it scrolls to the source's card; holding
-/// it previews the page. The circle stays 17 pt; the target around it is the
-/// 44 pt minimum, invisible.
-struct CitationDot: View {
-
-    let number: Int
-    let previewURL: URL?
-    let onTap: () -> Void
-
-    private enum Layout {
-        /// The touch target the dot carries.
-        static let hitSide: CGFloat = 44
-    }
-
-    var body: some View {
-        Button(action: onTap) {
-            CitationBadge(number: number)
-                .frame(minWidth: Layout.hitSide, minHeight: Layout.hitSide)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .contextMenu(
-            menuItems: {},
-            preview: {
-                if let previewURL {
-                    WebView(url: previewURL)
-                        .ignoresSafeArea()
-                }
-            }
-        )
-        .accessibilityLabel(Text("Source \(number)"))
     }
 }
 
