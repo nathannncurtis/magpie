@@ -361,6 +361,18 @@
         }
       }
     },
+    "Close tab" : {
+      "comment" : "Tab card: VoiceOver action that closes the tab",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close tab"
+          }
+        }
+      }
+    },
     "Continue" : {
       "comment" : "The engine picker's CTA before anything is picked",
       "extractionState" : "manual",

@@ -128,11 +128,11 @@ struct TabCard: View {
             VStack(spacing: 8) {
                 Image(systemName: "globe")
                     .font(.system(size: 24, weight: .medium))
-                    .foregroundStyle(Palette.textTertiary)
+                    .foregroundStyle(Palette.textSecondary)
                 if let host = tab.host {
                     Text(host)
                         .font(Typography.meta)
-                        .foregroundStyle(Palette.textTertiary)
+                        .foregroundStyle(Palette.textSecondary)
                         .lineLimit(1)
                 }
             }
