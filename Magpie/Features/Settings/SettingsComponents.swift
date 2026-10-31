@@ -259,6 +259,17 @@ struct SettingsChevron: View {
     }
 }
 
+/// The checkmark on a Settings list's chosen row: decoration only — the row's
+/// `isSelected` trait carries the choice to VoiceOver.
+struct SettingsCheckmark: View {
+    var body: some View {
+        Image(systemName: "checkmark")
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(Palette.textPrimary)
+            .accessibilityHidden(true)
+    }
+}
+
 /// An uppercase section label above a group.
 struct SettingsSectionLabel: View {
     let title: String

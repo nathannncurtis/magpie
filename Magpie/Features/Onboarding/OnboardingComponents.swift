@@ -80,12 +80,15 @@ struct EngineTile: View {
             }
             .overlay(alignment: .topTrailing) {
                 if isSelected {
+                    // Decorative: the trait below says the choice to VoiceOver.
                     checkBadge
+                        .accessibilityHidden(true)
                 }
             }
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
         .accessibilityIdentifier("picker.tile.\(engine.id)")
     }
 

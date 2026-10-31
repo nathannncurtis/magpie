@@ -15,9 +15,7 @@ struct ArchivePickerPage: View {
                 ) { index, step in
                     SettingsRow(icon: .symbol("archivebox"), title: Preferences.archiveIntervalLabel(step)) {
                         if preferences.archiveInterval == step {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(Palette.textPrimary)
+                            SettingsCheckmark()
                         }
                     }
                     .divided(index > 0)
@@ -25,6 +23,9 @@ struct ArchivePickerPage: View {
                         preferences.archiveInterval = step
                         dismiss()
                     }
+                    .accessibilityAddTraits(
+                        preferences.archiveInterval == step ? .isSelected : []
+                    )
                     .accessibilityIdentifier("settings.archiveStep.\(index)")
                 }
             }
