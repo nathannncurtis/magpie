@@ -1,6 +1,26 @@
 import SwiftUI
 import _WebKit_SwiftUI
 
+// MARK: - Working scene
+
+/// Where the Skim working scene puts its mark, shared with the failed scene so the
+/// still mark stands where the drawing one left off. The place is a share of the
+/// screen's height, not a fixed offset, so it holds on any device: on the board's
+/// 844 pt phone, 0.344 of the height is the board's 290 pt.
+enum SkimScene {
+
+    /// The mark's side.
+    static let markSize: CGFloat = 96
+
+    /// The mark's top edge, as a share of the screen's height.
+    static let markTopShare: CGFloat = 0.344
+
+    /// The mark's top edge on a screen of the given height.
+    static func markTop(in height: CGFloat) -> CGFloat {
+        markTopShare * height
+    }
+}
+
 // MARK: - Query bar
 
 /// The Skim page's floating query bar (03 · Skim): glass, the search icon, the
@@ -10,11 +30,14 @@ struct SkimQueryBar: View {
     let query: String
     let onEdit: () -> Void
 
+    /// The gap between the status bar's bottom edge and the bar's top. The bar sits
+    /// inside the safe area, so it rides just under the status bar on any device —
+    /// 58 pt from the top on the board's 54 pt status bar.
+    static let topGap: CGFloat = 4
+
     private enum Layout {
         static let height = Metrics.Bar.skimQueryHeight
         static let inset = Metrics.Spacing.insetFloating
-        /// Just under the status bar.
-        static let fromTop: CGFloat = 58
         static let gap: CGFloat = 9
         static let sidePadding: CGFloat = 14
         static let iconSize: CGFloat = 15
@@ -281,6 +304,8 @@ struct SkimSectionRow: View {
     let section: SkimSection
     let onCitation: (Int) -> Void
 
+    @Environment(\.colorScheme) private var colorScheme
+
     private enum Layout {
         static let tile: CGFloat = 30
         static let radius: CGFloat = 9
@@ -315,7 +340,9 @@ struct SkimSectionRow: View {
 
     /// The claim with its citations inline: per citation, one thin space then
     /// a circled digit in the sheen's solid mid tone — itself the link that
-    /// taps to its source.
+    /// taps to its source. These stay inside the text: they are links a finger
+    /// follows while reading, not buttons it aims at, so they carry no 44 pt
+    /// target (the source cards' dots do).
     private var claim: Text {
         var text = AttributedString()
         var term = AttributedString(section.term)
@@ -330,7 +357,9 @@ struct SkimSectionRow: View {
             text += space
             var dot = AttributedString(Self.dotGlyph(for: citation))
             dot.font = .system(size: Layout.dotSize)
-            dot.foregroundColor = Palette.sheenMid
+            // The sheen's green falls short of contrast on the light skim paper;
+            // there the text accent's teal stands in for it.
+            dot.foregroundColor = colorScheme == .dark ? Palette.sheenMid : Palette.teal
             dot.baselineOffset = Layout.dotLift
             dot.link = URL(string: "magpie-cite://\(citation)")
             text += dot
@@ -359,13 +388,11 @@ struct SkimSectionRow: View {
     }
 }
 
-/// A citation dot (03 · Skim): the source's number on the sheen. Tapping it
-/// scrolls to the source's card; holding it previews the page.
-struct CitationDot: View {
+/// The source's number on the sheen (03 · CitationDot): the 17 pt circle itself,
+/// for the places it sits inside a line and is not tapped on its own.
+struct CitationBadge: View {
 
     let number: Int
-    let previewURL: URL?
-    let onTap: () -> Void
 
     private enum Layout {
         static let size: CGFloat = 17
@@ -373,13 +400,35 @@ struct CitationDot: View {
     }
 
     var body: some View {
+        Text("\(number)")
+            .font(.system(size: Layout.numberSize, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(width: Layout.size, height: Layout.size)
+            .background(Circle().fill(Palette.sheen))
+            .contentShape(Circle())
+            .accessibilityLabel(Text("Source \(number)"))
+    }
+}
+
+/// A citation dot (03 · Skim). Tapping it scrolls to the source's card; holding
+/// it previews the page. The circle stays 17 pt; the target around it is the
+/// 44 pt minimum, invisible.
+struct CitationDot: View {
+
+    let number: Int
+    let previewURL: URL?
+    let onTap: () -> Void
+
+    private enum Layout {
+        /// The touch target the dot carries.
+        static let hitSide: CGFloat = 44
+    }
+
+    var body: some View {
         Button(action: onTap) {
-            Text("\(number)")
-                .font(.system(size: Layout.numberSize, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(width: Layout.size, height: Layout.size)
-                .background(Circle().fill(Palette.sheen))
-                .contentShape(Circle())
+            CitationBadge(number: number)
+                .frame(minWidth: Layout.hitSide, minHeight: Layout.hitSide)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .contextMenu(
@@ -424,8 +473,7 @@ struct SourceCard: View {
                 thumbnail
                 HStack(spacing: Layout.gap) {
                     ListFavicon(host: source.host, size: Layout.favicon)
-                    CitationDot(number: number, previewURL: source.url) {}
-                        .allowsHitTesting(false)
+                    CitationBadge(number: number)
                     Text(source.host)
                         .font(Typography.tag)
                         .foregroundStyle(Palette.skimSourceSite)

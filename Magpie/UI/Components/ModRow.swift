@@ -8,6 +8,8 @@ struct ModRow: View {
     /// What sits at the row's trailing edge.
     enum Trailing {
         case get(action: () -> Void)
+        /// The mark while the mod's file is fetched and checked (05 · 06).
+        case fetching
         case installed(pops: Bool)
         case toggle(isOn: Binding<Bool>)
     }
@@ -18,6 +20,8 @@ struct ModRow: View {
         static let verticalPadding: CGFloat = 11
         static let swipeOpenWidth: CGFloat = 92
         static let swipeTrigger: CGFloat = 56
+        /// The mark the row carries while its install runs.
+        static let spinner: CGFloat = 24
     }
 
     let icon: ModIconSpec
@@ -49,6 +53,9 @@ struct ModRow: View {
     private var row: some View {
         HStack(alignment: .center, spacing: Layout.gap) {
             ModIcon(spec: icon)
+                .accessibilityHidden(true)
+            // The text reads as one line; what trails it stays its own element, so
+            // Get and the on/off switch stay reachable.
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 6) {
                     Text(name)
@@ -72,6 +79,8 @@ struct ModRow: View {
                         .lineLimit(1)
                 }
             }
+            .accessibilityElement(children: .combine)
+            .removeAction(onRemove)
             Spacer(minLength: 0)
             trailingView
         }
@@ -79,7 +88,6 @@ struct ModRow: View {
         // The card's own colour, so the row is opaque: the swipe action under it shows
         // only where a swipe has moved the row aside, never through empty space.
         .background(Palette.card)
-        .accessibilityElement(children: .combine)
         .accessibilityIdentifier("mods.row")
     }
 
@@ -98,6 +106,10 @@ struct ModRow: View {
         switch trailing {
         case .get(let action):
             GetButton(action: action)
+        case .fetching:
+            MarkSpinner(size: Layout.spinner)
+                .accessibilityElement()
+                .accessibilityLabel(Text(ModsCopy.installing))
         case .installed(let pops):
             InstalledCheck(pops: pops)
         case .toggle(let isOn):
@@ -140,6 +152,20 @@ struct ModRow: View {
                     swipeOffset = 0
                 }
             }
+    }
+}
+
+/// The swipe-left action, named for VoiceOver: the gesture itself is invisible to it,
+/// so the row's line carries the action instead.
+private extension View {
+
+    @ViewBuilder
+    func removeAction(_ action: (() -> Void)?) -> some View {
+        if let action {
+            accessibilityAction(named: Text(ModsCopy.remove), action)
+        } else {
+            self
+        }
     }
 }
 

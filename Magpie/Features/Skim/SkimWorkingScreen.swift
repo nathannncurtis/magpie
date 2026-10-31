@@ -13,9 +13,6 @@ struct SkimWorkingScreen: View {
     var exiting = false
 
     private enum Layout {
-        static let markSize: CGFloat = 96
-        /// Where the mark sits from the top of the screen.
-        static let markTop: CGFloat = 290
         static let titleGap: CGFloat = 18
         static let statusGap: CGFloat = 14
         static let statusInnerGap: CGFloat = 9
@@ -35,22 +32,27 @@ struct SkimWorkingScreen: View {
             MistBackground(drifting: true)
                 .ignoresSafeArea()
                 .opacity(exiting ? 0 : 1)
-            VStack(spacing: 0) {
-                Color.clear.frame(height: Layout.markTop)
-                MarkSpinner(size: Layout.markSize)
-                    .foregroundStyle(Palette.textPrimary)
-                    .scaleEffect(exiting && !reduceMotion ? 0.7 : 1)
-                    .opacity(exiting ? 0 : 1)
-                Color.clear.frame(height: Layout.titleGap)
-                Text(displayQuery)
-                    .font(Typography.skimWorkingTitle)
-                    .foregroundStyle(Palette.textPrimary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, Metrics.Spacing.insetText)
-                    .opacity(titleArrived && !exiting ? 1 : 0)
-                Color.clear.frame(height: Layout.statusGap)
-                status
-                Spacer(minLength: 0)
+            // The scene's pieces sit where the screen puts the mark, measured from
+            // the physical top: a share of the height, not a fixed offset.
+            GeometryReader { geo in
+                VStack(spacing: 0) {
+                    Color.clear.frame(height: SkimScene.markTop(in: geo.size.height))
+                    MarkSpinner(size: SkimScene.markSize)
+                        .foregroundStyle(Palette.textPrimary)
+                        .scaleEffect(exiting && !reduceMotion ? 0.7 : 1)
+                        .opacity(exiting ? 0 : 1)
+                    Color.clear.frame(height: Layout.titleGap)
+                    Text(displayQuery)
+                        .font(Typography.skimWorkingTitle)
+                        .foregroundStyle(Palette.textPrimary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, Metrics.Spacing.insetText)
+                        .opacity(titleArrived && !exiting ? 1 : 0)
+                    Color.clear.frame(height: Layout.statusGap)
+                    status
+                    Spacer(minLength: 0)
+                }
+                .frame(width: geo.size.width, height: geo.size.height)
             }
             .ignoresSafeArea(edges: .top)
             VStack {

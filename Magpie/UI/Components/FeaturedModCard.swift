@@ -4,8 +4,16 @@ import SwiftUI
 /// then the mod itself (03 · Featured mod card).
 struct FeaturedModCard: View {
 
+    /// Layout numbers from the board.
+    private enum Layout {
+        /// The mark the card carries while its install runs (05 · 06).
+        static let mark: CGFloat = 24
+    }
+
     let mod: DirectoryMod
     var installed: Bool
+    /// The mod's file is being fetched and checked, so Get gives way to the mark.
+    var fetching = false
     var onGet: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
@@ -13,8 +21,12 @@ struct FeaturedModCard: View {
     var body: some View {
         VStack(spacing: 0) {
             preview
+                .accessibilityHidden(true)
             HStack(alignment: .center, spacing: 12) {
                 ModIcon(spec: mod.icon)
+                    .accessibilityHidden(true)
+                // The card's text reads as one line; what trails it stays its own
+                // element, so Get stays reachable.
                 VStack(alignment: .leading, spacing: 1) {
                     Text(mod.name)
                         .font(Typography.rowTitle)
@@ -25,9 +37,14 @@ struct FeaturedModCard: View {
                         .foregroundStyle(Palette.textSecondary)
                         .lineLimit(2)
                 }
+                .accessibilityElement(children: .combine)
                 Spacer(minLength: 0)
                 if installed {
                     InstalledCheck()
+                } else if fetching {
+                    MarkSpinner(size: Layout.mark)
+                        .accessibilityElement()
+                        .accessibilityLabel(Text(ModsCopy.installing))
                 } else {
                     GetButton(action: onGet)
                 }
@@ -38,7 +55,6 @@ struct FeaturedModCard: View {
         .clipShape(RoundedRectangle(cornerRadius: Metrics.Radius.card, style: .continuous))
         .shadow(color: Palette.tabCardShadow, radius: 15, y: 14)
         .overlay(cardHairline)
-        .accessibilityElement(children: .combine)
         .accessibilityIdentifier("mods.featured")
     }
 

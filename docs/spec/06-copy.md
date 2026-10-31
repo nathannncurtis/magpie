@@ -32,6 +32,7 @@ Put all strings in `Localizable.xcstrings`; English only at 1.0.
 | Where | String |
 |---|---|
 | Mods · Installed | "Not reviewed" · "{type} · {author} · from a link" · "Swipe a mod left to remove it. Off keeps it, but it stops running." |
+| Mods · Directory install failed | "{name} didn't install. Tap Get to try again." (drafted, `// COPY: review`) |
 | Empty Archive | "Nothing archived yet" / "Tabs you leave alone for a day land here, and stay for 30 days." |
 | No search results | "No results" / "Nothing in the archive matches that search." · "No bookmarks match that search." |
 | Empty Bookmarks | "No bookmarks yet" / "Tap Bookmark in the menu to keep a page here." (drafted, `// COPY: review`) |

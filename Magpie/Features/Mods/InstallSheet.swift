@@ -42,7 +42,10 @@ struct InstallSheet: View {
     @State private var phase: Phase = .idle
     @State private var inspectedURL: URL?
     @State private var readTask: Task<Void, Never>?
-    @State private var contentHeight: CGFloat = 0
+    /// The sheet's height once laid out. It starts at the idle sheet's standing
+    /// height — grabber, title, field, buttons — so the detent never flashes
+    /// from zero on arrival.
+    @State private var contentHeight: CGFloat = 190
     @State private var bottomInset: CGFloat = 0
     @FocusState private var fieldFocused: Bool
 
@@ -83,6 +86,12 @@ struct InstallSheet: View {
         // bottom — the home indicator, or the keyboard while the field is focused — so
         // the buttons rest just above either.
         .presentationDetents([.height(contentHeight + bottomInset)])
+        // The Mods page stays visible behind the sheet, blurred and dimmed (04 · 12).
+        .presentationBackground {
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .overlay(Palette.scrim)
+        }
         .onChange(of: linkText) { _, text in
             queueRead(of: text)
         }
@@ -110,7 +119,7 @@ struct InstallSheet: View {
             .accessibilityIdentifier("mods.sheet.field")
         }
         .padding(.horizontal, 14)
-        .frame(height: Layout.fieldHeight)
+        .frame(minHeight: Layout.fieldHeight)
         .background(Palette.installURLFill, in: fieldShape)
         .overlay(fieldShape.strokeBorder(Palette.textPrimary, lineWidth: Layout.ringWidth))
     }
@@ -242,7 +251,7 @@ struct InstallSheet: View {
                 .font(Typography.buttonPill)
                 .foregroundStyle(Palette.textPrimary)
                 .frame(maxWidth: .infinity)
-                .frame(height: Layout.buttonHeight)
+                .frame(minHeight: Layout.buttonHeight)
                 .background(Palette.fill, in: Capsule())
                 .accessibilityIdentifier("mods.sheet.cancel")
             installButton
@@ -254,7 +263,7 @@ struct InstallSheet: View {
             Group {
                 switch phase {
                 case .installing:
-                    MarkDrawOn(size: Layout.markSide)
+                    MarkSpinner(size: Layout.markSide)
                 case .ticked:
                     Image(systemName: "checkmark")
                         .font(.system(size: 15, weight: .semibold))
@@ -263,7 +272,7 @@ struct InstallSheet: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: Layout.buttonHeight)
+            .frame(minHeight: Layout.buttonHeight)
         }
         .font(Typography.buttonPill)
         .foregroundStyle(Palette.onInk)
@@ -271,6 +280,7 @@ struct InstallSheet: View {
         .opacity(installable ? 1 : 0.3)
         .disabled(!installable)
         .buttonStyle(PressScale())
+        .accessibilityLabel(installing ? Text(ModsCopy.installing) : Text(ModsCopy.install))
         .accessibilityIdentifier("mods.sheet.install")
     }
 
@@ -428,48 +438,6 @@ private struct SheetGrabber: View {
             .frame(width: 38, height: 5)
             .padding(.top, 8)
             .accessibilityHidden(true)
-    }
-}
-
-/// The mark drawing itself while an install runs (05 · 06).
-private struct MarkDrawOn: View {
-
-    private enum Layout {
-        static let strokeWidth: CGFloat = 2.4
-        static let pass: Double = 1.1
-    }
-
-    var size: CGFloat
-
-    @State private var progress: CGFloat = 0
-
-    var body: some View {
-        Centreline()
-            .trim(from: 0, to: progress)
-            .stroke(
-                Palette.onInk,
-                style: StrokeStyle(lineWidth: Layout.strokeWidth, lineCap: .round, lineJoin: .round)
-            )
-            .frame(width: size, height: size)
-            .onAppear {
-                Task { @MainActor in
-                    while !Task.isCancelled {
-                        progress = 0
-                        withAnimation(.linear(duration: Layout.pass)) {
-                            progress = 1
-                        }
-                        try? await Task.sleep(for: .seconds(Layout.pass))
-                    }
-                }
-            }
-            .accessibilityLabel(Text(String(localized: "Installing")))
-    }
-
-    /// The mark's centreline, fitted into the frame.
-    private struct Centreline: Shape {
-        func path(in rect: CGRect) -> Path {
-            MarkGeometry.centreline().applying(MarkGeometry.transform(into: rect))
-        }
     }
 }
 

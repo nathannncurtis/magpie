@@ -25,6 +25,18 @@
         }
       }
     },
+    "%@ didn't install. Tap Get to try again." : {
+      "comment" : "Mods: a directory install that did not land, Get being the way to retry",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ didn't install. Tap Get to try again."
+          }
+        }
+      }
+    },
     "%lld days" : {
       "comment" : "Archive interval step in days",
       "extractionState" : "manual",

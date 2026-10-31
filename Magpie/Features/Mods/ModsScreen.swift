@@ -23,6 +23,8 @@ struct ModsScreen: View {
         static let hintInset: CGFloat = 8
         /// How far down the empty state sits from the content's top.
         static let emptyOffset: CGFloat = 140
+        /// The scroll's own margin below its content, before the footer's clearance.
+        static let contentBottom: CGFloat = 16
         static let footerInset: CGFloat = 14
     }
 
@@ -42,6 +44,11 @@ struct ModsScreen: View {
     @State private var landedModID: String?
     /// The mods installed while this screen has been up, so their checks pop.
     @State private var newlyInstalled: Set<String> = []
+    /// The mod whose file is being fetched and checked, so its row carries the mark.
+    @State private var installingID: String?
+    /// The mod whose install did not land, for the one line under the card.
+    @State private var failedID: String?
+    @State private var bottomInset: CGFloat = 0
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -68,15 +75,25 @@ struct ModsScreen: View {
                         }
                     }
                     .padding(.horizontal, Layout.contentInset)
-                    .padding(.bottom, 16)
+                    .padding(.bottom, scrollBottom)
                 }
             }
+            // The footer rides the bottom edge the way the other floating bars do;
+            // the scroll's padding keeps its last row clear of it.
+            VStack(spacing: 0) {
+                Spacer()
+                InstallFooter(action: { showingInstallSheet = true })
+                    .padding(.horizontal, Layout.footerInset)
+                    .padding(
+                        .bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset))
+            }
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            InstallFooter(action: { showingInstallSheet = true })
-                .padding(.horizontal, Layout.footerInset)
-                .padding(.bottom, 6)
+        .onGeometryChange(for: CGFloat.self) {
+            $0.safeAreaInsets.bottom
+        } action: {
+            bottomInset = $0
         }
+        .ignoresSafeArea(edges: .bottom)
         .sheet(isPresented: $showingInstallSheet) {
             InstallSheet { draft in
                 store.install(draft)
@@ -88,7 +105,19 @@ struct ModsScreen: View {
         .onChange(of: showingInstallSheet) { _, showing in
             if !showing { holdLandedCheck() }
         }
+        .onChange(of: segment) { _, _ in
+            // The check pops on the install's own landing; a revisit shows it still.
+            newlyInstalled.removeAll()
+        }
         .onDisappear { newlyInstalled.removeAll() }
+    }
+
+    /// The scroll's bottom padding: its own margin plus enough clearance for the
+    /// footer to float over the content without covering its last row.
+    private var scrollBottom: CGFloat {
+        Layout.contentBottom
+            + Metrics.Bar.installFooterHeight
+            + Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset)
     }
 
     private var header: some View {
@@ -100,6 +129,8 @@ struct ModsScreen: View {
             Button(ModsCopy.done, action: onDone)
                 .font(Typography.rowTitle)
                 .foregroundStyle(Palette.textPrimary)
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
                 .accessibilityIdentifier("mods.done")
         }
         .padding(.horizontal, Layout.headerInset)
@@ -114,6 +145,7 @@ struct ModsScreen: View {
                 FeaturedModCard(
                     mod: featured,
                     installed: store.mod(id: featured.id) != nil,
+                    fetching: installingID == featured.id,
                     onGet: { install(featured) }
                 )
                 .padding(.bottom, 4)
@@ -125,31 +157,65 @@ struct ModsScreen: View {
                     EdgeInsets(
                         top: Layout.sectionTop, leading: Layout.sectionSide,
                         bottom: Layout.sectionBottom, trailing: Layout.sectionSide))
-            rowsCard(
-                directory.popular.map { entry in
-                    ModRow(
-                        icon: entry.icon,
-                        name: entry.name,
-                        summary: entry.descriptionText,
-                        authorLine: ModsCopy.authorLine(kind: entry.kind, author: entry.author, fromLink: false),
-                        trailing: trailing(for: entry))
-                })
+            rowsCard(directory.popular) { entry in
+                ModRow(
+                    icon: entry.icon,
+                    name: entry.name,
+                    summary: entry.descriptionText,
+                    authorLine: ModsCopy.authorLine(kind: entry.kind, author: entry.author, fromLink: false),
+                    trailing: trailing(for: entry))
+            }
+            if let failed = failedMod {
+                Text(ModsCopy.installFailedLine(failed.name))
+                    .font(Typography.small)
+                    .foregroundStyle(Palette.textOnMistSecondary)
+                    .padding(
+                        EdgeInsets(
+                            top: 12,
+                            leading: Layout.hintInset,
+                            bottom: 0,
+                            trailing: Layout.hintInset)
+                    )
+                    .accessibilityIdentifier("mods.installFailed")
+            }
         }
     }
 
-    /// What a directory row carries: the check once installed, else Get.
+    /// The mod whose install did not land, if the directory still knows it.
+    private var failedMod: DirectoryMod? {
+        failedID.flatMap(directory.entry(id:))
+    }
+
+    /// What a directory row carries: the check once installed, the mark while its
+    /// file is fetched and checked, else Get.
     private func trailing(for entry: DirectoryMod) -> ModRow.Trailing {
-        store.mod(id: entry.id) != nil
-            ? .installed(pops: newlyInstalled.contains(entry.id))
-            : .get(action: { install(entry) })
+        if store.mod(id: entry.id) != nil {
+            return .installed(pops: newlyInstalled.contains(entry.id))
+        }
+        if installingID == entry.id {
+            return .fetching
+        }
+        return .get(action: { install(entry) })
     }
 
     /// A directory install: the entry's file, verified against the index's digest, then
-    /// the row's Get becomes a popping check.
+    /// the row's Get becomes a popping check. While the file is fetched and checked the
+    /// row carries the mark; if nothing comes of it, one plain line says so and Get is
+    /// the way to try again.
     private func install(_ entry: DirectoryMod) {
+        installingID = entry.id
+        failedID = nil
         Task { @MainActor in
-            guard let body = try? await directory.download(entry) else { return }
-            guard let draft = entry.draft(body: body) else { return }
+            defer {
+                if installingID == entry.id { installingID = nil }
+            }
+            guard
+                let body = try? await directory.download(entry),
+                let draft = entry.draft(body: body)
+            else {
+                failedID = entry.id
+                return
+            }
             store.install(draft)
             newlyInstalled.insert(draft.id)
         }
@@ -162,10 +228,9 @@ struct ModsScreen: View {
             if store.mods.isEmpty {
                 emptyState
             } else {
-                rowsCard(
-                    store.mods.map { mod in
-                        installedRow(mod)
-                    })
+                rowsCard(store.mods) { mod in
+                    installedRow(mod)
+                }
                 Text(ModsCopy.swipeHint)
                     .font(Typography.small)
                     .foregroundStyle(Palette.textOnMistSecondary)
@@ -236,12 +301,15 @@ struct ModsScreen: View {
 
     // MARK: Shared
 
-    /// A solid card of rows, separators between them (board's `.mcard`).
-    private func rowsCard<Row: View>(_ rows: [Row]) -> some View {
+    /// A solid card of rows, separators between them (board's `.mcard`). Rows are
+    /// identified by the mod each holds, so a row keeps its state as the list moves.
+    private func rowsCard<Item: Identifiable, Row: View>(
+        _ items: [Item], @ViewBuilder row: (Item) -> Row
+    ) -> some View {
         VStack(spacing: 0) {
-            ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
-                row
-                if index < rows.count - 1 {
+            ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                row(item)
+                if index < items.count - 1 {
                     Rectangle()
                         .fill(Palette.separator)
                         .frame(height: 1)
