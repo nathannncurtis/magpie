@@ -336,11 +336,30 @@ final class AppModel {
     }
 
     private func dropSessions(notIn keep: Set<Tab.ID>) {
-        for (id, task) in sessionTasks where !keep.contains(id) {
-            task.cancel()
-            sessionTasks[id] = nil
-            sessions[id] = nil
+        for id in Array(sessions.keys) where !keep.contains(id) {
+            dropSession(id)
         }
+    }
+
+    /// Lets the tab's page go, and every piece of work kept for it. The tab keeps its
+    /// picture and its address; its page loads again from there when it is opened.
+    private func dropSession(_ id: Tab.ID) {
+        sessionTasks[id]?.cancel()
+        sessionTasks[id] = nil
+        sessions[id]?.close()
+        sessions[id] = nil
+        captureDrains[id]?.cancel()
+        captureDrains[id] = nil
+        captureRetries[id]?.cancel()
+        captureRetries[id] = nil
+        captureGates[id] = nil
+        retryAttempts[id] = nil
+    }
+
+    /// The system is short of memory: only the current tab keeps its page live. The
+    /// others keep their pictures and load again when opened.
+    func memoryWarning() {
+        dropSessions(notIn: Set([store.currentTabID].compactMap { $0 }))
     }
 
     /// Brings the tab in step with its page: where it is, what it's called, its site's icon.
@@ -637,9 +656,7 @@ final class AppModel {
 
     /// A flung card. Closing the last tab leaves the launch search.
     func closeTab(_ id: Tab.ID) {
-        sessionTasks[id]?.cancel()
-        sessionTasks[id] = nil
-        sessions[id] = nil
+        dropSession(id)
         store.close(id)
         if store.tabs.isEmpty {
             surface = .launchSearch
