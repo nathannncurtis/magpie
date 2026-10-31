@@ -107,6 +107,19 @@ struct ModsScreen: View {
             .presentationDragIndicator(.hidden)
             .presentationBackgroundInteraction(.disabled)
         }
+        // A link update that would run on more sites, or ask for more, waits here for
+        // the user's word; cancel keeps the version already installed.
+        .sheet(
+            item: Binding(
+                get: { store.pendingUpdate },
+                set: { if $0 == nil { store.cancelPendingUpdate() } })
+        ) { pending in
+            InstallSheet(update: pending) { _ in
+                store.confirmPendingUpdate()
+            }
+            .presentationDragIndicator(.hidden)
+            .presentationBackgroundInteraction(.disabled)
+        }
         .onChange(of: showingInstallSheet) { _, showing in
             if !showing { holdLandedCheck() }
         }

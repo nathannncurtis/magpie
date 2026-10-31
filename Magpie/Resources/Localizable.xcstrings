@@ -997,6 +997,30 @@
         }
       }
     },
+    "New grants" : {
+      "comment" : "Install sheet: grants a link update adds over the installed version",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New grants"
+          }
+        }
+      }
+    },
+    "New sites" : {
+      "comment" : "Install sheet: sites a link update adds over the installed version",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New sites"
+          }
+        }
+      }
+    },
     "New tab" : {
       "comment" : "Tabs screen button that opens the launch search as a new tab",
       "extractionState" : "manual",
@@ -1849,6 +1873,18 @@
         }
       }
     },
+    "This update asks for more" : {
+      "comment" : "Install sheet title: a link update that widens where the mod runs, held for confirm",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This update asks for more"
+          }
+        }
+      }
+    },
     "Those pages are too long to read together. Try a narrower search." : {
       "comment" : "Skim couldn't finish: the sources were too large to compose from. COPY: review",
       "extractionState" : "manual",
@@ -1881,6 +1917,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Try again"
+          }
+        }
+      }
+    },
+    "Update" : {
+      "comment" : "Install sheet: confirms a held link update",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update"
           }
         }
       }

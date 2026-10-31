@@ -88,6 +88,12 @@ enum ModsCopy {
         return line
     }
 
+    // The install sheet, holding a link update that widens where the mod runs.
+    static var updateAsksForMore: String { String(localized: "This update asks for more") }
+    static var newSites: String { String(localized: "New sites") }
+    static var newGrants: String { String(localized: "New grants") }
+    static var update: String { String(localized: "Update") }
+
     // The install sheet's warning.
     static var notInDirectory: String { String(localized: "Not in the directory.") }
     static var warningLine: String {

@@ -148,7 +148,7 @@ struct ModsStoreTests {
         #expect(store.mod(id: "a-mod")?.version == "1.0")
 
         let updated = await store.update(id: "a-mod", directory: directory)
-        #expect(updated)
+        #expect(updated == .updated)
         #expect(store.mod(id: "a-mod")?.version == "2.0")
         // The store keeps the script's code, not its metadata block.
         let parsed = try #require(Userscript.parse(body))
@@ -171,7 +171,7 @@ struct ModsStoreTests {
         let store = makeStore()
         store.install(draft(id: "a-mod"))
         let updated = await store.update(id: "a-mod", directory: directory)
-        #expect(!updated)
+        #expect(updated == .failed)
         #expect(store.mod(id: "a-mod")?.version == "1.0")
     }
 
