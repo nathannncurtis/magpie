@@ -292,8 +292,12 @@ final class ReadingSession {
     /// The address the page has committed to: what the bar shows. A load still in
     /// flight, or one a page started and never finished, does not speak for the page.
     var committedURL: URL? {
-        page.backForwardList.currentItem?.url
+        // Idle, the page's own address is the committed one, a same-page move included;
+        // mid-load it may already name where the load is headed.
+        page.isLoading ? lastCommittedURL : page.url
     }
+    /// The address as of the last commit, for the bar while a load is in flight.
+    private var lastCommittedURL: URL?
 
     var canGoBack: Bool {
         !page.backForwardList.backList.isEmpty
@@ -335,6 +339,7 @@ final class ReadingSession {
                         "nav \(logTag) \(Self.describe(event)) url=\(page.url?.absoluteString ?? "nil")")
                     if event == .committed {
                         failure = nil
+                        lastCommittedURL = page.url
                     }
                     if event == .finished {
                         await refreshPageBackground()

@@ -153,7 +153,7 @@ struct ReadingScreen: View {
     /// The menu (05): the bar's glass grows up into it, the bar row pinned in place.
     private func menuSheet(bottomEdge: CGFloat) -> some View {
         MenuSheet(
-            host: session?.failure?.host ?? HostFormatter.host(for: session?.page.url),
+            host: session?.failure?.host ?? HostFormatter.host(for: session?.committedURL),
             tabCount: tabCount,
             canGoBack: session?.canGoBack ?? false,
             showsWarning: session?.failure != nil,
@@ -188,7 +188,7 @@ struct ReadingScreen: View {
             skimEnabled: skimEnabled,
             suggestionsEnabled: suggestionsEnabled,
             focusSuspended: focusSuspended,
-            initialText: session?.page.url?.absoluteString ?? "",
+            initialText: session?.committedURL?.absoluteString ?? "",
             morphNamespace: chromeNamespace,
             suggestions: suggestions,
             recents: recents,
@@ -199,7 +199,7 @@ struct ReadingScreen: View {
 
     private var bar: some View {
         ReadingBar(
-            host: session?.failure?.host ?? HostFormatter.host(for: session?.page.url),
+            host: session?.failure?.host ?? HostFormatter.host(for: session?.committedURL),
             tabCount: tabCount,
             canGoBack: session?.canGoBack ?? false,
             isSlim: collapse >= 1,
