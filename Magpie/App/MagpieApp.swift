@@ -43,5 +43,6 @@ struct MagpieApp: App {
                     model.memoryWarning()
                 }
         }
+        .commands { KeyCommands(model: model) }
     }
 }

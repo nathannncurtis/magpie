@@ -1,6 +1,126 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Close Menu" : {
+      "comment" : "Keyboard shortcut (Esc): folds the reading menu back into the bar",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close Menu"
+          }
+        }
+      }
+    },
+    "Close Search" : {
+      "comment" : "Keyboard shortcut (Esc): folds the search sheet or find bar away",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close Search"
+          }
+        }
+      }
+    },
+    "Close Tab" : {
+      "comment" : "Keyboard shortcut (⌘W): closes the current tab",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close Tab"
+          }
+        }
+      }
+    },
+    "Find on Page" : {
+      "comment" : "Keyboard shortcut (⌘F): opens the find bar over the page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find on Page"
+          }
+        }
+      }
+    },
+    "Forward" : {
+      "comment" : "Keyboard shortcut (⌘]): goes forward one page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forward"
+          }
+        }
+      }
+    },
+    "New Tab" : {
+      "comment" : "Keyboard shortcut (⌘T): opens the launch search for a new tab",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Tab"
+          }
+        }
+      }
+    },
+    "Open Location" : {
+      "comment" : "Keyboard shortcut (⌘L): opens the search sheet over the page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Location"
+          }
+        }
+      }
+    },
+    "Page" : {
+      "comment" : "Keyboard shortcut overlay: the menu holding the page's shortcuts",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page"
+          }
+        }
+      }
+    },
+    "Reload Page" : {
+      "comment" : "Keyboard shortcut (⌘R): reloads the page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reload Page"
+          }
+        }
+      }
+    },
+    "Show All Tabs" : {
+      "comment" : "Keyboard shortcut (⌘⇧\\): shows the tab stack",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show All Tabs"
+          }
+        }
+      }
+    },
     "%@ — not supported yet" : {
       "comment" : "Install sheet: the unsupported grants themselves",
       "extractionState" : "manual",

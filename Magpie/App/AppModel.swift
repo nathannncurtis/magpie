@@ -663,6 +663,61 @@ final class AppModel {
         }
     }
 
+    // MARK: Keyboard
+
+    /// Whether a page is up, with nothing over it: where the page's own shortcuts apply.
+    var isReadingPage: Bool { surface == .reading(searchOpen: false) }
+
+    /// The find bar over the page (⌘F).
+    var isFindingInPage = false
+
+    /// ⌘T: the launch search, which submits into a new tab.
+    var canOpenNewTab: Bool { surface != .launchSearch && surface != nil }
+
+    /// ⌘⇧\: the tab stack, from the page or the launch search.
+    var canShowTabsFromKeyboard: Bool {
+        switch surface {
+        case .reading: true
+        case .launchSearch: !store.tabs.isEmpty
+        default: false
+        }
+    }
+
+    /// ⌘W: the current tab closes and the next one opens in its place; the last one
+    /// closing leaves the launch search.
+    func closeCurrentTab() {
+        guard isReadingPage, let id = store.currentTabID else { return }
+        isFindingInPage = false
+        closeTab(id)
+        if let next = store.currentTabID {
+            openTab(next)
+        }
+    }
+
+    /// ⌘[ and ⌘]: whether the current page has somewhere to go.
+    var canGoBack: Bool { isReadingPage && (currentSession?.canGoBack ?? false) }
+    var canGoForward: Bool { isReadingPage && (currentSession?.canGoForward ?? false) }
+
+    /// Esc: whether there is a search sheet to fold away or a find bar to close.
+    var canDismissWithEscape: Bool {
+        switch surface {
+        case .reading(let searchOpen): searchOpen || isFindingInPage
+        case .launchSearch: !store.tabs.isEmpty
+        default: false
+        }
+    }
+
+    /// Esc: the search sheet folds back, over the page or over the stack; else the find
+    /// bar closes.
+    func dismissWithEscape() {
+        switch surface {
+        case .reading(searchOpen: true): closeSearchOverPage()
+        case .reading: isFindingInPage = false
+        case .launchSearch: dismissLaunchSearch()
+        default: break
+        }
+    }
+
     // MARK: Skim
 
     /// The query the menu's Skim tile reads: the search behind the page when it is a

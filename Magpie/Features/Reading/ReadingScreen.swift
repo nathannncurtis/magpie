@@ -39,6 +39,8 @@ struct ReadingScreen: View {
     /// web view re-hosts blank and lays out at the card's width for a few frames.
     var arrivalPicture: Data? = nil
     var onArrivalDone: () -> Void = {}
+    /// The find bar over the page (⌘F).
+    var isFinding: Binding<Bool> = .constant(false)
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
@@ -167,6 +169,14 @@ struct ReadingScreen: View {
             onTabsTap: onTabsTap,
             onMenuTap: closeMenu,
             onDismiss: closeMenu)
+        .background {
+            // Esc folds the menu back, as a tap away does.
+            Button(String(localized: "Close Menu"), action: closeMenu)
+                .keyboardShortcut(.cancelAction)
+                .opacity(0)
+                .frame(width: 0, height: 0)
+                .accessibilityHidden(true)
+        }
     }
 
     /// The search sheet over the page, prefilled with the page's address.
@@ -222,6 +232,7 @@ struct ReadingScreen: View {
                 } else {
                     ZStack {
                         WebView(session.page)
+                            .findNavigator(isPresented: isFinding)
                             .safeAreaPadding(.bottom, bottomClearance)
                             // The page starts below the status bar and runs under the
                             // bar to the bottom edge; the strip it leaves above takes

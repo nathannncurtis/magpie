@@ -285,6 +285,10 @@ final class ReadingSession {
         !page.backForwardList.backList.isEmpty
     }
 
+    var canGoForward: Bool {
+        !page.backForwardList.forwardList.isEmpty
+    }
+
     /// The site's icon link, for the tab's card and labels: an icon the page declares,
     /// preferring one that can be drawn — an SVG is skipped, whatever carries it — then
     /// the touch icon a page declares for elsewhere, and the site's own /favicon.ico
@@ -396,6 +400,13 @@ final class ReadingSession {
         guard let back = page.backForwardList.backList.last else { return }
         requestedURL = back.url
         startLoad { self.page.load(back) }
+    }
+
+    /// Goes forward one page.
+    func goForward() {
+        guard let forward = page.backForwardList.forwardList.first else { return }
+        requestedURL = forward.url
+        startLoad { self.page.load(forward) }
     }
 
     private func startLoad(
