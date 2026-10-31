@@ -176,7 +176,14 @@ struct MenuSheet: View {
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel(Text("Bookmark"))
         .accessibilityValue(
-            model.currentPageIsBookmarked ? Text(String(localized: "Saved")) : Text(""))
+            model.currentPageIsBookmarked ? Text(String(localized: "Saved")) : Text("")
+        )
+        // The long press has no VoiceOver gesture of its own; this action stands in.
+        .accessibilityAction(
+            named: Text(String(localized: "Open bookmarks"))
+        ) {
+            openBookmarks()
+        }
     }
 
     /// The long press on the Bookmark tile: Bookmarks over the page, the menu folded.
