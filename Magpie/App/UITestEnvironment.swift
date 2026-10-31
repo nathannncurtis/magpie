@@ -5,22 +5,32 @@ import SwiftUI
 /// its own local page server and a scratch tab store.
 enum UITestEnvironment {
 
+    /// The launch arguments the hooks read; empty in Release, so every hook below stays
+    /// off and the page server never starts in the shipped app.
+    private static var launchArguments: [String] {
+        #if DEBUG
+            ProcessInfo.processInfo.arguments
+        #else
+            []
+        #endif
+    }
+
     /// The page server's port, shared by the engine's search template.
     static let pageServerPort: UInt16 = 53117
 
     /// Whether the app runs under the UI tests.
     static var isUITesting: Bool {
-        ProcessInfo.processInfo.arguments.contains("-uiTesting")
+        launchArguments.contains("-uiTesting")
     }
 
     /// Whether this run starts from a clean slate; only the first launch of a flow passes it.
     static var resetsStore: Bool {
-        ProcessInfo.processInfo.arguments.contains("-uiTestingResetStore")
+        launchArguments.contains("-uiTestingResetStore")
     }
 
     /// Whether the run skips the first-launch flow (Welcome and the engine picker).
     static var skipsOnboarding: Bool {
-        ProcessInfo.processInfo.arguments.contains("-uiTestingSkipOnboarding")
+        launchArguments.contains("-uiTestingSkipOnboarding")
     }
 
     /// A screen the UI tests open directly while no flow reaches it: the archive, the
@@ -39,7 +49,7 @@ enum UITestEnvironment {
     /// The screen the UI tests asked for, if any.
     static var surface: Surface? {
         let prefix = "-uiTestingSurface="
-        for argument in ProcessInfo.processInfo.arguments where argument.hasPrefix(prefix) {
+        for argument in launchArguments where argument.hasPrefix(prefix) {
             return Surface(rawValue: String(argument.dropFirst(prefix.count)))
         }
         return nil
@@ -47,24 +57,24 @@ enum UITestEnvironment {
 
     /// Whether the seeded lists stay empty, for the empty states.
     static var listsEmpty: Bool {
-        ProcessInfo.processInfo.arguments.contains("-uiTestingListState=empty")
+        launchArguments.contains("-uiTestingListState=empty")
     }
 
     /// Whether this run starts with mods installed, for the installed screens.
     static var seedsMods: Bool {
-        ProcessInfo.processInfo.arguments.contains("-uiTestingModsInstalled")
+        launchArguments.contains("-uiTestingModsInstalled")
     }
 
     /// Whether the UI tests force Skim on, with the fixture page behind it.
     static var skimFaked: Bool {
-        ProcessInfo.processInfo.arguments.contains("-uiTestingSkim")
+        launchArguments.contains("-uiTestingSkim")
     }
 
     /// How many photos the seeded Skim page carries (`-uiTestingSkimState=`):
     /// photos3, photo1, none.
     static var skimPhotoCount: Int {
         let prefix = "-uiTestingSkimState="
-        for argument in ProcessInfo.processInfo.arguments where argument.hasPrefix(prefix) {
+        for argument in launchArguments where argument.hasPrefix(prefix) {
             switch String(argument.dropFirst(prefix.count)) {
             case "photo1": return 1
             case "none": return 0
@@ -77,21 +87,21 @@ enum UITestEnvironment {
     /// Whether the landed install's check holds past its beat, so the UI test's shot can
     /// catch it whatever the runner's latency; the released app clears it on time.
     static var holdsInstallCheck: Bool {
-        ProcessInfo.processInfo.arguments.contains("-uiTestingHoldInstallCheck")
+        launchArguments.contains("-uiTestingHoldInstallCheck")
     }
 
     /// Whether the UI tests force Reduce Motion on (`-uiTestingReduceMotion`), injected
     /// where `accessibilityReduceMotion` is read; nil outside the UI tests.
     static var reduceMotionOverride: Bool? {
         guard isUITesting else { return nil }
-        return ProcessInfo.processInfo.arguments.contains("-uiTestingReduceMotion")
+        return launchArguments.contains("-uiTestingReduceMotion")
     }
 
     /// Whether the launch intro's phases hold past their beats, so the UI tests' shots
     /// can catch each one whatever the runner's latency; the released app plays them
     /// on time.
     static var holdsLaunchIntro: Bool {
-        ProcessInfo.processInfo.arguments.contains("-uiTestingHoldIntro")
+        launchArguments.contains("-uiTestingHoldIntro")
     }
 
     /// The appearance the tests ask for by launch argument (`-AppleInterfaceStyle Dark`),
@@ -108,7 +118,7 @@ enum UITestEnvironment {
     /// without the UI test runner: `-uiTestingScript "open:URL;wait:MS;tabs"`. Only under
     /// the UI tests.
     static var script: [String] {
-        let arguments = ProcessInfo.processInfo.arguments
+        let arguments = launchArguments
         guard isUITesting, let flag = arguments.firstIndex(of: "-uiTestingScript"),
             arguments.indices.contains(flag + 1)
         else { return [] }

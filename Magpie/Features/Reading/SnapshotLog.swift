@@ -14,10 +14,16 @@ enum SnapshotLog {
     private static let scheme = UITestEnvironment.colorScheme == .dark ? "dark" : "light"
 
     /// Where the test run asked for the log; nil outside a run that asked.
-    private static let logURL = ProcessInfo.processInfo.environment["MAGPIE_SHOTS_DIR"].map {
-        URL(fileURLWithPath: $0, isDirectory: true)
-            .appendingPathComponent("snapshot.log")
-    }
+    private static let logURL: URL? = {
+        #if DEBUG
+            ProcessInfo.processInfo.environment["MAGPIE_SHOTS_DIR"].map {
+                URL(fileURLWithPath: $0, isDirectory: true)
+                    .appendingPathComponent("snapshot.log")
+            }
+        #else
+            nil
+        #endif
+    }()
 
     static func event(_ text: String) {
         logger.notice("\(text, privacy: .public)")
