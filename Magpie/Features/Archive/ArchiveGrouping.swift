@@ -27,7 +27,7 @@ enum ArchiveGrouping {
 
         for tab in ordered {
             let day = calendar.startOfDay(for: tab.lastActive)
-            if day == startOfToday {
+            if day >= startOfToday {
                 today.append(tab)
             } else if day == startOfYesterday {
                 yesterday.append(tab)

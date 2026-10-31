@@ -174,4 +174,28 @@ struct SearchEngineTests {
         }
         #expect(duckduckgo.resultsQuery(for: blank) == nil)
     }
+
+    @Test("an Other URL's scheme is read without regard to case")
+    func otherSchemeCase() {
+        let other = SearchEngine.other(template: "HTTPS://example.org/?q=%s")
+        #expect(other != nil)
+        #expect(other?.searchURL(for: "a b")?.host == "example.org")
+        #expect(SearchEngine.other(template: "Http://example.org/?q=%s") != nil)
+    }
+
+    @Test("an Other URL with no host, or another scheme, is turned away")
+    func otherRejects() {
+        #expect(SearchEngine.other(template: "https:///?q=%s") == nil)
+        #expect(SearchEngine.other(template: "mailto:%s") == nil)
+        #expect(SearchEngine.other(template: "file:///search?q=%s") == nil)
+        #expect(SearchEngine.other(template: "https://example.org/?q=\t%s") == nil)
+    }
+
+    @Test("an Other URL keeps every placeholder it has")
+    func otherRepeatedPlaceholder() {
+        let other = SearchEngine.other(template: "https://example.org/?q=%s&again=%s")
+        #expect(
+            other?.searchURL(for: "x y")?.absoluteString
+                == "https://example.org/?q=x%20y&again=x%20y")
+    }
 }
