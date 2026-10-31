@@ -48,6 +48,9 @@ struct EnginePickerScreen: View {
                 }
             }
             .scrollBounceBehavior(.basedOnSize)
+            // With the keys up the grid scrolls under the header; it softens there rather
+            // than cutting tiles mid-line.
+            .scrollEdgeEffectStyle(.soft, for: .top)
 
             PrimaryCTA(
                 title: continueTitle,
@@ -135,6 +138,8 @@ struct EnginePickerScreen: View {
                 Text("The address needs %s where the query goes, on http or https.")
                     .font(Typography.small)
                     .foregroundStyle(Palette.textOnMistSecondary)
+                    // In line with the field's text, not its box.
+                    .padding(.horizontal, 14)
             }
         }
         .padding(.horizontal, Metrics.Spacing.insetList)

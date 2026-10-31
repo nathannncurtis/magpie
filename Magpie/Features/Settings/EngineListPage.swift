@@ -94,6 +94,8 @@ struct EngineListPage: View {
                 Text("The address needs %s where the query goes, on http or https.")
                     .font(Typography.small)
                     .foregroundStyle(Palette.textOnMistSecondary)
+                    // In line with the field's text, not its box.
+                    .padding(.horizontal, 14)
             }
 
             Button("Use this URL") { saveOther() }
