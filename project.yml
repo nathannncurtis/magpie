@@ -20,10 +20,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.magpiebrowser.Magpie
         MARKETING_VERSION: "1.0"
         CURRENT_PROJECT_VERSION: "1"
-    entitlements:
-      path: Magpie/Support/Magpie.entitlements
-      properties:
-        com.apple.developer.web-browser: true
+    # The default-browser entitlement (com.apple.developer.web-browser) goes back here
+    # once Apple grants it; a profile can't carry it before then.
     info:
       path: Magpie/Support/Info.plist
       properties:
