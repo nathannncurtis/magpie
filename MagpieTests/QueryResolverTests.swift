@@ -124,6 +124,96 @@ struct QueryResolverTests {
         #expect(engine.searchURL(for: "quiet web")?.absoluteString == "https://www.google.com/search?q=quiet%20web")
     }
 
+    // MARK: Edge cases
+
+    @Test(
+        "edge inputs that open as addresses",
+        arguments: [
+            ("example.com", "https://example.com"),
+            ("sub.example.co.uk", "https://sub.example.co.uk"),
+            ("www.example.com", "https://www.example.com"),
+            ("Example.COM/Path", "https://example.com/Path"),
+            ("example.com:8443/a/b?x=1&y=2#f", "https://example.com:8443/a/b?x=1&y=2#f"),
+            ("github.com/foo", "https://github.com/foo"),
+            ("example.com/🕊", "https://example.com/%F0%9F%95%8A"),
+            ("localhost:3000", "https://localhost:3000"),
+            ("LOCALHOST:3000", "https://localhost:3000"),
+            ("Localhost", "https://localhost"),
+            ("localhost/path", "https://localhost/path"),
+            ("127.0.0.1:8080", "https://127.0.0.1:8080"),
+            ("1.1.1.1", "https://1.1.1.1"),
+            ("[::1]", "https://[::1]"),
+            ("[::1]:8080/x", "https://[::1]:8080/x"),
+            ("xn--bcher-kva.de", "https://xn--bcher-kva.de"),
+            ("BÜCHER.DE", "https://xn--bcher-kva.de"),
+            ("https://例え.jp", "https://xn--r8jz45g.jp"),
+            ("HTTPS://example.com", "HTTPS://example.com"),
+            ("http://localhost:3000", "http://localhost:3000"),
+            ("  example.com\n", "https://example.com"),
+            ("\n\nexample.com\r\n\t", "https://example.com"),
+            // No TLD list: any alphabetic tail reads as one, as with node.js.
+            ("file.txt", "https://file.txt"),
+        ])
+    func edgeAddresses(input: String, expected: String) {
+        #expect(urlString(QueryResolver.resolve(input, engine: .default)) == expected)
+    }
+
+    @Test(
+        "edge inputs that search",
+        arguments: [
+            "search",
+            "example.com is down",
+            "what is 3.5 in cm",
+            "3.5",
+            "2+2",
+            "c#",
+            "100%",
+            "🕊",
+            "🕊.com",
+            "user@example.com",
+            "example.com/a b",
+            "https://example.com is down",
+            "example.com:",
+            "[::1]x",
+            "mailto:me@example.com",
+        ])
+    func edgeSearches(input: String) {
+        #expect(QueryResolver.resolve(input, engine: .default) == .search(input))
+    }
+
+    @Test("pasted multi-line text searches as one line")
+    func multiLine() {
+        #expect(
+            QueryResolver.resolve("line one\nline two", engine: .default) == .search("line one line two"))
+        #expect(
+            QueryResolver.resolve("example.com\r\nexample.org", engine: .default)
+                == .search("example.com example.org"))
+        #expect(
+            QueryResolver.resolve("  first \n\n  second\tthird\n", engine: .default)
+                == .search("first second third"))
+        // Plain interior spaces stay as typed.
+        #expect(QueryResolver.resolve("two  spaces", engine: .default) == .search("two  spaces"))
+    }
+
+    @Test("names longer than DNS allows search")
+    func dnsLengths() {
+        let longLabel = String(repeating: "a", count: 64) + ".com"
+        #expect(QueryResolver.resolve(longLabel, engine: .default) == .search(longLabel))
+        let maxLabel = String(repeating: "a", count: 63) + ".com"
+        #expect(urlString(QueryResolver.resolve(maxLabel, engine: .default)) == "https://" + maxLabel)
+        let longHost = Array(repeating: String(repeating: "a", count: 60), count: 5).joined(separator: ".") + ".com"
+        #expect(QueryResolver.resolve(longHost, engine: .default) == .search(longHost))
+    }
+
+    @Test("very long input searches and still builds a URL")
+    func veryLongInput() {
+        let words = Array(repeating: "magpie", count: 2_000).joined(separator: " ")
+        #expect(QueryResolver.resolve(words, engine: .default) == .search(words))
+        #expect(SearchEngine.default.searchURL(for: words) != nil)
+        let token = String(repeating: "x", count: 10_000)
+        #expect(QueryResolver.resolve(token, engine: .default) == .search(token))
+    }
+
     private func urlString(_ resolution: QueryResolution?) -> String? {
         guard case .url(let url)? = resolution else { return nil }
         return url.absoluteString
