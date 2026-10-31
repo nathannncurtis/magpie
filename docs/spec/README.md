@@ -30,3 +30,4 @@ Status: draft 1, 2026-10-30. Sources:
 - **Privacy:** no telemetry, no analytics SDK, no crash SDK, no network calls Magpie makes for itself (except filter-list and mod-directory updates).
 - **Dark mode:** follows the system. Web pages are never inverted or force-darkened.
 - **Units:** all sizes are in points at the 390 pt-wide board phone. Use these values as they are; let Dynamic Type scale text, not layout chrome.
+- **Touch:** every control's hit area is at least 44 pt. Small controls reach it with invisible padding rather than a bigger face; rows and tiles grow only when scaled text needs the room.

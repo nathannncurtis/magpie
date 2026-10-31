@@ -21,13 +21,17 @@ struct DefaultBrowserCard: View {
                 }
                 Spacer(minLength: 8)
                 Button("Open") { openDefaultBrowserSettings() }
-                    .font(.system(size: 13.5, weight: .semibold))
+                    .font(.system(size: 13.5, weight: .semibold, relativeTo: .footnote))
                     .foregroundStyle(Palette.onInk)
                     .padding(.horizontal, 15)
                     .padding(.vertical, 7)
                     .background(
                         Capsule().fill(Palette.ink)
                     )
+                    // The capsule keeps its size; the target around it meets the 44 pt
+                    // least.
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(.rect)
                     .accessibilityIdentifier("settings.defaultBrowser.open")
             }
             .padding(.horizontal, 16)

@@ -99,6 +99,8 @@ struct EngineListPage: View {
             Button("Use this URL") { saveOther() }
                 .font(Typography.buttonPill)
                 .foregroundStyle(otherIsValid ? Palette.teal : Palette.textTertiary)
+                .frame(minHeight: 44, alignment: .leading)
+                .contentShape(.rect)
                 .disabled(!otherIsValid)
                 .accessibilityIdentifier("settings.otherSave")
         }
