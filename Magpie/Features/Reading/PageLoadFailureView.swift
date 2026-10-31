@@ -72,6 +72,8 @@ private struct GlobeWithSlash: View {
                     .frame(width: Self.slashWidth, height: Self.slashLength)
                     .rotationEffect(.degrees(45))
             }
+            // The title says what happened; the icon is a picture of it.
+            .accessibilityHidden(true)
     }
 }
 
