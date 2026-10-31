@@ -190,11 +190,11 @@ Photos come only from the source pages' `og:image` or largest article image. The
 
 **EngineTile**
 - Glass, 92 tall, radius 20, padding 12 × 14.
-- Contents: the real favicon (30 pt, radius 8) at top left; the name in `row` semibold and a one-line note in `small` at the bottom.
+- Contents: the real favicon (30 pt, radius 8) at top left; the name in `row` semibold and a one-line note in `small` at the bottom (wrapping when type grows).
 - **Selected:** a 2 pt `ink` ring, a 22 pt `ink` check badge at top right, and a more opaque fill.
 - **Other tile:** no glass, just a 1 pt `ink` 14% outline and a generic icon on a `fill` square.
 
-**PrimaryCTA**: an ink glass capsule, 54 tall, full width minus 32, with `button` text. In dark it is paper.
+**PrimaryCTA**: an ink glass capsule, 54 tall, full width minus 32, with semibold text that scales with Dynamic Type. In dark it is paper.
 
 ## Settings
 

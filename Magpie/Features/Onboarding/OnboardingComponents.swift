@@ -10,10 +10,10 @@ struct PrimaryCTA: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.system(size: 16, weight: .semibold, relativeTo: .body))
                 .foregroundStyle(Palette.onInk)
                 .frame(maxWidth: .infinity)
-                .frame(height: Metrics.Bar.primaryCTAHeight)
+                .frame(minHeight: Metrics.Bar.primaryCTAHeight)
         }
         .buttonStyle(.glassProminent)
         .tint(Palette.ink)
@@ -40,9 +40,9 @@ struct OnboardingStepLabel: View {
     }
 }
 
-/// One engine in the picker's grid (03 · Onboarding): glass, 92 tall, the favicon top
-/// left, the name and note at the bottom. Selected: a 2 pt ink ring, an ink check badge,
-/// and a more opaque fill. The Other tile drops the glass for an outline.
+/// One engine in the picker's grid (03 · Onboarding): glass, at least 92 tall, the
+/// favicon top left, the name and note at the bottom. Selected: a 2 pt ink ring, an ink
+/// check badge, and a more opaque fill. The Other tile drops the glass for an outline.
 struct EngineTile: View {
     let engine: PickableEngine
     let isSelected: Bool
@@ -56,11 +56,9 @@ struct EngineTile: View {
                     Text(engine.title)
                         .font(Typography.rowTitle)
                         .foregroundStyle(Palette.textPrimary)
-                        .lineLimit(1)
                     Text(engine.note)
                         .font(Typography.small)
                         .foregroundStyle(Palette.textOnMistSecondaryMeta)
-                        .lineLimit(1)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
             }
@@ -68,7 +66,7 @@ struct EngineTile: View {
             // bottom with the same all round.
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
-            .frame(height: 92)
+            .frame(minHeight: 92)
             .frame(maxWidth: .infinity)
             .background(tileFill)
             .overlay {
