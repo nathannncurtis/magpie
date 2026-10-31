@@ -1,0 +1,174 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%lld open" : {
+      "extractionState" : "manual",
+      "comment" : "Open-tab count in the tabs screen's bottom row",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld open"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld open"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Archived · %lld" : {
+      "extractionState" : "manual",
+      "comment" : "Archived-tab count on the tabs screen's chip",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Archived · %lld"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Archived · %lld"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Back" : {
+      "extractionState" : "manual",
+      "comment" : "Reading bar button that goes back one page",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back"
+          }
+        }
+      }
+    },
+    "Can't reach %@" : {
+      "extractionState" : "manual",
+      "comment" : "Page-load failure title naming the host that didn't answer",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can't reach %@"
+          }
+        }
+      }
+    },
+    "Can't reach this page" : {
+      "extractionState" : "manual",
+      "comment" : "Page-load failure title when no host is known",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Can't reach this page"
+          }
+        }
+      }
+    },
+    "It didn't answer. Try again in a moment." : {
+      "extractionState" : "manual",
+      "comment" : "Page-load failure line for errors other than being offline",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It didn't answer. Try again in a moment."
+          }
+        }
+      }
+    },
+    "Menu" : {
+      "extractionState" : "manual",
+      "comment" : "Reading bar button that opens the menu",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menu"
+          }
+        }
+      }
+    },
+    "New tab" : {
+      "extractionState" : "manual",
+      "comment" : "Tabs screen button that opens the launch search as a new tab",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New tab"
+          }
+        }
+      }
+    },
+    "Skim" : {
+      "extractionState" : "manual",
+      "comment" : "The Skim pill at the trailing end of a suggestion row",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skim"
+          }
+        }
+      }
+    },
+    "Tabs" : {
+      "extractionState" : "manual",
+      "comment" : "Reading bar button that opens the tab stack",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabs"
+          }
+        }
+      }
+    },
+    "Try again" : {
+      "extractionState" : "manual",
+      "comment" : "The page-load failure button",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try again"
+          }
+        }
+      }
+    },
+    "You're offline. It'll load when you're back." : {
+      "extractionState" : "manual",
+      "comment" : "Page-load failure line when the network path is down",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're offline. It'll load when you're back."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

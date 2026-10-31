@@ -1,22 +1,113 @@
 import SwiftUI
+import WebKit
 
-/// The root screen: the mist with the wordmark centred on it.
+/// The root switch (04 · the navigation map): the launch search, reading, or the tab
+/// stack. The bar and the search sheet are one glass shape, and the page and its tab
+/// card are one view, both moving between the surfaces.
 struct RootView: View {
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(AppModel.self) private var model
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// The bar and the search sheet morph as one glass shape.
+    @Namespace private var chrome
+    /// The page and its tab card trade places.
+    @Namespace private var cards
+
+    /// The restored surface lands with nothing animating; every move after it does.
+    @State private var movesWithChrome = false
 
     var body: some View {
-        // Fraunces sizes are scaled by hand, so the body must re-run when the text size changes.
-        let _ = dynamicTypeSize
-        ZStack {
-            MistBackground()
-            Text("magpie")
-                .font(Typography.wordmark)
-                .tracking(Typography.wordmarkTracking)
-                .foregroundStyle(Palette.textPrimary)
+        GeometryReader { geo in
+            ZStack {
+                // Pages that still owe their tab a picture keep drawing in the window,
+                // unseen, under whatever surface shows; each leaves once its picture lands.
+                // Laid out exactly as the reading screen lays out its page, full screen
+                // under every inset, so the picture matches one taken in place.
+                ForEach(model.pagesStillDrawing, id: \.self) { session in
+                    WebView(session.page)
+                        .ignoresSafeArea()
+                        .onAppear { session.isDrawnUnseen = true }
+                        .onDisappear { session.isDrawnUnseen = false }
+                        .opacity(Self.unseen)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                        // Gone at once, never animated out: a reading screen can take
+                        // the page the same moment.
+                        .transition(.identity)
+                }
+                .animation(nil, value: model.pagesStillDrawing)
+                switch model.surface {
+                case .launchSearch:
+                    LaunchScreen(
+                        engine: model.engine,
+                        suggestions: model.suggestions,
+                        recents: model.recents,
+                        onOpen: { model.openFromLaunch($0) },
+                        onDismiss: { model.dismissLaunchSearch() }
+                    )
+                case .reading(let searchOpen):
+                    ReadingScreen(
+                        session: model.currentSession,
+                        tabID: model.store.currentTabID,
+                        tabCount: model.store.tabs.count,
+                        isSearchOpen: searchOpen,
+                        engine: model.engine,
+                        suggestions: model.suggestions,
+                        recents: model.recents,
+                        chromeNamespace: chrome,
+                        cardNamespace: cards,
+                        onSearchSubmit: { model.navigateCurrent($0) },
+                        onSearchDismiss: { model.closeSearchOverPage() },
+                        onAddressTap: { model.openSearchOverPage() },
+                        onTabsTap: { model.showTabs() },
+                        onPageSize: { model.notePageSize($0) }
+                    )
+                    // The page never answers the keyboard. An address just submitted
+                    // arrives with the keys still dropping, and a first frame squeezed
+                    // by them is the wrong size to arm captures at; the sheet over the
+                    // page is the piece that rides the keys.
+                    .ignoresSafeArea(.keyboard, edges: searchOpen ? [] : .bottom)
+                    .onAppear { model.readingScreenMounted = true }
+                    .onDisappear { model.readingScreenMounted = false }
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("reading.screen")
+                case .tabs:
+                    TabsScreen(
+                        store: model.store,
+                        onOpen: { model.openTab($0) },
+                        onNewTab: { model.newTabFromTabs() },
+                        onClose: { model.closeTab($0) },
+                        onShowArchive: {},
+                        pageBackground: { id in model.sessions[id]?.pageBackground },
+                        transitionNamespace: cards
+                    )
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("tabs.screen")
+                case nil:
+                    // Nothing has started yet: the mist, while the saved tabs load.
+                    MistBackground()
+                        .ignoresSafeArea()
+                        .accessibilityIdentifier("boot.mist")
+                }
+            }
+            .animation(movesWithChrome ? transition : nil, value: model.surface)
+            .onChange(of: model.surface != nil) { _, present in
+                guard present else { return }
+                movesWithChrome = true
+            }
         }
+    }
+
+    /// Drawn, but not seen: WebKit keeps drawing a page that is in the window, which a
+    /// hidden or fully transparent view is not taken to be.
+    private static let unseen = 0.01
+
+    private var transition: Animation? {
+        reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation
     }
 }
 
 #Preview {
     RootView()
+        .environment(AppModel())
 }
