@@ -202,4 +202,4 @@ Photos come only from the source pages' `og:image` or largest article image. The
 
 **DefaultBrowserCard**: a SettingsGroup-styled card that reads "Make Magpie your default browser" / "Links from other apps open here. Set in iOS Settings." with a trailing ink "Open" capsule.
 - The "Open" button calls `UIApplication.openDefaultApplicationsSettingsURLString`.
-- The card is shown only until Magpie is the default browser; check with `UIApplication.shared.isDefault(.webBrowser)`.
+- The card is shown only until Magpie is the default browser; check with `UIApplication.shared.isDefault(.webBrowser)`, again whenever the app returns to the foreground.

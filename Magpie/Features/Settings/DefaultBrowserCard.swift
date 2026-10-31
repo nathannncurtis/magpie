@@ -4,6 +4,7 @@ import SwiftUI
 /// 04 · 11): the group's frosted material, a line about what it gives, and the ink "Open"
 /// capsule that jumps to the place iOS decides it.
 struct DefaultBrowserCard: View {
+    @Environment(\.scenePhase) private var scenePhase
     @State private var isDefault = false
 
     var body: some View {
@@ -46,8 +47,19 @@ struct DefaultBrowserCard: View {
             )
             .padding(.horizontal, Metrics.Spacing.insetList)
             .accessibilityIdentifier("settings.defaultBrowser")
-            .task { isDefault = (try? UIApplication.shared.isDefault(.webBrowser)) ?? false }
+            .task { refresh() }
+            .onChange(of: scenePhase) { _, phase in
+                // The user may have just made Magpie the default in iOS Settings, which
+                // is where the card sends them; look again on the way back in.
+                guard phase == .active else { return }
+                refresh()
+            }
         }
+    }
+
+    /// Whether iOS counts Magpie as the default browser.
+    private func refresh() {
+        isDefault = (try? UIApplication.shared.isDefault(.webBrowser)) ?? false
     }
 
     private func openDefaultBrowserSettings() {
