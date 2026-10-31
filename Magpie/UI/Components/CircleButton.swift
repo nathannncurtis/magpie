@@ -9,8 +9,9 @@ enum CircleButtonLayout {
     static let symbolSize: CGFloat = 20
     /// The pressed fill, in the middle of the spec's 8-10% band.
     static let pressedFillOpacity = 0.09
-    /// How faint a disabled button's symbol sits: still there, not calling.
-    static let disabledOpacity = 0.35
+    /// How faint a disabled button's symbol sits: still there, not calling, and still
+    /// plain against a mid-luminance tint.
+    static let disabledOpacity = 0.45
 }
 
 /// A bar button (03 · Chrome): a 48 × 48 hit area holding a 20 pt symbol, with no
