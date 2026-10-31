@@ -84,6 +84,8 @@ struct SkimFailedScreen: View {
             Button(action: onShowResults) {
                 Text("Show search results")
                     .font(Typography.buttonBar)
+                    // The ink flips light in dark; the label flips with it.
+                    .foregroundStyle(Palette.onInk)
                     .frame(maxWidth: .infinity)
                     .frame(height: Layout.ctaHeight)
                     .contentShape(.capsule)
