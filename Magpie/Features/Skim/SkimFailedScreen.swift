@@ -96,7 +96,8 @@ struct SkimFailedScreen: View {
                 .font(Typography.row)
                 .fontWeight(.semibold)
                 .foregroundStyle(Palette.textPrimary)
-                .padding(6)
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
                 .accessibilityIdentifier("skim.retry")
         }
     }

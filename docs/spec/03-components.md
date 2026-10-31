@@ -124,7 +124,7 @@ Photos come only from the source pages' `og:image` or largest article image. The
 - **Left column:** an `EmojiTile` (30 × 30, radius 9, `emojiTile` fill, 16 pt emoji).
 - **Right column:** the **Term** in `body` semibold `textPrimary`, then " — ", then the claim in `body`, then one or more `CitationDot`s.
 
-**CitationDot**: a 17 pt `sheen` circle with the source number in white, 10 pt semibold. Tapping it scrolls to that source card, and a long press previews the page.
+**CitationDot**: a 17 pt `sheen` circle with the source number in white, 10 pt semibold. Tapping it scrolls to that source card, and a long press previews the page. In a claim's text the circled-digit glyphs are links a finger follows while reading; on their own (the source cards' site lines) the dot carries an invisible 44 pt target.
 
 **SourceCard**: solid card, 200 wide, radius 18, padding 8.
 - Contents: a thumbnail (84 tall, radius 12), then the site line (favicon, `CitationDot` and host in `tag`), then the title in `meta` semibold.
@@ -178,7 +178,7 @@ Photos come only from the source pages' `og:image` or largest article image. The
   - a trailing `GetButton` or `InstalledCheck`
 - Rows are grouped in a solid card with radius 24.
 
-**GetButton**: a capsule with padding 6 × 16, reading "Get" in `meta` bold `teal` on a #EEF0EE fill (dark: white at 10% fill, #5EEAD4 text).
+**GetButton**: a capsule with padding 6 × 16, reading "Get" in `meta` bold `teal` on a #EEF0EE fill (dark: white at 10% fill, #5EEAD4 text). The capsule carries an invisible 44 pt target.
 
 **InstalledCheck**: a 30 pt `sheen` circle with a white checkmark. When it first appears it pops with the snap spring (05).
 

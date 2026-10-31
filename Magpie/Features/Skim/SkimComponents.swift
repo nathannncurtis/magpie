@@ -338,7 +338,9 @@ struct SkimSectionRow: View {
 
     /// The claim with its citations inline: per citation, one thin space then
     /// a circled digit in the sheen's solid mid tone — itself the link that
-    /// taps to its source.
+    /// taps to its source. These stay inside the text: they are links a finger
+    /// follows while reading, not buttons it aims at, so they carry no 44 pt
+    /// target (the source cards' dots do).
     private var claim: Text {
         var text = AttributedString()
         var term = AttributedString(section.term)
@@ -382,13 +384,11 @@ struct SkimSectionRow: View {
     }
 }
 
-/// A citation dot (03 · Skim): the source's number on the sheen. Tapping it
-/// scrolls to the source's card; holding it previews the page.
-struct CitationDot: View {
+/// The source's number on the sheen (03 · CitationDot): the 17 pt circle itself,
+/// for the places it sits inside a line and is not tapped on its own.
+struct CitationBadge: View {
 
     let number: Int
-    let previewURL: URL?
-    let onTap: () -> Void
 
     private enum Layout {
         static let size: CGFloat = 17
@@ -396,13 +396,35 @@ struct CitationDot: View {
     }
 
     var body: some View {
+        Text("\(number)")
+            .font(.system(size: Layout.numberSize, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(width: Layout.size, height: Layout.size)
+            .background(Circle().fill(Palette.sheen))
+            .contentShape(Circle())
+            .accessibilityLabel(Text("Source \(number)"))
+    }
+}
+
+/// A citation dot (03 · Skim). Tapping it scrolls to the source's card; holding
+/// it previews the page. The circle stays 17 pt; the target around it is the
+/// 44 pt minimum, invisible.
+struct CitationDot: View {
+
+    let number: Int
+    let previewURL: URL?
+    let onTap: () -> Void
+
+    private enum Layout {
+        /// The touch target the dot carries.
+        static let hitSide: CGFloat = 44
+    }
+
+    var body: some View {
         Button(action: onTap) {
-            Text("\(number)")
-                .font(.system(size: Layout.numberSize, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(width: Layout.size, height: Layout.size)
-                .background(Circle().fill(Palette.sheen))
-                .contentShape(Circle())
+            CitationBadge(number: number)
+                .frame(minWidth: Layout.hitSide, minHeight: Layout.hitSide)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .contextMenu(
@@ -447,8 +469,7 @@ struct SourceCard: View {
                 thumbnail
                 HStack(spacing: Layout.gap) {
                     ListFavicon(host: source.host, size: Layout.favicon)
-                    CitationDot(number: number, previewURL: source.url) {}
-                        .allowsHitTesting(false)
+                    CitationBadge(number: number)
                     Text(source.host)
                         .font(Typography.tag)
                         .foregroundStyle(Palette.skimSourceSite)

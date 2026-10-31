@@ -129,6 +129,8 @@ struct ModsScreen: View {
             Button(ModsCopy.done, action: onDone)
                 .font(Typography.rowTitle)
                 .foregroundStyle(Palette.textPrimary)
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
                 .accessibilityIdentifier("mods.done")
         }
         .padding(.horizontal, Layout.headerInset)
