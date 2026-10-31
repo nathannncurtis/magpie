@@ -38,6 +38,8 @@ struct MenuSheet: View {
     let tabCount: Int
     /// Whether the page can go back.
     let canGoBack: Bool
+    /// Whether the page failed to load: the URL pill's error lock, as the bar shows it.
+    var showsLock = false
     /// Whether Skim runs here: the Skim tile hides when it can't.
     var skimOffered: Bool = true
     /// Where the pinned row's bottom edge sits above the screen bottom: the floating
@@ -304,7 +306,7 @@ struct MenuSheet: View {
                 .disabled(!canGoBack)
                 .accessibilityLabel(Text("Back"))
                 .accessibilityIdentifier("bar.back")
-            URLPill(host: host, action: onAddressTap)
+            URLPill(host: host, showsLock: showsLock, action: onAddressTap)
                 .accessibilityIdentifier("bar.url")
             CircleButton(action: onTabsTap) { TabCount(count: tabCount) }
                 .accessibilityLabel(Text("Tabs"))
@@ -313,6 +315,9 @@ struct MenuSheet: View {
                 .accessibilityLabel(Text("Menu"))
                 .accessibilityIdentifier("bar.menu")
         }
+        // The row grows with the type size to the same deliberate stop as the bar
+        // itself: past the first accessibility size it would stop being a bar.
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .padding(.leading, 4)
         .padding(.trailing, 5)
         .padding(.horizontal, Metrics.Menu.barRowSideInset - 4)

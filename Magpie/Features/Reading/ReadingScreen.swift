@@ -147,6 +147,7 @@ struct ReadingScreen: View {
             host: session?.failure?.host ?? HostFormatter.host(for: session?.page.url),
             tabCount: tabCount,
             canGoBack: session?.canGoBack ?? false,
+            showsLock: session?.failure != nil,
             skimOffered: skimRunsHere,
             barBottomEdge: bottomEdge,
             morphNamespace: chromeNamespace,
