@@ -145,10 +145,43 @@ struct ModsMatchPatternTests {
         #expect(try !matches("https://example.com/exact", "https://example.com/exact/x"))
     }
 
+    @Test("a host rule is not fooled by look-alike hosts, userinfo, queries or fragments")
+    func strictHosts() throws {
+        // Exact host.
+        #expect(try !matches("*://example.com/*", "https://example.com.evil.net/"))
+        #expect(try !matches("*://example.com/*", "https://evilexample.com/"))
+        #expect(try !matches("*://example.com/*", "https://example.com@evil.net/"))
+        #expect(try !matches("*://example.com/*", "https://example.com:443@evil.net/"))
+        #expect(try !matches("*://example.com/*", "https://evil.net/?example.com/"))
+        #expect(try matches("*://example.com/*", "https://example.com:8443/x"))
+        // Subdomain rule.
+        #expect(try !matches("*://*.example.com/*", "https://example.com.evil.net/"))
+        #expect(try !matches("*://*.example.com/*", "https://evilexample.com/"))
+        #expect(try !matches("*://*.example.com/*", "https://evil.net?.example.com/"))
+        #expect(try !matches("*://*.example.com/*", "https://evil.net#.example.com/"))
+        #expect(try !matches("*://*.example.com/*", "https://evil.net/x.example.com/"))
+        #expect(try !matches("*://*.example.com/*", "https://x.example.com@evil.net/"))
+        #expect(try !matches("*://*.example.com/*", "https://u:p@evil.net:1/.example.com/"))
+        #expect(try matches("*://*.example.com/*", "https://a.b.example.com:8080/x"))
+        // A match rule never reaches an app-internal or script scheme.
+        #expect(try !matches("*://*/*", "about:blank"))
+        #expect(try !matches("*://*/*", "javascript:alert(1)//x/"))
+        #expect(try !matches("*://*/*", "magpie://settings/"))
+        #expect(try !matches("*://*/*", "file:///etc/hosts"))
+    }
+
+    @Test("the JavaScript guard agrees with Swift on the strict-host cases")
+    func guardSourcesAreLiteralSafe() throws {
+        let pattern = try #require(MatchPattern(raw: "*://*.example.com/*"))
+        let literal = RuleRegexJS.literalSafe(pattern.regexSource)
+        #expect(!literal.contains("[^/"))
+        #expect(literal.contains("[^\\/?#@:"))
+    }
+
     @Test("the pattern compiles to the anchored source the guard uses")
     func regexSource() throws {
         let pattern = try #require(MatchPattern(raw: "*://*.wikipedia.org/wiki/*"))
-        #expect(pattern.regexSource == "^https?://(?:[^/]+\\.)*wikipedia\\.org/wiki/.*$")
+        #expect(pattern.regexSource == "^https?://(?:[^/?#@:\\\\.]+\\.)*wikipedia\\.org(?::[0-9]+)?/wiki/.*$")
         let any = try #require(MatchPattern(raw: "*://*/*"))
         #expect(any.regexSource == "^https?://[^/]*/.*$")
     }
@@ -262,7 +295,9 @@ struct ModsGuardTests {
         #expect(wrapped.contains("function GM_addStyle(css)"))
         #expect(wrapped.contains("function GM_getValue(key, fallback)"))
         #expect(wrapped.contains("function GM_setValue(key, value)"))
-        #expect(wrapped.contains("\"mod\": \"mod-1\""))
+        // The relay knows its mod from the world; the post doesn't name one.
+        #expect(!wrapped.contains("\"mod\":"))
+        #expect(!wrapped.contains("mod-1"))
         #expect(wrapped.contains("\"count\":\"3\""))
         #expect(wrapped.contains("done();"))
         #expect(wrapped.contains("GM_info.script"))
@@ -276,5 +311,24 @@ extension UserscriptMetadata {
         var meta = UserscriptMetadata()
         meta.matches = [pattern]
         return meta.runs(on: url)
+    }
+}
+
+/// The GM bridge: what a post must look like before a value is stored.
+@Suite("ModValueRelay")
+struct ModValueRelayTests {
+
+    @Test("only a key and a string value, within limits, are taken")
+    func entryShape() {
+        #expect(ModValueRelay.entry(from: ["key": "a", "value": "1"])?.key == "a")
+        #expect(ModValueRelay.entry(from: ["key": "a", "value": "1", "mod": "other"])?.value == "1")
+        #expect(ModValueRelay.entry(from: "a") == nil)
+        #expect(ModValueRelay.entry(from: ["key": "a"]) == nil)
+        #expect(ModValueRelay.entry(from: ["key": "", "value": "1"]) == nil)
+        #expect(ModValueRelay.entry(from: ["key": 1, "value": "1"]) == nil)
+        let longKey = String(repeating: "k", count: ModValueRelay.maxKeyLength + 1)
+        #expect(ModValueRelay.entry(from: ["key": longKey, "value": "1"]) == nil)
+        let bigValue = String(repeating: "v", count: ModValueRelay.maxValueLength + 1)
+        #expect(ModValueRelay.entry(from: ["key": "a", "value": bigValue]) == nil)
     }
 }

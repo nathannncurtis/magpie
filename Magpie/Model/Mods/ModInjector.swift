@@ -23,7 +23,6 @@ final class ModInjector {
     let contentController = WKUserContentController()
 
     private let values: (any ModValuesReading)?
-    private var relay: ModValueRelay?
     /// The worlds mods have been handed, so their handlers can come off again.
     private var usedWorlds: [String: WKContentWorld] = [:]
 
@@ -51,7 +50,7 @@ final class ModInjector {
             }
             let worldName = Self.worldName(for: mod)
             let world = WKContentWorld.world(name: worldName)
-            addMessageHandler(for: world, name: worldName)
+            addMessageHandler(for: world, name: worldName, modID: mod.id)
             let script = WKUserScript(
                 source: Self.wrappedScript(
                     metadata: metadata,
@@ -71,11 +70,11 @@ final class ModInjector {
         "magpie.mod." + mod.id
     }
 
-    private func addMessageHandler(for world: WKContentWorld, name: String) {
-        if relay == nil {
-            relay = ModValueRelay()
-        }
-        guard let relay else { return }
+    /// Each world gets a relay bound to its own mod, so the mod a value lands in comes
+    /// from the world that posted it, never from what the script says it is. The handler
+    /// lives only in that world: the page's own scripts, and other mods, can't reach it.
+    private func addMessageHandler(for world: WKContentWorld, name: String, modID: String) {
+        let relay = ModValueRelay(modID: modID, worldName: name)
         relay.values = values
         contentController.add(relay, contentWorld: world, name: Self.messageName)
         usedWorlds[name] = world
@@ -139,7 +138,7 @@ final class ModInjector {
                 GM_values[key] = JSON.stringify(value);
                 try {
                     window.webkit.messageHandlers.magpieMods.postMessage(
-                        { "mod": "\#(modID)", "key": key, "value": GM_values[key] });
+                        { "key": String(key), "value": GM_values[key] });
                 } catch (e) { }
             }
             \#(body)
@@ -192,16 +191,39 @@ extension ModStore: ModValuesReading {}
 @MainActor
 final class ModValueRelay: NSObject, WKScriptMessageHandler {
 
+    /// The longest key, and the longest value as JSON, one post may store.
+    nonisolated static let maxKeyLength = 256
+    nonisolated static let maxValueLength = 256 * 1024
+
     var values: (any ModValuesReading)?
+    let modID: String
+    let worldName: String
+
+    init(modID: String, worldName: String) {
+        self.modID = modID
+        self.worldName = worldName
+    }
 
     func userContentController(
         _ userContentController: WKUserContentController,
         didReceive message: WKScriptMessage
     ) {
-        guard let body = message.body as? [String: Any] else { return }
-        guard let mod = body["mod"] as? String else { return }
-        guard let key = body["key"] as? String else { return }
-        guard let value = body["value"] as? String else { return }
-        values?.storeValue(value, forKey: key, modID: mod)
+        // Mods run in the main frame only, in their own world.
+        guard message.frameInfo.isMainFrame, message.world.name == worldName else { return }
+        guard let (key, value) = Self.entry(from: message.body) else { return }
+        values?.storeValue(value, forKey: key, modID: modID)
+    }
+
+    /// The key and value a post carries, when it is shaped as the shim sends it and
+    /// within the size limits.
+    nonisolated static func entry(from body: Any) -> (key: String, value: String)? {
+        guard
+            let body = body as? [String: Any],
+            let key = body["key"] as? String,
+            let value = body["value"] as? String,
+            !key.isEmpty, key.utf8.count <= maxKeyLength,
+            value.utf8.count <= maxValueLength
+        else { return nil }
+        return (key, value)
     }
 }
