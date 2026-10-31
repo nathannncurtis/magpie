@@ -17,20 +17,43 @@ enum ReadableForeground {
         luminance(tint, scheme: scheme) >= lightTintLuminance
     }
 
-    /// The tint's relative luminance, WCAG-style, as resolved under the appearance.
+    /// The tint's relative luminance, WCAG-style, as resolved under the appearance. A
+    /// tint that is not opaque — the bar's page tints sit at 0.55 — is composited over a
+    /// nominal glass base first, so the foreground is chosen for the colour the glass
+    /// actually shows, not the tint at full strength.
     static func luminance(_ tint: Color, scheme: ColorScheme) -> Double {
         let style: UIUserInterfaceStyle = scheme == .dark ? .dark : .light
-        let resolved = UIColor(tint).resolvedColor(with: UITraitCollection(userInterfaceStyle: style))
+        let traits = UITraitCollection(userInterfaceStyle: style)
+        guard
+            let tintChannels = Self.channels(
+                of: UIColor(tint).resolvedColor(with: traits)),
+            let baseChannels = Self.channels(
+                of: UIColor(glassBase).resolvedColor(with: traits))
+        else { return 0 }
+        let opacity = Double(tintChannels.alpha)
+        let red = Double(tintChannels.red) * opacity + Double(baseChannels.red) * (1 - opacity)
+        let green = Double(tintChannels.green) * opacity + Double(baseChannels.green) * (1 - opacity)
+        let blue = Double(tintChannels.blue) * opacity + Double(baseChannels.blue) * (1 - opacity)
+        func linear(_ channel: Double) -> Double {
+            channel <= 0.03928 ? channel / 12.92 : pow((channel + 0.055) / 1.055, 2.4)
+        }
+        return 0.2126 * linear(red) + 0.7152 * linear(green) + 0.0722 * linear(blue)
+    }
+
+    /// The nominal base the glass reads at under no tint of its own: the solid-card
+    /// colour, the closest token to the untinted material.
+    private static let glassBase = Palette.card
+
+    /// One colour's straight sRGB channels, or nil where they can't be read.
+    private static func channels(
+        of color: UIColor
+    ) -> (red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat)? {
         var red: CGFloat = 0
         var green: CGFloat = 0
         var blue: CGFloat = 0
         var alpha: CGFloat = 0
-        guard resolved.getRed(&red, green: &green, blue: &blue, alpha: &alpha) else { return 0 }
-        func linear(_ channel: CGFloat) -> Double {
-            let value = Double(channel)
-            return value <= 0.03928 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
-        }
-        return 0.2126 * linear(red) + 0.7152 * linear(green) + 0.0722 * linear(blue)
+        guard color.getRed(&red, green: &green, blue: &blue, alpha: &alpha) else { return nil }
+        return (red, green, blue, alpha)
     }
 }
 
@@ -55,8 +78,6 @@ struct ReadingBar: View {
     /// How far the bar has collapsed, 0 full to 1 slim. The interactive scroll tracking
     /// drives this; without it the bar takes the discrete `isSlim`.
     var collapse: CGFloat?
-    /// Whether the menu is open: the ••• state.
-    var isMenuOpen = false
     /// Whether the page failed to load: the URL pill's error lock.
     var showsLock = false
     /// The page tint the glass takes.
@@ -72,6 +93,11 @@ struct ReadingBar: View {
 
     @Environment(\.colorScheme) private var colorScheme
 
+    /// The bar's heights follow the type size, as its text does — the pill's host text
+    /// is what sets them.
+    @ScaledMetric(relativeTo: .subheadline) private var fullHeight = Metrics.Bar.readingHeight
+    @ScaledMetric(relativeTo: .subheadline) private var slimHeight = Metrics.Bar.readingSlimHeight
+
     /// How much further in from the screen sides the slim pill sits, past the full bar's
     /// inset (the motion board's 110, minus the 12 it already has).
     private static let slimSideInsetGain: CGFloat = 98
@@ -81,18 +107,25 @@ struct ReadingBar: View {
     }
 
     private var height: CGFloat {
-        Metrics.Bar.readingHeight
-            - (Metrics.Bar.readingHeight - Metrics.Bar.readingSlimHeight) * progress
+        fullHeight - (fullHeight - slimHeight) * progress
     }
 
     private var sideInset: CGFloat {
         Metrics.Spacing.insetReadingBar + Self.slimSideInsetGain * progress
     }
 
+    /// The tabs button's spoken label: the count said with it.
+    private var tabsLabel: String {
+        String(localized: "Tabs, \(tabCount) open")
+    }
+
     var body: some View {
         namedGlass
             .padding(.horizontal, sideInset)
             .frame(maxWidth: .infinity)
+            // The bar grows with the type size to a deliberate stop: past the first
+            // accessibility size it would stop being a bar.
+            .dynamicTypeSize(...DynamicTypeSize.accessibility1)
     }
 
     /// The capsule, named for morphing when a namespace is given.
@@ -117,11 +150,11 @@ struct ReadingBar: View {
                 .accessibilityIdentifier("bar.url")
             side {
                 CircleButton(action: onTabsTap) { TabCount(count: tabCount) }
-                    .accessibilityLabel(Text("Tabs"))
+                    .accessibilityLabel(Text(tabsLabel))
                     .accessibilityIdentifier("bar.tabs")
             }
             side {
-                CircleButton(systemName: "ellipsis", isPressed: isMenuOpen, action: onMenuTap)
+                CircleButton(systemName: "ellipsis", action: onMenuTap)
                     .accessibilityLabel(Text("Menu"))
                     .accessibilityIdentifier("bar.menu")
             }
@@ -134,14 +167,22 @@ struct ReadingBar: View {
         .glassEffect(.regular.tint(tint), in: .capsule)
     }
 
-    /// Wraps a side button: its width collapses and it fades as the bar slims.
+    /// Wraps a side button: it fades as the bar slims, and its slot folds away only
+    /// once the button has stopped taking taps — the tap target never shrinks under a
+    /// finger mid-collapse. The folding slot clips the visuals alone.
     private func side<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         content()
             .frame(width: CircleButtonLayout.hitSize)
-            .frame(width: CircleButtonLayout.hitSize * (1 - progress))
-            .clipped()
             .opacity(1 - progress)
+            .frame(width: CircleButtonLayout.hitSize * fold)
+            .clipped()
             .allowsHitTesting(progress < 0.5)
+    }
+
+    /// How far the button's slot has folded, 0 to 1: the hit frame holds at full width
+    /// while the button can still take a tap, then the slot folds to nothing.
+    private var fold: CGFloat {
+        progress < 0.5 ? 0 : (progress - 0.5) * 2
     }
 }
 

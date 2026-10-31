@@ -27,7 +27,7 @@ Later launches restore the last tab, with no animation.
 - **Opened from a page:** the bar morphs into this sheet and the sheet turns solid (02, 05 · Open search).
 
 ## 02 · Reading
-- **Layout:** a full-bleed `WKWebView` under the status bar, with the `ReadingBar` floating at the bottom.
+- **Layout:** a `WKWebView` that starts below the status bar and runs to the bottom edge under the floating `ReadingBar`. The strip above the page, under the status bar, takes the page's own top colour (`themeColor`, else its own background, else paper), so the screen still reads edge to edge.
 - **Bar tint:** comes from the page's `themeColor`, or `underPageBackgroundColor` when there's no theme colour.
 - **Scrolling:** collapses the bar to slim (05 · Chrome on scroll).
 - **Dark mode on pages:** never inverted. Send `Sec-CH-Prefers-Color-Scheme: dark` to Google, and inject nothing; sites with a dark theme show it themselves.
@@ -147,7 +147,7 @@ Every edge state follows one pattern: one plain line saying what happened, and o
   - Bookmarks and Installed: see 06.
 
 ### 15 · Page can't load
-- **Layout:** Magpie's own page on `skimBackground` (dark #121316), centred: a 40 pt globe-with-slash line icon in `textTertiary`, a title in 18 pt semibold, one line in `body` `textSecondary`, and an ink capsule "Try again" (paper in dark).
+- **Layout:** Magpie's own page on `skimBackground` (dark #121316), centred: a 40 pt globe-with-slash line icon in `textTertiary`, a title in 18 pt semibold, one line in `body` `textSecondary`, and an ink capsule "Try again" (paper in dark), never under 44 tall.
 - **The bar stays**, at its default tint.
 - **Offline:** the page reloads by itself when the connection returns (`NWPathMonitor`).
 - **Other failures** follow the same layout with different copy (see 06).

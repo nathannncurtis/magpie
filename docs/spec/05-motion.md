@@ -56,7 +56,7 @@ Stagger lists 25–30 ms per item. Content inside a sheet starts 50 ms after the
 
 ### 05 · Chrome on scroll
 - **Trigger:** scroll direction, not scroll position.
-- **Collapse:** after 24 pt of downward scroll, the bar goes from 60 tall to a 38-tall pill showing only the host. The side buttons fade out and their width collapses.
+- **Collapse:** after 24 pt of downward scroll, the bar goes from 60 tall to a 38-tall pill showing only the host. The side buttons fade out; each keeps its full hit width while it can still be tapped, then its slot folds away.
 - **Expand:** any upward scroll, or reaching the end of the page, brings the full bar back.
 - **Tracking:** progress follows the scroll offset interactively, then settles with `settle` (about 0.4 s).
 - **Slim pill:** tapping it expands the bar and opens search.

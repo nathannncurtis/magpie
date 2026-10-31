@@ -9,10 +9,13 @@ enum CircleButtonLayout {
     static let symbolSize: CGFloat = 20
     /// The pressed fill, in the middle of the spec's 8-10% band.
     static let pressedFillOpacity = 0.09
+    /// How faint a disabled button's symbol sits: still there, not calling.
+    static let disabledOpacity = 0.35
 }
 
 /// A bar button (03 · Chrome): a 48 × 48 hit area holding a 20 pt symbol, with no
-/// background of its own. The ••• state fills with `ink` while the menu is open.
+/// background of its own. The ••• state fills with `ink` while the menu is open; a
+/// disabled one keeps its place and fades.
 struct CircleButton<Content: View>: View {
 
     /// Whether the pressed fill shows.
@@ -30,12 +33,17 @@ struct CircleButton<Content: View>: View {
         self.content = content
     }
 
+    /// A disabled button keeps its place and fades instead: the caller's `disabled`
+    /// state reaches it through the environment, so every bar row reads the same.
+    @Environment(\.isEnabled) private var isEnabled
+
     var body: some View {
         Button(action: action) {
             content()
                 .frame(width: CircleButtonLayout.hitSize, height: CircleButtonLayout.hitSize)
         }
         .buttonStyle(.plain)
+        .opacity(isEnabled ? 1 : CircleButtonLayout.disabledOpacity)
         .background {
             if isPressed {
                 Circle().fill(Palette.ink.opacity(CircleButtonLayout.pressedFillOpacity))

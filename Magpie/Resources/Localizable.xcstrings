@@ -13,6 +13,18 @@
         }
       }
     },
+    "%@, can't load" : {
+      "comment" : "Reading bar: the URL pill's label when the page can't load",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, can't load"
+          }
+        }
+      }
+    },
     "%lld days" : {
       "comment" : "Archive interval step in days",
       "extractionState" : "manual",
@@ -117,6 +129,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "About Magpie"
+          }
+        }
+      }
+    },
+    "Address" : {
+      "comment" : "Reading bar: the URL pill's label when no host is known",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Address"
           }
         }
       }
@@ -1473,6 +1497,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tabs you leave alone for a day land here, and stay for 30 days."
+          }
+        }
+      }
+    },
+    "Tabs, %lld open" : {
+      "comment" : "Reading bar: the tabs button's label",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tabs, %lld open"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Tabs, %lld open"
+                }
+              }
+            }
           }
         }
       }

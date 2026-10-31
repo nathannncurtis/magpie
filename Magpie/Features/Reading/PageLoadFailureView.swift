@@ -7,8 +7,6 @@ struct PageLoadFailureView: View {
     let failure: PageLoadFailure
     let onRetry: () -> Void
 
-    /// The line glyph, a plain SF Symbol standing in for the drawn one.
-    private static let iconSize: CGFloat = 40
     /// The title, 18 pt semibold on the board.
     private static let titleSize: CGFloat = 18
     /// The block's rhythm: a 6 pt gap with a little more above the title and the button.
@@ -18,15 +16,13 @@ struct PageLoadFailureView: View {
     private static let sideInset: CGFloat = 44
     /// The block sits this far above centre.
     private static let lift: CGFloat = 80
-    /// The "Try again" capsule.
+    /// The "Try again" capsule, its height a full-size tap target.
     private static let buttonPaddingH: CGFloat = 22
-    private static let buttonPaddingV: CGFloat = 11
+    private static let buttonHeight: CGFloat = 44
 
     var body: some View {
         VStack(spacing: Self.gap) {
-            Image(systemName: "globe")
-                .font(.system(size: Self.iconSize, weight: .medium))
-                .foregroundStyle(Palette.textTertiary)
+            GlobeWithSlash()
             Text(failure.title)
                 .font(.system(size: Self.titleSize, weight: .semibold))
                 .foregroundStyle(Palette.textPrimary)
@@ -41,7 +37,7 @@ struct PageLoadFailureView: View {
                     .font(Typography.buttonPill)
                     .foregroundStyle(Palette.onInk)
                     .padding(.horizontal, Self.buttonPaddingH)
-                    .padding(.vertical, Self.buttonPaddingV)
+                    .frame(minHeight: Self.buttonHeight)
                     .background(Capsule().fill(Palette.ink))
             }
             .buttonStyle(.plain)
@@ -51,6 +47,31 @@ struct PageLoadFailureView: View {
         .padding(.bottom, Self.lift)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Palette.skimBackground)
+    }
+}
+
+/// The 04 · 15 line icon: a globe with a slash through it. SF Symbols carries no such
+/// glyph, so the slash is composed over the plain globe, leaning the way the system's
+/// own slashed glyphs lean.
+private struct GlobeWithSlash: View {
+
+    /// The globe.
+    private static let globeSize: CGFloat = 40
+    /// The slash, long enough to cross the globe's stroke corner to corner.
+    private static let slashLength: CGFloat = 58
+    /// The slash's thickness, at the medium-weight symbol's stroke.
+    private static let slashWidth: CGFloat = 3.5
+
+    var body: some View {
+        Image(systemName: "globe")
+            .font(.system(size: Self.globeSize, weight: .medium))
+            .foregroundStyle(Palette.textTertiary)
+            .overlay {
+                Capsule()
+                    .fill(Palette.textTertiary)
+                    .frame(width: Self.slashWidth, height: Self.slashLength)
+                    .rotationEffect(.degrees(45))
+            }
     }
 }
 

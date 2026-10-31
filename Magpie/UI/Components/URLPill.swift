@@ -19,6 +19,9 @@ struct URLPill: View {
     private static let fullHeight: CGFloat = 48
     /// The pill's height in the slim pill.
     private static let slimHeight: CGFloat = 30
+    /// The least the pill's tap target measures, whatever its visual height: the slim
+    /// pill looks 30 tall and must still take a full-size tap.
+    private static let minHitHeight: CGFloat = 44
     /// The lock glyph, only shown on errors.
     private static let lockSize: CGFloat = 13
     /// The gap between the lock and the host.
@@ -26,6 +29,14 @@ struct URLPill: View {
 
     private var height: CGFloat {
         Self.fullHeight - (Self.fullHeight - Self.slimHeight) * collapse
+    }
+
+    /// The pill's spoken label: the host — never empty — with the failure lock named
+    /// when the page can't load.
+    private var spokenLabel: String {
+        let name = host.isEmpty ? String(localized: "Address") : host
+        guard showsLock else { return name }
+        return String(localized: "\(name), can't load")
     }
 
     var body: some View {
@@ -41,12 +52,12 @@ struct URLPill: View {
                     text(Typography.meta.weight(.medium)).opacity(collapse)
                 }
             }
-            .frame(height: height)
+            .frame(minHeight: max(Self.minHitHeight, height))
             .frame(maxWidth: .infinity)
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(Text(host))
+        .accessibilityLabel(Text(spokenLabel))
     }
 
     /// One of the two crossfading host texts: full size in the bar, smaller in the pill.
