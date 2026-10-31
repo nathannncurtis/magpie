@@ -39,4 +39,6 @@ rc=$?
 set -e
 grep -E 'error:|warning:|Test Suite|Executed|✘|recorded an issue|\*\* (BUILD|TEST)' xcodebuild.log | sort -u | tail -80 || true
 cp xcodebuild.log "$shots/" 2>/dev/null || true
+# An app crash under test leaves its report with the host; keep it beside the shots.
+cp ~/Library/Logs/DiagnosticReports/Magpie*.ips "$shots/" 2>/dev/null || true
 [ "$rc" -eq 0 ] || { tail -60 xcodebuild.log; exit "$rc"; }
