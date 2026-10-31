@@ -304,7 +304,7 @@ struct ModsScreen: View {
     /// A solid card of rows, separators between them (board's `.mcard`). Rows are
     /// identified by the mod each holds, so a row keeps its state as the list moves.
     private func rowsCard<Item: Identifiable, Row: View>(
-        _ items: [Item], @ViewBuilder row: (Item) -> Row
+        _ items: [Item], @ViewBuilder row: @escaping (Item) -> Row
     ) -> some View {
         VStack(spacing: 0) {
             ForEach(Array(items.enumerated()), id: \.element.id) { index, item in

@@ -22,7 +22,7 @@ struct DefaultBrowserCard: View {
                 }
                 Spacer(minLength: 8)
                 Button("Open") { openDefaultBrowserSettings() }
-                    .font(.system(size: 13.5, weight: .semibold, relativeTo: .footnote))
+                    .font(.system(.footnote, weight: .semibold))
                     .foregroundStyle(Palette.onInk)
                     .padding(.horizontal, 15)
                     .padding(.vertical, 7)
