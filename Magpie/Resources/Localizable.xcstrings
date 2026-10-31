@@ -397,6 +397,30 @@
         }
       }
     },
+    "Close Menu" : {
+      "comment" : "Keyboard shortcut (Esc): folds the reading menu back into the bar",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close Menu"
+          }
+        }
+      }
+    },
+    "Close Search" : {
+      "comment" : "Keyboard shortcut (Esc): folds the search sheet or find bar away",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close Search"
+          }
+        }
+      }
+    },
     "Close tab" : {
       "comment" : "Tab card: VoiceOver action that closes the tab",
       "extractionState" : "manual",
@@ -405,6 +429,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Close tab"
+          }
+        }
+      }
+    },
+    "Close Tab" : {
+      "comment" : "Keyboard shortcut (⌘W): closes the current tab",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close Tab"
           }
         }
       }
@@ -553,6 +589,18 @@
         }
       }
     },
+    "Find on Page" : {
+      "comment" : "Keyboard shortcut (⌘F): opens the find bar over the page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find on Page"
+          }
+        }
+      }
+    },
     "Folder name" : {
       "comment" : "Placeholder in the folder rename alert",
       "extractionState" : "manual",
@@ -573,6 +621,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Folders"
+          }
+        }
+      }
+    },
+    "Forward" : {
+      "comment" : "Keyboard shortcut (⌘]): goes forward one page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forward"
           }
         }
       }
@@ -865,6 +925,18 @@
         }
       }
     },
+    "New Tab" : {
+      "comment" : "Keyboard shortcut (⌘T): opens the launch search for a new tab",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Tab"
+          }
+        }
+      }
+    },
     "No answer from that link." : {
       "comment" : "Install failed: the link didn't answer",
       "extractionState" : "manual",
@@ -1057,6 +1129,18 @@
         }
       }
     },
+    "Open Location" : {
+      "comment" : "Keyboard shortcut (⌘L): opens the search sheet over the page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Location"
+          }
+        }
+      }
+    },
     "Other" : {
       "comment" : "The engine picker's last tile, and the engine list's last row",
       "extractionState" : "manual",
@@ -1077,6 +1161,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Own index"
+          }
+        }
+      }
+    },
+    "Page" : {
+      "comment" : "Keyboard shortcut overlay: the menu holding the page's shortcuts",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page"
           }
         }
       }
@@ -1197,6 +1293,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Recently added"
+          }
+        }
+      }
+    },
+    "Reload Page" : {
+      "comment" : "Keyboard shortcut (⌘R): reloads the page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reload Page"
           }
         }
       }
@@ -1365,6 +1473,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Share"
+          }
+        }
+      }
+    },
+    "Show All Tabs" : {
+      "comment" : "Keyboard shortcut (⌘⇧\\): shows the tab stack",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show All Tabs"
           }
         }
       }

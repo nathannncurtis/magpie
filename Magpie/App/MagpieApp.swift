@@ -24,5 +24,6 @@ struct MagpieApp: App {
                     }
                 }
         }
+        .commands { KeyCommands(model: model) }
     }
 }
