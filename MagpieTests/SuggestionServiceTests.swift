@@ -34,6 +34,12 @@ final class CannedSuggestProtocol: URLProtocol {
         return store.requests.count
     }
 
+    static var requestedURLs: [String] {
+        lock.lock()
+        defer { lock.unlock() }
+        return store.requests.map(\.url)
+    }
+
     static func reset() {
         lock.lock()
         defer { lock.unlock() }
@@ -208,5 +214,45 @@ struct SuggestionServiceTests {
         #expect(configuration.httpCookieStorage == nil)
         #expect(configuration.timeoutIntervalForRequest <= 5)
         #expect(configuration.timeoutIntervalForResource <= 8)
+    }
+    @Test("typing on cancels each earlier keystroke; only the settled text is asked for")
+    func typingCancelsEarlierKeystrokes() async {
+        CannedSuggestProtocol.serve("q=", body: #"["carb",["carbon steel"]]"#)
+        let service = service(debounce: .milliseconds(200))
+        var earlier: [Task<[String], Never>] = []
+        for prefix in ["c", "ca", "car"] {
+            earlier.last?.cancel()
+            earlier.append(Task { await service.suggestions(for: prefix, engine: .default, enabled: true) })
+            try? await Task.sleep(for: .milliseconds(40))
+        }
+        earlier.last?.cancel()
+        let settled = await service.suggestions(for: "carb", engine: .default, enabled: true)
+        for task in earlier {
+            #expect(await task.value == [])
+        }
+        #expect(settled == ["carbon steel"])
+        #expect(CannedSuggestProtocol.requestCount == 1)
+        #expect(CannedSuggestProtocol.requestedURLs == ["https://duckduckgo.com/ac/?q=carb&type=list"])
+    }
+
+    @Test("suggestions off never reaches the network, however long the wait")
+    func disabledNeverSends() async {
+        CannedSuggestProtocol.serve("q=", body: #"["cars",["cars for sale"]]"#)
+        for engine in SearchEngine.builtins {
+            let rows = await service(debounce: .milliseconds(1)).suggestions(
+                for: "cars", engine: engine, enabled: false)
+            #expect(rows == [])
+        }
+        try? await Task.sleep(for: .milliseconds(50))
+        #expect(CannedSuggestProtocol.requestCount == 0)
+    }
+
+    @Test("the suggest request carries the trimmed, encoded query")
+    func suggestRequestEncoding() async {
+        CannedSuggestProtocol.serve("q=", body: #"["x",[]]"#)
+        _ = await service().suggestions(for: "  a+b & c#d 100%  ", engine: .default, enabled: true)
+        #expect(
+            CannedSuggestProtocol.requestedURLs
+                == ["https://duckduckgo.com/ac/?q=a%2Bb%20%26%20c%23d%20100%25&type=list"])
     }
 }

@@ -198,4 +198,36 @@ struct SearchEngineTests {
             other?.searchURL(for: "x y")?.absoluteString
                 == "https://example.org/?q=x%20y&again=x%20y")
     }
+
+    @Test(
+        "each engine encodes +, &, #, %, spaces, line breaks and unicode",
+        arguments: SearchEngine.builtins)
+    func encodingPerEngine(engine: SearchEngine) {
+        let encoded = "a%2Bb%20%26%20c%23d%20100%25%20%C3%A9%0Ax%20%F0%9F%95%8A"
+        let expected = engine.searchTemplate.replacingOccurrences(of: "%s", with: encoded)
+        #expect(engine.searchURL(for: "a+b & c#d 100% é\nx 🕊")?.absoluteString == expected)
+        if let suggest = engine.suggestTemplate {
+            #expect(
+                engine.suggestURL(for: "a+b & c#d 100% é\nx 🕊")?.absoluteString
+                    == suggest.replacingOccurrences(of: "%s", with: encoded))
+        }
+    }
+
+    @Test("a query holding the placeholder itself is encoded, not re-substituted")
+    func placeholderInQuery() {
+        #expect(
+            SearchEngine.default.searchURL(for: "%s and %s")?.absoluteString
+                == "https://duckduckgo.com/?q=%25s%20and%20%25s")
+        #expect(SearchEngine.default.resultsQuery(for: SearchEngine.default.searchURL(for: "100% %s")!) == "100% %s")
+    }
+
+    @Test("an Other template encodes the same way, wherever the placeholder sits")
+    func otherEncoding() {
+        let path = SearchEngine.other(template: "https://example.org/find/%s")
+        #expect(path?.searchURL(for: "a/b c?")?.absoluteString == "https://example.org/find/a%2Fb%20c%3F")
+        let query = SearchEngine.other(template: "https://example.org/?q=%s&lang=en")
+        #expect(
+            query?.searchURL(for: "bücher & co")?.absoluteString
+                == "https://example.org/?q=b%C3%BCcher%20%26%20co&lang=en")
+    }
 }
