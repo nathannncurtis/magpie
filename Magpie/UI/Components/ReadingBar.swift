@@ -116,6 +116,11 @@ struct ReadingBar: View {
         Metrics.Spacing.insetReadingBar + Self.slimSideInsetGain * progress
     }
 
+    /// The tabs button's spoken label: the count said with it.
+    private var tabsLabel: String {
+        String(localized: "Tabs, \(tabCount) open")
+    }
+
     var body: some View {
         namedGlass
             .padding(.horizontal, sideInset)
@@ -147,7 +152,7 @@ struct ReadingBar: View {
                 .accessibilityIdentifier("bar.url")
             side {
                 CircleButton(action: onTabsTap) { TabCount(count: tabCount) }
-                    .accessibilityLabel(Text("Tabs"))
+                    .accessibilityLabel(Text(tabsLabel))
                     .accessibilityIdentifier("bar.tabs")
             }
             side {

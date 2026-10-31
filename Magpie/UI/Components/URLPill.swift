@@ -31,6 +31,14 @@ struct URLPill: View {
         Self.fullHeight - (Self.fullHeight - Self.slimHeight) * collapse
     }
 
+    /// The pill's spoken label: the host — never empty — with the failure lock named
+    /// when the page can't load.
+    private var spokenLabel: String {
+        let name = host.isEmpty ? String(localized: "Address") : host
+        guard showsLock else { return name }
+        return String(localized: "\(name), can't load")
+    }
+
     var body: some View {
         Button(action: action) {
             HStack(spacing: Self.gap) {
@@ -49,7 +57,7 @@ struct URLPill: View {
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(Text(host))
+        .accessibilityLabel(Text(spokenLabel))
     }
 
     /// One of the two crossfading host texts: full size in the bar, smaller in the pill.
