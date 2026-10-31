@@ -1,8 +1,9 @@
 import SwiftUI
 
 /// The mods screen: the mist, the Directory and Installed segments, and the glass footer
-/// that opens the install-from-URL sheet (04 · 06, 04 · 13). Directory installs land on
-/// the Installed segment with the new row's check popping (05 · 06).
+/// that opens the install-from-URL sheet (04 · 06, 04 · 13). A directory install stays
+/// on the Directory segment, its row's Get giving way to a popping check (05 · 06); only
+/// the sheet's install lands on the Installed segment.
 struct ModsScreen: View {
 
     /// Layout numbers from the board.
@@ -44,8 +45,9 @@ struct ModsScreen: View {
     @State private var landedModID: String?
     /// The mods installed while this screen has been up, so their checks pop.
     @State private var newlyInstalled: Set<String> = []
-    /// The mod whose file is being fetched and checked, so its row carries the mark.
-    @State private var installingID: String?
+    /// The mods whose files are being fetched and checked at once, so each row
+    /// carries its own mark without resetting another's.
+    @State private var installingIDs: Set<String> = []
     /// The mod whose install did not land, for the one line under the card.
     @State private var failedID: String?
     @State private var bottomInset: CGFloat = 0
@@ -145,7 +147,8 @@ struct ModsScreen: View {
                 FeaturedModCard(
                     mod: featured,
                     installed: store.mod(id: featured.id) != nil,
-                    fetching: installingID == featured.id,
+                    fetching: installingIDs.contains(featured.id),
+                    pops: newlyInstalled.contains(featured.id),
                     onGet: { install(featured) }
                 )
                 .padding(.bottom, 4)
@@ -192,7 +195,7 @@ struct ModsScreen: View {
         if store.mod(id: entry.id) != nil {
             return .installed(pops: newlyInstalled.contains(entry.id))
         }
-        if installingID == entry.id {
+        if installingIDs.contains(entry.id) {
             return .fetching
         }
         return .get(action: { install(entry) })
@@ -201,14 +204,14 @@ struct ModsScreen: View {
     /// A directory install: the entry's file, verified against the index's digest, then
     /// the row's Get becomes a popping check. While the file is fetched and checked the
     /// row carries the mark; if nothing comes of it, one plain line says so and Get is
-    /// the way to try again.
+    /// the way to try again. Several can run at once; a Get for an entry already
+    /// installing does nothing.
     private func install(_ entry: DirectoryMod) {
-        installingID = entry.id
+        guard !installingIDs.contains(entry.id) else { return }
+        installingIDs.insert(entry.id)
         failedID = nil
         Task { @MainActor in
-            defer {
-                if installingID == entry.id { installingID = nil }
-            }
+            defer { installingIDs.remove(entry.id) }
             guard
                 let body = try? await directory.download(entry),
                 let draft = entry.draft(body: body)

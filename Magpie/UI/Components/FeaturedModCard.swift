@@ -14,6 +14,8 @@ struct FeaturedModCard: View {
     var installed: Bool
     /// The mod's file is being fetched and checked, so Get gives way to the mark.
     var fetching = false
+    /// The install just landed, so the check pops (05 · 06).
+    var pops = false
     var onGet: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
@@ -40,7 +42,7 @@ struct FeaturedModCard: View {
                 .accessibilityElement(children: .combine)
                 Spacer(minLength: 0)
                 if installed {
-                    InstalledCheck()
+                    InstalledCheck(pops: pops)
                 } else if fetching {
                     MarkSpinner(size: Layout.mark)
                         .accessibilityElement()

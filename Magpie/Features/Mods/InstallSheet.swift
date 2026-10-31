@@ -40,6 +40,9 @@ struct InstallSheet: View {
 
     @State private var linkText = ""
     @State private var phase: Phase = .idle
+    /// The link's read result, held onto while the install runs so the preview
+    /// stays up through the mark and the tick (05 · 06).
+    @State private var readyResult: InstallLinkResult?
     @State private var inspectedURL: URL?
     @State private var readTask: Task<Void, Never>?
     /// The sheet's height once laid out. It starts at the idle sheet's standing
@@ -292,11 +295,6 @@ struct InstallSheet: View {
         phase == .installing || phase == .ticked
     }
 
-    private var readyResult: InstallLinkResult? {
-        if case .ready(let result) = phase { return result }
-        return nil
-    }
-
     // MARK: Reading the link
 
     /// A quiet read once the typing settles; the return key reads at once.
@@ -304,6 +302,7 @@ struct InstallSheet: View {
         readTask?.cancel()
         guard !text.trimmingCharacters(in: .whitespaces).isEmpty else {
             phase = .idle
+            readyResult = nil
             return
         }
         readTask = Task { @MainActor in
@@ -316,15 +315,18 @@ struct InstallSheet: View {
     private func read(_ text: String) {
         guard let url = Self.url(from: text) else {
             inspectedURL = nil
+            readyResult = text.isEmpty ? nil : .webPage
             phase = text.isEmpty ? .idle : .ready(.webPage)
             return
         }
         guard url != inspectedURL || readyResult == nil else { return }
         inspectedURL = url
+        readyResult = nil
         phase = .reading
         Task { @MainActor in
             let result = await ModLinkInstaller.inspect(url)
             guard inspectedURL == url else { return }
+            readyResult = result
             withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.settle.animation) {
                 phase = .ready(result)
             }
