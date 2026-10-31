@@ -23,7 +23,12 @@ struct FilterListsPage: View {
                     EmptyView()
                 }
                 .divided(!updates.isEmpty)
-                .action { Task { await blocker.updateNow() } }
+                .action {
+                    Task {
+                        await blocker.updateNow()
+                        updates = await blocker.listUpdates()
+                    }
+                }
                 .accessibilityIdentifier("settings.updateNow")
             }
         }
