@@ -368,7 +368,8 @@ private struct BookmarkRow: View {
                 ListRow(
                     title: bookmark.title,
                     subtitle: subtitle,
-                    host: bookmark.host
+                    host: bookmark.host,
+                    faviconData: bookmark.faviconData
                 )
             case .skim(let sourceHosts):
                 SkimPageRow(

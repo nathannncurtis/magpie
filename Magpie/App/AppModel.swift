@@ -58,6 +58,9 @@ final class AppModel {
     let skimDependencies: SkimDependencies
     /// Saved Skim pages, brought back by their bookmarks.
     let skimPageStore: SkimPageStore
+    /// The sites' own icons: fetched off the main actor, shared by every row that points
+    /// at the same address.
+    let faviconFetcher: FaviconFetcher
 
     /// The Skim run on screen, when one is going.
     private(set) var skimRun: SkimRun?
@@ -98,7 +101,8 @@ final class AppModel {
         modDirectory: ModDirectory? = nil,
         skimPageStore: SkimPageStore = SkimPageStore(),
         skimDependencies: SkimDependencies = .live,
-        skimAvailable: Bool = SkimAvailability.resolve().isAvailable
+        skimAvailable: Bool = SkimAvailability.resolve().isAvailable,
+        faviconFetcher: FaviconFetcher = FaviconFetcher()
     ) {
         self.store = store
         self.preferences = preferences ?? Preferences(defaults: Self.freshDefaults())
@@ -121,6 +125,7 @@ final class AppModel {
         self.skimPageStore = skimPageStore
         self.skimDependencies = skimDependencies
         self.skimAvailable = skimAvailable
+        self.faviconFetcher = faviconFetcher
     }
 
     /// The app as it runs on a device: the JSON indexes in Application Support.
@@ -146,6 +151,7 @@ final class AppModel {
         await store.loadIndex()
         armLaunchIntro()
         await bookmarks.loadIndex()
+        fillMissingFavicons()
         refreshArchive(now: now)
         await blocker.attach(modInjector.contentController)
         modInjector.apply(modStore.enabledUserscripts)
@@ -345,6 +351,43 @@ final class AppModel {
             title: session.page.title,
             faviconURL: session.pageIconURL,
             now: .now)
+        fetchTabFavicon(for: id, at: session.pageIconURL)
+    }
+
+    // MARK: Favicons
+
+    /// The icons the saved rows point at but do not hold. One pass as the indexes land;
+    /// from then on each icon arrives as its page names it.
+    private func fillMissingFavicons() {
+        for tab in store.tabs + store.archivedTabs {
+            fetchTabFavicon(for: tab.id, at: tab.faviconURL)
+        }
+        for bookmark in bookmarks.bookmarks {
+            fetchBookmarkFavicon(for: bookmark.id, at: bookmark.faviconURL)
+        }
+    }
+
+    /// The icon onto the tab whose page named it — fetched off the main actor, cached
+    /// back onto the tab, and left to the letter tile when the site has none to give.
+    private func fetchTabFavicon(for id: Tab.ID, at url: URL?) {
+        let tab = store.tabs.first { $0.id == id } ?? store.archivedTabs.first { $0.id == id }
+        guard tab?.faviconData == nil else { return }
+        fetchFavicon(at: url) { [store] in store.setFavicon($0, for: id) }
+    }
+
+    /// The icon onto its bookmark, the same way.
+    private func fetchBookmarkFavicon(for id: Bookmark.ID, at url: URL?) {
+        guard bookmarks.bookmarks.first(where: { $0.id == id })?.faviconData == nil else { return }
+        fetchFavicon(at: url) { [bookmarks] in bookmarks.setFavicon($0, for: id) }
+    }
+
+    /// One download per address, shared by every row that points at it.
+    private func fetchFavicon(at url: URL?, save: @MainActor @escaping (Data) -> Void) {
+        guard let url else { return }
+        Task { [faviconFetcher] in
+            guard let data = await faviconFetcher.favicon(at: url) else { return }
+            save(data)
+        }
     }
 
     /// A page settled: the tab takes what the page now shows. The capture is debounced — a
@@ -738,6 +781,7 @@ final class AppModel {
             url: url,
             title: tab.displayTitle,
             faviconURL: tab.faviconURL,
+            faviconData: tab.faviconData,
             folder: nil,
             now: now)
     }
