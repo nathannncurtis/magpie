@@ -331,6 +331,7 @@ final class AppModel {
             url: tab.url ?? Self.blankPage,
             pageConfiguration: configuration)
         session.logTag = "tab=\(tab.id.uuidString.prefix(4))"
+        session.isPrivate = tab.isPrivate
         session.viewportSize = restingPageSize
         sessions[tab.id] = session
         sessionTasks[tab.id] = Task {
@@ -597,6 +598,8 @@ final class AppModel {
     /// A submitted search or address over the page: the current tab navigates.
     func navigateCurrent(_ url: URL) {
         guard let session = currentSession else {
+            // A private page's search stays private in the tab it opens.
+            if currentIsPrivate { launchIsPrivate = true }
             openFromLaunch(url)
             return
         }
@@ -717,6 +720,8 @@ final class AppModel {
     func startSkim(query: String) {
         guard
             skimAvailable,
+            // A private page runs no Skim: its reads land in the shared, kept website data.
+            !searchIsPrivate || surface == .skim,
             !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         else { return }
         if case .reading(true) = surface {

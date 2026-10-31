@@ -66,7 +66,7 @@ struct RootView: View {
                     isSearchOpen: searchOpen,
                     engine: model.engine,
                     skimEnabled: model.offersSkim && !model.searchIsPrivate,
-                    skimRunsHere: model.skimAvailable,
+                    skimRunsHere: model.skimAvailable && !model.currentIsPrivate,
                     suggestionsEnabled: model.suggestionsEnabled,
                     focusSuspended: coversOverLaunch,
                     suggestions: model.suggestions,

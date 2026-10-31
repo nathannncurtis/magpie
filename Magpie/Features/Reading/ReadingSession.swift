@@ -84,6 +84,9 @@ final class ReadingSession {
     /// made, so every line names the page it belongs to.
     @ObservationIgnored var logTag = "tab=----"
 
+    /// A private tab's session: its addresses stay out of the log, which the system keeps.
+    @ObservationIgnored var isPrivate = false
+
     /// Whether a reading screen's web view holds this page — the current tab's, or one
     /// still on its way out after the screen moved to another tab.
     var isOnReadingScreen = false
@@ -304,7 +307,7 @@ final class ReadingSession {
             do {
                 for try await event in page.navigations {
                     SnapshotLog.event(
-                        "nav \(logTag) \(Self.describe(event)) url=\(page.url?.absoluteString ?? "nil")")
+                        "nav \(logTag) \(Self.describe(event)) url=\(loggable(page.url))")
                     if event == .committed {
                         failure = nil
                     }
@@ -320,7 +323,7 @@ final class ReadingSession {
             } catch is CancellationError {
                 return
             } catch {
-                SnapshotLog.event("nav \(logTag) threw \(Self.describe(error))")
+                SnapshotLog.event("nav \(logTag) threw \(isPrivate ? "error" : Self.describe(error))")
                 // A single load's failure also lands here; the load's own sequence
                 // records it, so keep listening for the rest of the session.
                 if case WebPage.NavigationError.failedProvisionalNavigation = error { continue }
@@ -382,7 +385,7 @@ final class ReadingSession {
         // goes with it, read afresh once the new page has settled.
         pageIconURL = nil
         loadTask?.cancel()
-        SnapshotLog.event("load \(logTag) \(requestedURL?.absoluteString ?? "nil")")
+        SnapshotLog.event("load \(logTag) \(loggable(requestedURL))")
         let sequence = events()
         loadTask = Task { [weak self] in
             await self?.drive(sequence)
@@ -685,6 +688,12 @@ final class ReadingSession {
         guard let view = webViewLookup?(), view.window != nil else { return nil }
         webView = view
         return (view, "probe")
+    }
+
+    /// An address as the log may show it: none for a private tab.
+    func loggable(_ url: URL?) -> String {
+        guard let url else { return "nil" }
+        return isPrivate ? "private" : url.absoluteString
     }
 
     /// An error, trimmed to sit on one log line.
