@@ -259,7 +259,9 @@ final class ReadingSession {
     init(url: URL, pageConfiguration: WebPage.Configuration? = nil) {
         initialURL = url
         requestedURL = url
-        page = pageConfiguration.map { WebPage(configuration: $0) } ?? WebPage()
+        page = WebPage(
+            configuration: pageConfiguration ?? WebPage.Configuration(),
+            navigationDecider: PageNavigationDecider())
         monitor.pathUpdateHandler = { [weak self] path in
             let online = path.status == .satisfied
             Task { @MainActor in
@@ -271,6 +273,12 @@ final class ReadingSession {
 
     deinit {
         monitor.cancel()
+    }
+
+    /// The address the page has committed to: what the bar shows. A load still in
+    /// flight, or one a page started and never finished, does not speak for the page.
+    var committedURL: URL? {
+        page.backForwardList.currentItem?.url
     }
 
     var canGoBack: Bool {
