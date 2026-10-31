@@ -46,6 +46,8 @@ final class FlowTests: XCTestCase {
 
         // 02 · a query, with the stub rows beneath it.
         field.tap()
+        // Keys up first: text typed before the keyboard is ready loses its first characters.
+        _ = app.keyboards.firstMatch.waitForExistence(timeout: 5)
         field.typeText("magpie test")
         land("launch-row") {
             app.staticTexts["magpie test"].firstMatch.waitForExistence(timeout: 5)
@@ -86,6 +88,8 @@ final class FlowTests: XCTestCase {
         app.buttons["tabs.plus"].tap()
         land("launch-again") { field.waitForExistence(timeout: 10) }
         field.tap()
+        // Keys up first: text typed before the keyboard is ready loses its first characters.
+        _ = app.keyboards.firstMatch.waitForExistence(timeout: 5)
         field.typeText("http://127.0.0.1:53117/page")
 
         // 08 · a second tab: the count now reads two.
