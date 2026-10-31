@@ -184,6 +184,36 @@ struct AppModelTests {
         #expect(model.store.currentTabID == oldest)
     }
 
+    @Test("a memory warning keeps only the current tab's page live")
+    func memoryWarningDropsOtherSessions() {
+        let model = makeModel()
+        for index in 0..<3 {
+            model.openFromLaunch(url("t\(index).example"), now: date(Double(index)))
+        }
+        let current = model.store.currentTabID!
+        #expect(model.sessions.count == 3)
+
+        model.memoryWarning()
+
+        #expect(Set(model.sessions.keys) == [current])
+        #expect(model.store.tabs.count == 3)
+    }
+
+    @Test("a page dropped under a memory warning comes back on open")
+    func memoryWarningSessionComesBack() {
+        let model = makeModel()
+        model.openFromLaunch(url("a.example"), now: date(0))
+        let first = model.store.currentTabID!
+        model.openFromLaunch(url("b.example"), now: date(10))
+        model.memoryWarning()
+        #expect(model.sessions[first] == nil)
+
+        model.openTab(first, now: date(20))
+
+        #expect(model.sessions[first] != nil)
+        #expect(model.sessions[first]?.requestedURL == url("a.example"))
+    }
+
     // MARK: Auto-archive
 
     @Test("a start archives the stale and keeps the current")

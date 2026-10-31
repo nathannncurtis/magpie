@@ -298,6 +298,8 @@ final class ReadingSession {
     /// The watch subscribes after the load is issued, and a page served fast can outrun
     /// it — the load's own sequence, in `drive`, spans every event of that load.
     func run() async {
+        // A session dropped before its task ran never starts a load.
+        guard !Task.isCancelled else { return }
         SnapshotLog.event("observer start \(logTag)")
         open(initialURL)
         while !Task.isCancelled {
@@ -343,6 +345,22 @@ final class ReadingSession {
             guard !Task.isCancelled else { return }
             self?.onPageSettled?()
         }
+    }
+
+    /// The tab let its page go: closed, archived, or pruned past the live cap. The page's
+    /// own work stops — its load and every watch on it — so nothing holds the session,
+    /// and its web content process, past the owner dropping it.
+    func close() {
+        loadTask?.cancel()
+        loadTask = nil
+        loadWatch?.cancel()
+        loadWatch = nil
+        layoutWatch?.cancel()
+        layoutWatch = nil
+        onPageSettled = nil
+        onPageTitled = nil
+        monitor.cancel()
+        page.stopLoading()
     }
 
     /// Loads a page outright.

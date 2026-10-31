@@ -36,6 +36,12 @@ struct MagpieApp: App {
                         Task { await model.refreshBlocking() }
                     }
                 }
+                .onReceive(
+                    NotificationCenter.default.publisher(
+                        for: UIApplication.didReceiveMemoryWarningNotification)
+                ) { _ in
+                    model.memoryWarning()
+                }
         }
     }
 }
