@@ -17,6 +17,7 @@ final class PrivateTabTests: XCTestCase {
         app.launchArguments += ["-uiTesting", "-uiTestingResetStore", "-uiTestingSkipOnboarding"]
         shots = ShotWriter(test: self, prefix: "private")
         self.app = app
+        app.logsBesideShots()
         app.launch()
 
         // An ordinary tab first, on the stub page.
@@ -51,6 +52,7 @@ final class PrivateTabTests: XCTestCase {
         // A relaunch keeps the ordinary tab and drops the private one.
         app.terminate()
         app.launchArguments.removeAll { $0 == "-uiTestingResetStore" }
+        app.logsBesideShots()
         app.launch()
         land("relaunched") { address.waitForExistence(timeout: 20) }
         XCTAssertFalse(
@@ -71,7 +73,7 @@ final class PrivateTabTests: XCTestCase {
         field.tap()
         // Keys up first: text typed before the keyboard is ready loses its first characters.
         _ = app.keyboards.firstMatch.waitForExistence(timeout: 5)
-        field.typeText(address + "\n")
+        field.typeTextLogged(address + "\n")
     }
 
     private func land(

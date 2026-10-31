@@ -30,6 +30,7 @@ final class MenuTests: XCTestCase {
         ]
         shots = ShotWriter(test: self, prefix: appearance.lowercased())
         self.app = app
+        app.logsBesideShots()
         app.launch()
 
         // Reading, on the stub page.
@@ -39,7 +40,7 @@ final class MenuTests: XCTestCase {
         field.tap()
         // Keys up first: text typed before the keyboard is ready loses its first characters.
         _ = app.keyboards.firstMatch.waitForExistence(timeout: 5)
-        field.typeText("http://127.0.0.1:53117/page\n")
+        field.typeTextLogged("http://127.0.0.1:53117/page\n")
         let address = app.buttons["bar.url"]
         land("reading") { address.waitForExistence(timeout: 20) }
 

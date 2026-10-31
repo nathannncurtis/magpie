@@ -100,6 +100,7 @@ final class ModsTests: XCTestCase {
             app.launchArguments.append("-uiTestingHoldInstallCheck")
         }
         self.app = app
+        app.logsBesideShots()
         app.launch()
     }
 
@@ -114,7 +115,7 @@ final class ModsTests: XCTestCase {
     /// Types a link and returns, which reads it at once.
     private func typeLink(_ link: String) {
         sheetField.tap()
-        sheetField.typeText(link)
+        sheetField.typeTextLogged(link)
         sheetField.typeText("\n")
     }
 

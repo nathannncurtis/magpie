@@ -62,6 +62,7 @@ final class ListsTests: XCTestCase {
             "-AppleInterfaceStyle", appearance,
         ]
         let shots = ShotWriter(test: self, prefix: appearance.lowercased())
+        app.logsBesideShots()
         app.launch()
 
         // 01 · the seeded archive: yesterday, the week, and a month band.
@@ -105,7 +106,7 @@ final class ListsTests: XCTestCase {
         field.tap()
         // Keys up first: text typed before the keyboard is ready loses its first characters.
         _ = app.keyboards.firstMatch.waitForExistence(timeout: 5)
-        field.typeText("season")
+        field.typeTextLogged("season")
         XCTAssertFalse(
             any(app, "archive.row.rebase vs merge · git docs").exists,
             "an unmatched row, filtered out")
@@ -119,6 +120,7 @@ final class ListsTests: XCTestCase {
             "-uiTesting", "-uiTestingResetStore", "-uiTestingSkipOnboarding", "-uiTestingSurface=archive",
             "-uiTestingListState=empty", "-AppleInterfaceStyle", appearance,
         ]
+        app.logsBesideShots()
         app.launch()
         wait(
             any(app, "archive.empty"), timeout: 20, "the empty archive",
@@ -137,6 +139,7 @@ final class ListsTests: XCTestCase {
             "-AppleInterfaceStyle", appearance,
         ]
         let shots = ShotWriter(test: self, prefix: appearance.lowercased())
+        app.logsBesideShots()
         app.launch()
 
         // 01 · the seeded list: the folders, then a mix of saved pages.
@@ -196,6 +199,7 @@ final class ListsTests: XCTestCase {
             "-uiTesting", "-uiTestingResetStore", "-uiTestingSkipOnboarding", "-uiTestingSurface=bookmarks",
             "-uiTestingListState=empty", "-AppleInterfaceStyle", appearance,
         ]
+        app.logsBesideShots()
         app.launch()
         wait(
             any(app, "bookmarks.empty"), timeout: 20, "the empty bookmarks",
