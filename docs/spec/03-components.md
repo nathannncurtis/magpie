@@ -91,6 +91,7 @@ The sheet **hugs its content**: 14 pt between the last group and the bar, never 
 - A live snapshot of the page, radius 26, at 62% of the screen scale.
 - Ring: 5 pt of white at 38%, plus a 0.75 pt outer hairline of white at 75%, plus the soft shadow. Dark: white at 6% and 16%.
 - Above each card: a `TabLabel` (16 pt favicon plus the title in caption semibold, one line, truncated).
+- VoiceOver: the card speaks as one element (title, host, button, with a Close Tab action); the face inside is a single named element — the picture the UI tests wait on — never a bare second stop.
 - Gestures:
   - fling up to close (see 05)
   - tap to open
@@ -98,7 +99,7 @@ The sheet **hugs its content**: 14 pt between the last group and the bar, never 
 **TabStack**: cards sit side by side on the mist, 14 pt apart, with the current card centred and its neighbours peeking in from the screen edges.
 - Bottom row, inset 16 from the sides and 34 above the bottom: `ArchivedChip` ("Archived · 12") on the left, the count ("3 open", `small`, `labelOnMist`) in the middle, and `PlusButton` on the right.
 
-**ArchivedChip**: glass capsule, 46 tall, padding 0 × 16, with an `archivebox` icon and the label in `row` semibold.
+**ArchivedChip**: glass capsule, at least 46 tall (growing with Dynamic Type), padding 0 × 16, with an `archivebox` icon and the label in `row` semibold.
 
 **PlusButton**: 54 × 54 ink glass circle (paper in dark) with a 22 pt plus.
 
@@ -153,7 +154,7 @@ Photos come only from the source pages' `og:image` or largest article image. The
 
 **DayHeader**: the `label` style in `labelOnMist`: "YESTERDAY", "EARLIER THIS WEEK".
 
-**FolderRow**: a 28 × 24 folder glyph tinted per folder, then the name, the count and a chevron. Each folder glyph is a two-tone tinted folder (back panel dark, front panel light). The user picks a tint from 6 presets. Defaults, as on the board (dark / light):
+**FolderRow**: a 28 × 24 folder glyph tinted per folder, then the name, the count and a chevron. The row is at least 44 tall. Each folder glyph is a two-tone tinted folder (back panel dark, front panel light). The user picks a tint from 6 presets. Defaults, as on the board (dark / light):
 - Kitchen: orange #F08A2A / #FFC27A
 - Reading: blue #2F6BDF / #7FB0FA
 - Work: sage #5E7550 / #9FB38E
@@ -161,14 +162,14 @@ Photos come only from the source pages' `og:image` or largest article image. The
 **SkimPageRow**: like ListRow, but the leading 26 pt tile is the mark on `ink` (radius 7) and the trailing element is a `FaviconStack` of its sources at 18 pt. The subtitle reads "Skim page · Kitchen".
 
 **BottomSearchPill**
-- Glass capsule, 54 tall, inset 14 from the sides and 26 above the bottom (see 01 Spacing).
+- Glass capsule, at least 54 tall (growing with Dynamic Type), inset 14 from the sides and 26 above the bottom (see 01 Spacing).
 - Contents: a search icon and the placeholder in `row` `textOnMistSecondary`.
 - Focused, it lifts itself clear of the keyboard, keeping its 26 pt foot clearance above the keys.
 - The list behind it uses the soft scroll-edge effect.
 
 ## Mods
 
-**SegmentedControl**: glass capsule, 38 tall, inset 3 inside the capsule. Segments: "Directory" and "Installed · N". The selected segment is solid `card` with a small shadow (dark: white at 16%).
+**SegmentedControl**: glass capsule, 38 tall, inset 3 inside the capsule. Segments: "Directory" and "Installed · N". The selected segment is solid `card` with a small shadow (dark: white at 16%). Each segment's tap target is at least 44 tall, standing taller than the track itself.
 
 **FeaturedModCard**: solid card, radius 24.
 - On top, a 150 pt preview showing what the mod does. For Google Answer Box, this is the drawn mini Google result with the answer card ringed.

@@ -250,12 +250,21 @@ final class ReadingSession {
         !page.backForwardList.backList.isEmpty
     }
 
-    /// The site's icon link, for the tab's card and labels. Falls back to the touch icon
-    /// a page declares for elsewhere; "" when the page declares none.
+    /// The site's icon link, for the tab's card and labels: an icon the page declares,
+    /// preferring one that can be drawn — an SVG is skipped, whatever carries it — then
+    /// the touch icon a page declares for elsewhere, and the site's own /favicon.ico
+    /// when the page declares nothing usable.
     private static let pageIconScript = #"""
-        const icon = document.querySelector("link[rel~='icon']")
-            || document.querySelector("link[rel='apple-touch-icon']");
-        return icon ? icon.href : new URL("/favicon.ico", location.href).href;
+        const isRaster = (link) => {
+            if (!link.href) return false;
+            if ((link.type || "").toLowerCase() === "image/svg+xml") return false;
+            return !link.href.toLowerCase().split("?")[0].split("#")[0].endsWith(".svg");
+        };
+        const declared = document.querySelectorAll("link[rel~='icon']");
+        for (const link of declared) { if (isRaster(link)) return link.href; }
+        const touch = document.querySelectorAll("link[rel='apple-touch-icon']");
+        for (const link of touch) { if (isRaster(link)) return link.href; }
+        return new URL("/favicon.ico", location.href).href;
         """#
 
     /// Starts the session: the first load, then the standing watch on navigation events.
@@ -337,6 +346,9 @@ final class ReadingSession {
     ) {
         failure = nil
         pageBackground = nil
+        // The page being left does not keep speaking for the one arriving: its icon
+        // goes with it, read afresh once the new page has settled.
+        pageIconURL = nil
         loadTask?.cancel()
         SnapshotLog.event("load \(logTag) \(requestedURL?.absoluteString ?? "nil")")
         let sequence = events()
@@ -442,16 +454,17 @@ final class ReadingSession {
     }
 
     /// Reads the site's icon link from the page once per site, so the tab's card and
-    /// labels can show it.
+    /// labels can show it. The site is remembered only once its link has been read —
+    /// a page whose reading fails keeps its place among the unread, to try again.
     private func readPageIcon() async {
         guard let host = page.url?.host(), host != iconHost else { return }
-        iconHost = host
         guard
             let result = try? await page.callJavaScript(
                 Self.pageIconScript, contentWorld: .defaultClient),
             let href = result as? String,
             let url = URL(string: href), url.scheme != nil
         else { return }
+        iconHost = host
         pageIconURL = url
     }
 

@@ -5,6 +5,10 @@ struct ArchivedChip: View {
     let count: Int
     var action: () -> Void
 
+    /// The chip's height at the default size, growing with Dynamic Type the way its
+    /// label does.
+    @ScaledMetric(relativeTo: .subheadline) private var height = ChipMetrics.height
+
     private enum ChipMetrics {
         static let height: CGFloat = 46
         static let horizontalPadding: CGFloat = 16
@@ -23,7 +27,7 @@ struct ArchivedChip: View {
             }
             .foregroundStyle(Palette.textPrimary)
             .padding(.horizontal, ChipMetrics.horizontalPadding)
-            .frame(height: ChipMetrics.height)
+            .frame(minHeight: height)
             .glassEffect(.regular.interactive(), in: .capsule)
         }
         .buttonStyle(.plain)
