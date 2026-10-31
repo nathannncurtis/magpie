@@ -685,6 +685,18 @@
         }
       }
     },
+    "Installed just now" : {
+      "comment" : "The confirmation row's line when an install from a link lands",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installed just now"
+          }
+        }
+      }
+    },
     "Installed · %lld" : {
       "comment" : "The mods screen's installed segment, with its count",
       "extractionState" : "manual",

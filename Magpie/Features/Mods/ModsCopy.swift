@@ -15,6 +15,8 @@ enum ModsCopy {
     static var popularThisWeek: String { String(localized: "Popular this week") }
     static var get: String { String(localized: "Get") }
     static var installed: String { String(localized: "Installed") }
+    /// The confirmation row's line while a sheet install lands (06).
+    static var installedJustNow: String { String(localized: "Installed just now") }
     static var installing: String { String(localized: "Installing") }
     static var installFromURL: String { String(localized: "Install from URL") }
     static var notReviewed: String { String(localized: "Not reviewed") }
