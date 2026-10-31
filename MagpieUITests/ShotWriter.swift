@@ -68,4 +68,26 @@ extension XCUIElement {
         }
         return false
     }
+
+    /// Types into a field and logs what landed beside what was sent, so a dropped key shows
+    /// at the keystroke instead of as a wrong page steps later. A trailing return goes on
+    /// its own, after the field has been read.
+    func typeTextLogged(_ text: String) {
+        let body = text.hasSuffix("\n") ? String(text.dropLast()) : text
+        typeText(body)
+        let held = exists ? (value as? String ?? "<no value>") : "<field gone>"
+        print("=== typed \"\(body)\"; field holds \"\(held)\" ===")
+        if body != text { typeText("\n") }
+    }
+}
+
+@MainActor
+extension XCUIApplication {
+
+    /// Hands the app the run's shots directory, so its snapshot log lands beside the shots.
+    func logsBesideShots() {
+        if let shotsDir = ProcessInfo.processInfo.environment["MAGPIE_SHOTS_DIR"] {
+            launchEnvironment["MAGPIE_SHOTS_DIR"] = shotsDir
+        }
+    }
 }
