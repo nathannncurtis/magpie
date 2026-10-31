@@ -139,12 +139,14 @@ struct SkimControlBar: View {
                     .frame(width: 46, height: 46)
                     .contentShape(Rectangle())
             }
+            .accessibilityLabel(Text("Share"))
             .accessibilityIdentifier("skim.share")
         } else {
             CircleButton(systemName: "square.and.arrow.up") {}
                 .foregroundStyle(Palette.textPrimary.opacity(0.35))
                 .frame(width: 46, height: 46)
                 .disabled(true)
+                .accessibilityLabel(Text("Share"))
         }
     }
 }
@@ -407,7 +409,7 @@ struct CitationBadge: View {
     }
 
     var body: some View {
-        Text("\(number)")
+        Text(verbatim: "\(number)")
             .font(.system(size: Layout.numberSize, weight: .semibold))
             .foregroundStyle(.white)
             .frame(width: Layout.size, height: Layout.size)
