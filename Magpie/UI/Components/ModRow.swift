@@ -5,6 +5,8 @@ import SwiftUI
 /// (03 · Mod row).
 struct ModRow: View {
 
+    @Environment(\.colorScheme) private var colorScheme
+
     /// What sits at the row's trailing edge.
     enum Trailing {
         case get(action: () -> Void)
@@ -133,7 +135,8 @@ struct ModRow: View {
     private var removeBehind: some View {
         Text(String(localized: "Remove"))
             .font(Typography.rowTitle)
-            .foregroundStyle(.white)
+            // White on light teal; dark's bright teal needs dark text (1.5:1 in white).
+            .foregroundStyle(colorScheme == .dark ? Palette.onInk : .white)
             .frame(width: Layout.swipeOpenWidth, alignment: .center)
             .frame(maxHeight: .infinity)
             // Rounded to the card's radius, the shape that covers it: a square
