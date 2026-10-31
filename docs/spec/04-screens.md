@@ -66,7 +66,7 @@ Later launches restore the last tab, with no animation.
 - **Header:** "Mods" in `screenTitle`, with "Done" at top right.
 - **Segments:** Directory | Installed · N.
 - **Directory tab:** the `FeaturedModCard` (Google Answer Box), then "Popular this week" (`sectionTitle`) and a card of `ModRow`s.
-- **Directory install:** while the entry's file is fetched and checked, the row's Get gives way to the 24 pt `MarkSpinner` (05 · 06). An install that does not land shows one plain line under the card, with Get as the way to try again.
+- **Directory install:** while the entry's file is fetched and checked, the row's Get gives way to the 24 pt `MarkSpinner` (05 · 06). More than one can run at once, each row carrying its own mark; a Get for an entry already installing does nothing. The install stays on the Directory tab: when it lands, the row's Get becomes a popping `InstalledCheck` in place. An install that does not land shows one plain line under the card, with Get as the way to try again.
 - **Footer:** the glass `InstallFooter` pill.
 - **Installed tab:** the same rows, each with an on/off toggle and swipe-to-remove.
 - **Directory source:** a JSON index in a public GitHub repo. Every addition is reviewed through a pull request. It is fetched at most once a day.

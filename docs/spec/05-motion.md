@@ -68,8 +68,9 @@ Stagger lists 25–30 ms per item. Content inside a sheet starts 50 ms after the
   1. A 0.96 press scale.
   2. The label is replaced by a 24 pt `MarkSpinner` while the mod is fetched and checked, for at least 600 ms.
   3. A tick replaces the spinner (`snap`), with a success haptic (`.sensoryFeedback(.success)`).
-- **Sheet out:** the sheet drops away (`chrome`, about 0.5 s) and the blur behind it clears along with it.
+- **Sheet out:** the sheet drops away (`chrome`, about 0.5 s) and the blur behind it clears along with it. The preview card and warning stay up through the spinner and the tick.
 - **Lands:** a confirmation row rises 8 pt as it fades in, carrying the `InstalledCheck` pop (`snap`). The "Installed · N" segment ticks over.
+- **Directory installs (Get) never switch segments:** the row's Get becomes the popping `InstalledCheck` in place.
 
 ### 07 · Launch
 - **Trigger:** a cold launch with no open tabs. Later launches restore the last tab, with no animation.

@@ -107,7 +107,7 @@ The sheet **hugs its content**: 14 pt between the last group and the bar, never 
 **SkimQueryBar**
 - Glass capsule, 42 tall, inset 14 from the sides, 4 pt below the status bar's bottom edge (58 pt from the top on the board's phone), so it sits just under the status bar on any device.
 - Contents: a search icon, the query, then a trailing tag of the mark plus "Skim" in caption semibold.
-- Tapping it edits the query.
+- Tapping it edits the query. The capsule carries an invisible 44 pt target: a taller frame around the 42 pt glass.
 
 **PhotoHeader**: chosen by how many photos were found.
 - **3 or more → mosaic.** 300 tall; a 1.55 : 1 grid with a 3 pt gap. The large photo sits on the left; the right column stacks two.
@@ -124,12 +124,14 @@ Photos come only from the source pages' `og:image` or largest article image. The
 
 **SkimSection**: a two-column grid, 30 and the remaining width, with gap 10, padding 0 × 22 and 14 above.
 - **Left column:** an `EmojiTile` (30 × 30, radius 9, `emojiTile` fill, 16 pt emoji).
-- **Right column:** the **Term** in `body` semibold `textPrimary`, then " — ", then the claim in `body`, then one or more `CitationDot`s.
+- **Right column:** the **Term** in `body` semibold `textPrimary`, then " — ", then the claim in `body`, then one or more inline citation digits.
 
-**CitationDot**: a 17 pt `sheen` circle with the source number in white, 10 pt semibold. Tapping it scrolls to that source card, and a long press previews the page. In a claim's text the circled-digit glyphs are links a finger follows while reading; they take `teal` in light (the sheen's green falls short of contrast on the skim paper) and the sheen's mid green in dark. On their own (the source cards' site lines) the dot carries an invisible 44 pt target.
+**Citation digits**: inside a claim the digits are the circled-digit glyphs (1–10; anything higher in brackets), links a finger follows while reading rather than buttons it aims at, so they carry no 44 pt target of their own — the source card itself is the target. They take `teal` in light (the sheen's green falls short of contrast on the skim paper) and the sheen's mid green in dark, and scale with Dynamic Type beside the claim's `body` text. Tapping one scrolls to its source card.
+
+**CitationBadge**: the 17 pt `sheen` circle with the source number in white, 10 pt semibold, on a source card's site line.
 
 **SourceCard**: solid card, 200 wide, radius 18, padding 8.
-- Contents: a thumbnail (84 tall, radius 12), then the site line (favicon, `CitationDot` and host in `tag`), then the title in `meta` semibold.
+- Contents: a thumbnail (84 tall, radius 12), then the site line (favicon, `CitationBadge` and host in `tag`), then the title in `meta` semibold.
 - Cards sit in a horizontal row under a "Sources" heading.
 
 **SkimControlBar**
@@ -183,7 +185,7 @@ Photos come only from the source pages' `og:image` or largest article image. The
 
 **GetButton**: a capsule with padding 6 × 16, reading "Get" in `meta` bold `teal` on a #EEF0EE fill (dark: white at 10% fill, #5EEAD4 text). The capsule carries an invisible 44 pt target.
 
-**InstalledCheck**: a 30 pt `sheen` circle with a white checkmark. When it first appears it pops with the snap spring (05).
+**InstalledCheck**: a 30 pt `sheen` circle with a white checkmark. It pops with the snap spring (05) when an install lands — on a directory row or the featured card — and stays still on a revisit.
 
 **InstallFooter**: a glass capsule pill, 52 tall, reading "Install from URL" with a link icon.
 
