@@ -95,6 +95,11 @@ struct ReadingBar: View {
 
     @Environment(\.colorScheme) private var colorScheme
 
+    /// The bar's heights follow the type size, as its text does — the pill's host text
+    /// is what sets them.
+    @ScaledMetric(relativeTo: .subheadline) private var fullHeight = Metrics.Bar.readingHeight
+    @ScaledMetric(relativeTo: .subheadline) private var slimHeight = Metrics.Bar.readingSlimHeight
+
     /// How much further in from the screen sides the slim pill sits, past the full bar's
     /// inset (the motion board's 110, minus the 12 it already has).
     private static let slimSideInsetGain: CGFloat = 98
@@ -104,8 +109,7 @@ struct ReadingBar: View {
     }
 
     private var height: CGFloat {
-        Metrics.Bar.readingHeight
-            - (Metrics.Bar.readingHeight - Metrics.Bar.readingSlimHeight) * progress
+        fullHeight - (fullHeight - slimHeight) * progress
     }
 
     private var sideInset: CGFloat {
@@ -116,6 +120,9 @@ struct ReadingBar: View {
         namedGlass
             .padding(.horizontal, sideInset)
             .frame(maxWidth: .infinity)
+            // The bar grows with the type size to a deliberate stop: past the first
+            // accessibility size it would stop being a bar.
+            .dynamicTypeSize(...DynamicTypeSize.accessibility1)
     }
 
     /// The capsule, named for morphing when a namespace is given.

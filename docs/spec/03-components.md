@@ -5,7 +5,7 @@ Each component is one SwiftUI view in `UI/Components/`. Sizes are in points. "Da
 ## Chrome
 
 **ReadingBar**
-- Glass capsule, 60 tall; inset 12 from the screen sides and 26 above the bottom edge (see 01 Spacing). Padding: 4 on the leading side, 5 on the trailing side.
+- Glass capsule, 60 tall; inset 12 from the screen sides and 26 above the bottom edge (see 01 Spacing). Padding: 4 on the leading side, 5 on the trailing side. The 60/38 heights scale with Dynamic Type, capped at the first accessibility size.
 - Contents, left to right:
   - `CircleButton(back)`
   - `URLPill`, which grows to fill
