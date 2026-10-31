@@ -100,7 +100,8 @@ struct MenuSheet: View {
     }
 
     /// The sheet hugs its content and runs on to the bottom edge of the screen, with the
-    /// bar row sitting exactly where the floating bar sat.
+    /// bar row sitting exactly where the floating bar sat. The drag offset rides outside
+    /// the surface, so the glass follows the finger instead of the rows sliding under it.
     private var sheetBody: some View {
         sheetContent
             .frame(maxWidth: .infinity)
@@ -110,6 +111,8 @@ struct MenuSheet: View {
                     namespace: morphNamespace,
                     fillSettled: fillSettled)
             )
+            .offset(y: dragOffset)
+            .gesture(dismissDrag)
             .ignoresSafeArea(edges: .bottom)
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("menu.sheet")
@@ -129,8 +132,6 @@ struct MenuSheet: View {
             .padding(.bottom, Metrics.Menu.barGap)
             block(.bar) { barRow }
         }
-        .offset(y: dragOffset)
-        .gesture(dismissDrag)
     }
 
     // MARK: Quick actions
@@ -175,7 +176,14 @@ struct MenuSheet: View {
         .accessibilityAddTraits(.isButton)
         .accessibilityLabel(Text("Bookmark"))
         .accessibilityValue(
-            model.currentPageIsBookmarked ? Text(String(localized: "Saved")) : Text(""))
+            model.currentPageIsBookmarked ? Text(String(localized: "Saved")) : Text("")
+        )
+        // The long press has no VoiceOver gesture of its own; this action stands in.
+        .accessibilityAction(
+            named: Text(String(localized: "Open bookmarks"))
+        ) {
+            openBookmarks()
+        }
     }
 
     /// The long press on the Bookmark tile: Bookmarks over the page, the menu folded.
@@ -238,11 +246,10 @@ struct MenuSheet: View {
                     get: { model.blocker.blocksCookieBanners },
                     set: { model.blocker.blocksCookieBanners = $0 }))
 
-            MenuRow(icon: .symbol("archivebox"), title: "Archive inactive tabs") {
-                MenuArchiveValue(
-                    interval: model.preferences.archiveInterval,
-                    choose: { model.preferences.archiveInterval = $0 })
-            }
+            MenuArchiveRow(
+                interval: model.preferences.archiveInterval,
+                choose: { model.preferences.archiveInterval = $0 }
+            )
             .divided()
             .accessibilityIdentifier("menu.archive")
         }
@@ -282,13 +289,9 @@ struct MenuSheet: View {
     private func toggleRow(
         icon: SettingsIcon, title: String, id: String, isDivided: Bool, isOn: Binding<Bool>
     ) -> some View {
-        MenuRow(icon: icon, title: title, isDivided: isDivided) {
-            Toggle(title, isOn: isOn)
-                .toggleStyle(SettingsToggleStyle())
-                .labelsHidden()
-                .accessibilityLabel(title)
-                .accessibilityIdentifier(id)
-        }
+        MenuToggleRow(icon: icon, title: title, isOn: isOn)
+            .divided(isDivided)
+            .accessibilityIdentifier(id)
     }
 
     // MARK: The pinned bar row
@@ -337,7 +340,11 @@ struct MenuSheet: View {
                 let distance = change.translation.height
                 let fling = change.predictedEndTranslation.height - distance
                 if distance > Layout.dismissDistance || fling > Layout.dismissFling {
-                    onDismiss()
+                    // The sheet shrinks back into the bar on the same spring, wherever
+                    // the finger left it.
+                    withAnimation(Springs.chrome.animation) {
+                        onDismiss()
+                    }
                 } else {
                     withAnimation(Springs.chrome.animation) {
                         dragOffset = 0

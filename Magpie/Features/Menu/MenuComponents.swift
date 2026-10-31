@@ -1,8 +1,8 @@
 import SwiftUI
 
 /// The pieces the menu is built from (03 · Menu): the grabber, the quick-action tiles,
-/// the groups and their rows. The icon square, the toggle and the chevron come from
-/// Settings' pieces, so the two screens read as one.
+/// the groups and their rows. The icon square and the chevron come from Settings'
+/// pieces, so the two screens read as one.
 ///
 /// The menu's numbers: rows 50 tall, groups inset 14 with radius 20, tiles 64 tall with
 /// radius 18, gaps 8 between tiles and 10 between groups.
@@ -107,7 +107,7 @@ struct MenuGroup<Content: View>: View {
 }
 
 /// One row of a menu group: an icon square, the label, and what trails — a toggle or a
-/// value with its chevron. 50 tall, divided from the row above by a hairline.
+/// value with its chevron. At least 50 tall, divided from the row above by a hairline.
 struct MenuRow<Trailing: View>: View {
     let icon: SettingsIcon
     let title: String
@@ -137,18 +137,11 @@ struct MenuRow<Trailing: View>: View {
     }
 
     private var inner: some View {
-        HStack(spacing: 12) {
-            IconSquare(icon: icon)
-            Text(title)
-                .font(Typography.row)
-                .foregroundStyle(Palette.textPrimary)
-            Spacer(minLength: 12)
-            trailing()
-        }
-        .frame(height: Metrics.Spacing.rowMenu)
-        .padding(.horizontal, 14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .contentShape(.rect)
+        MenuRowFace(icon: icon, title: title, trailing: trailing)
+            .frame(minHeight: Metrics.Spacing.rowMenu)
+            .padding(.horizontal, 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(.rect)
     }
 
     /// Makes the row a tappable one.
@@ -166,11 +159,71 @@ struct MenuRow<Trailing: View>: View {
     }
 }
 
-/// The archive row's trailing value (03 · Menu): the interval, with the ⌃⌄ stepper that
-/// offers the same choices Settings' picker does.
-struct MenuArchiveValue: View {
+/// What a menu row's face holds: the icon square, the label, then what trails. The plain
+/// row, the toggle row and the archive row wear it alike.
+private struct MenuRowFace<Trailing: View>: View {
+    let icon: SettingsIcon
+    let title: String
+    @ViewBuilder var trailing: () -> Trailing
+
+    var body: some View {
+        HStack(spacing: 12) {
+            IconSquare(icon: icon)
+            Text(title)
+                .font(Typography.row)
+                .foregroundStyle(Palette.textPrimary)
+            Spacer(minLength: 12)
+            trailing()
+        }
+    }
+}
+
+/// A menu row whose whole face flips the switch at its end (03 · Menu): the system
+/// `Toggle`, tinted `ink`, carrying the row's icon square and label as its own label, so
+/// a tap anywhere from the icon to the switch flips it. `.divided()` draws the hairline
+/// above it, as on the other rows.
+struct MenuToggleRow: View {
+    let icon: SettingsIcon
+    let title: String
+    let isOn: Binding<Bool>
+    var isDivided = false
+
+    var body: some View {
+        Toggle(isOn: isOn) {
+            MenuRowFace(icon: icon, title: title) { EmptyView() }
+                .frame(minHeight: Metrics.Spacing.rowMenu)
+                .contentShape(.rect)
+        }
+        .toggleStyle(.switch)
+        .tint(Palette.ink)
+        .padding(.horizontal, 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .overlay(alignment: .top) {
+            if isDivided {
+                Rectangle()
+                    .fill(Palette.separator)
+                    .frame(height: 0.5)
+                    .padding(.horizontal, 14)
+            }
+        }
+        .accessibilityLabel(title)
+    }
+
+    /// Draws the hairline above this row.
+    func divided(_ divided: Bool = true) -> Self {
+        var copy = self
+        copy.isDivided = divided
+        return copy
+    }
+}
+
+/// The archive row (03 · Menu): the whole row opens the interval picker, whose choices
+/// are Settings' own; the trailing value's ⌃⌄ says the row picks. `.divided()` draws the
+/// hairline above it, as on the other rows.
+struct MenuArchiveRow: View {
     let interval: TimeInterval
     let choose: (TimeInterval) -> Void
+    var isDivided = false
 
     var body: some View {
         Menu {
@@ -180,16 +233,35 @@ struct MenuArchiveValue: View {
                 }
             }
         } label: {
-            HStack(spacing: 6) {
-                Text(String(localized: "After \(Preferences.archiveIntervalLabel(interval))"))
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(.system(size: 13, weight: .medium))
+            MenuRowFace(icon: .symbol("archivebox"), title: "Archive inactive tabs") {
+                HStack(spacing: 6) {
+                    Text(String(localized: "After \(Preferences.archiveIntervalLabel(interval))"))
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.system(size: 13, weight: .medium))
+                }
+                .font(Typography.row)
+                .foregroundStyle(Palette.textSecondary)
             }
-            .font(Typography.row)
-            .foregroundStyle(Palette.textSecondary)
+            .frame(minHeight: Metrics.Spacing.rowMenu)
+            .padding(.horizontal, 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(.rect)
         }
-        .accessibilityLabel(Text("Archive inactive tabs"))
+        .overlay(alignment: .top) {
+            if isDivided {
+                Rectangle()
+                    .fill(Palette.separator)
+                    .frame(height: 0.5)
+                    .padding(.horizontal, 14)
+            }
+        }
+    }
+
+    /// Draws the hairline above this row.
+    func divided(_ divided: Bool = true) -> Self {
+        var copy = self
+        copy.isDivided = divided
+        return copy
     }
 }
 

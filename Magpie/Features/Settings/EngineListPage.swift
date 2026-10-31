@@ -37,6 +37,7 @@ struct EngineListPage: View {
             preferences.searchEngine = engine
             dismiss()
         }
+        .accessibilityAddTraits(preferences.searchEngine.id == engine.id ? .isSelected : [])
     }
 
     private var otherRow: some View {
@@ -51,14 +52,13 @@ struct EngineListPage: View {
                 withAnimation(.easeInOut(duration: 0.2)) { showsOtherField = true }
             }
         }
+        .accessibilityAddTraits(preferences.searchEngine.id == "other" ? .isSelected : [])
     }
 
     private func checkmark(if selected: Bool) -> some View {
         Group {
             if selected {
-                Image(systemName: "checkmark")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Palette.textPrimary)
+                SettingsCheckmark()
             }
         }
     }
@@ -99,6 +99,8 @@ struct EngineListPage: View {
             Button("Use this URL") { saveOther() }
                 .font(Typography.buttonPill)
                 .foregroundStyle(otherIsValid ? Palette.teal : Palette.textTertiary)
+                .frame(minHeight: 44, alignment: .leading)
+                .contentShape(.rect)
                 .disabled(!otherIsValid)
                 .accessibilityIdentifier("settings.otherSave")
         }

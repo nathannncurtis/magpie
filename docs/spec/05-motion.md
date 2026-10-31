@@ -35,7 +35,7 @@ Stagger lists 25–30 ms per item. Content inside a sheet starts 50 ms after the
 - **Morph:** same as 01, but the bar row stays pinned at the base and never moves. The menu grows up from it and hugs its content. Spring: `chrome`; fill turns solid.
 - **Content:** groups stagger in from the bottom up, 25 ms apart, rising 12 pt as they fade in.
 - **••• state:** shows the pressed fill while the menu is open.
-- **Dismiss:** tap •••, swipe down, or tap the page.
+- **Dismiss:** tap •••, swipe down, or tap the page. The whole sheet follows the swipe down, glass and all, and shrinks back into the bar on the same spring.
 
 ### 03 · Tab stack
 - **Trigger:** tap the tab count.

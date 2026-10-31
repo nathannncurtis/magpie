@@ -75,14 +75,14 @@ The sheet **hugs its content**: 14 pt between the last group and the bar, never 
 - Rows, as on the board:
   - Block ads & trackers [toggle]
   - Block cookie banners [toggle]
-  - Archive inactive tabs [After 1 day]
+  - Archive inactive tabs [After 1 day] — the whole row opens the interval picker
   - Search engine [DuckDuckGo ›]
   - Skim for me [toggle]
   - Settings [›], added 2026-10-30; this row isn't on the board yet
 
 **IconSquare**: 30 × 30, radius 9, `ink` fill with a `onInk` 16 pt icon. Dark: paper fill with ink icon.
 
-**Toggle**: the system `Toggle` with `.tint(ink)`. In dark the tint is paper, and the knob turns ink if the API allows; if not, keep the system knob.
+**Toggle**: the system `Toggle` with `.tint(ink)`. In dark the tint is paper, and the knob turns ink if the API allows; if not, keep the system knob. The whole row flips the switch, not just the knob.
 
 ## Tabs
 
@@ -192,11 +192,11 @@ Photos come only from the source pages' `og:image` or largest article image. The
 
 **EngineTile**
 - Glass, 92 tall, radius 20, padding 12 × 14.
-- Contents: the real favicon (30 pt, radius 8) at top left; the name in `row` semibold and a one-line note in `small` at the bottom.
+- Contents: the real favicon (30 pt, radius 8) at top left; the name in `row` semibold and a one-line note in `small` at the bottom (wrapping when type grows).
 - **Selected:** a 2 pt `ink` ring, a 22 pt `ink` check badge at top right, and a more opaque fill.
 - **Other tile:** no glass, just a 1 pt `ink` 14% outline and a generic icon on a `fill` square.
 
-**PrimaryCTA**: an ink glass capsule, 54 tall, full width minus 32, with `button` text. In dark it is paper.
+**PrimaryCTA**: an ink glass capsule, 54 tall, full width minus 32, with semibold text that scales with Dynamic Type. In dark it is paper.
 
 ## Settings
 
@@ -204,4 +204,4 @@ Photos come only from the source pages' `og:image` or largest article image. The
 
 **DefaultBrowserCard**: a SettingsGroup-styled card that reads "Make Magpie your default browser" / "Links from other apps open here. Set in iOS Settings." with a trailing ink "Open" capsule.
 - The "Open" button calls `UIApplication.openDefaultApplicationsSettingsURLString`.
-- The card is shown only until Magpie is the default browser; check with `UIApplication.shared.isDefault(.webBrowser)`.
+- The card is shown only until Magpie is the default browser; check with `UIApplication.shared.isDefault(.webBrowser)`, again whenever the app returns to the foreground.

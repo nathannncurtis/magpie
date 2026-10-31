@@ -125,13 +125,9 @@ struct SettingsScreen: View {
     private func toggleRow(
         icon: SettingsIcon, title: String, id: String, isDivided: Bool, isOn: Binding<Bool>
     ) -> some View {
-        SettingsRow(icon: icon, title: title, isDivided: isDivided) {
-            Toggle(title, isOn: isOn)
-                .toggleStyle(SettingsToggleStyle())
-                .labelsHidden()
-                .accessibilityLabel(title)
-                .accessibilityIdentifier(id)
-        }
+        SettingsToggleRow(icon: icon, title: title, isOn: isOn)
+            .divided(isDivided)
+            .accessibilityIdentifier(id)
     }
 
     private func rowValue(_ text: String) -> some View {
@@ -142,8 +138,11 @@ struct SettingsScreen: View {
 
     private var done: some View {
         Button("Done") { model.closeSettings() }
-            .font(.system(size: 15.5, weight: .semibold))
+            .font(.system(size: 15.5, weight: .semibold, relativeTo: .body))
             .foregroundStyle(Palette.textPrimary)
+            .padding(.leading, 8)
+            .frame(minHeight: 44)
+            .contentShape(.rect)
             .accessibilityIdentifier("settings.done")
     }
 
@@ -213,10 +212,12 @@ struct SettingsScaffold<Trailing: View, Content: View>: View {
                 Button {
                     dismiss()
                 } label: {
+                    // The glyph holds its place in the 36 pt bar; the 44 pt target
+                    // around it spills over harmlessly.
                     Image(systemName: "chevron.backward")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(.system(size: 16, weight: .medium, relativeTo: .body))
                         .foregroundStyle(Palette.textPrimary)
-                        .frame(width: 36, height: 36)
+                        .frame(width: 44, height: 44)
                         .contentShape(.rect)
                 }
                 .accessibilityLabel("Back")
