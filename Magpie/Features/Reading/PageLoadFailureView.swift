@@ -23,7 +23,6 @@ struct PageLoadFailureView: View {
     var body: some View {
         VStack(spacing: Self.gap) {
             GlobeWithSlash()
-                .foregroundStyle(Palette.textTertiary)
             Text(failure.title)
                 .font(.system(size: Self.titleSize, weight: .semibold))
                 .foregroundStyle(Palette.textPrimary)
@@ -40,7 +39,6 @@ struct PageLoadFailureView: View {
                     .padding(.horizontal, Self.buttonPaddingH)
                     .frame(minHeight: Self.buttonHeight)
                     .background(Capsule().fill(Palette.ink))
-                    .contentShape(.rect)
             }
             .buttonStyle(.plain)
             .padding(.top, Self.buttonGap)
@@ -67,6 +65,7 @@ private struct GlobeWithSlash: View {
     var body: some View {
         Image(systemName: "globe")
             .font(.system(size: Self.globeSize, weight: .medium))
+            .foregroundStyle(Palette.textTertiary)
             .overlay {
                 Capsule()
                     .fill(Palette.textTertiary)
