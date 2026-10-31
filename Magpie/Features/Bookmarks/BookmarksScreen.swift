@@ -24,8 +24,10 @@ struct BookmarksScreen: View {
         static let titleBottom: CGFloat = 10
         static let listBottomClearance: CGFloat = 100
         static let backIcon: CGFloat = 20
-        /// The text's leading edge: the row inset, the glyph, and the gap after it.
-        static let separatorInset: CGFloat = Metrics.Spacing.insetList + 26 + 12
+        /// The least a control measures, so a tap never lands on less.
+        static let tapTarget: CGFloat = 44
+        /// A folder row's text leading edge: the glyph and the gap after it.
+        static let folderSeparatorInset: CGFloat = 28 + 12
     }
 
     // MARK: Data
@@ -67,6 +69,9 @@ struct BookmarksScreen: View {
                 )
                 .padding(.horizontal, Metrics.Spacing.insetFloating)
                 .padding(.bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset))
+                // The pill runs on behind the keys; the padding above, read off the safe
+                // area, is what lifts it onto them.
+                .ignoresSafeArea(.keyboard, edges: .bottom)
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("bookmarks.search")
             }
@@ -76,13 +81,24 @@ struct BookmarksScreen: View {
         } action: {
             bottomInset = $0
         }
-        .ignoresSafeArea(edges: .bottom)
+        .ignoresSafeArea(.container, edges: .bottom)
         .environment(\.editMode, .constant(editing ? .active : .inactive))
     }
 
     /// No pill when there is nothing to search, and none over a folder's own list.
     private var pillWanted: Bool {
         openFolder == nil && !store.bookmarks.isEmpty
+    }
+
+    /// What a search shows when it matches nothing: the pill stays, to take the query back.
+    private var noResults: some View {
+        EmptyListState(
+            icon: "magnifyingglass",
+            title: String(localized: "No results"),
+            message: String(localized: "No bookmarks match that search.")
+        )
+        .ignoresSafeArea(edges: .top)
+        .accessibilityIdentifier("bookmarks.results.empty")
     }
 
     private var pushTransition: AnyTransition {
@@ -111,6 +127,8 @@ struct BookmarksScreen: View {
                 )
                 .ignoresSafeArea(edges: .top)
                 .accessibilityIdentifier("bookmarks.empty")
+            } else if searching && visibleBookmarks.isEmpty {
+                noResults
             } else {
                 list
             }
@@ -161,10 +179,10 @@ struct BookmarksScreen: View {
                 name: folder.name, tint: folder.tint,
                 count: store.count(inFolder: folder.id)
             )
+            .padding(.horizontal, Metrics.Spacing.insetList)
             .overlay(alignment: .top) {
                 separator(visible: index > 0)
             }
-            .padding(.horizontal, Metrics.Spacing.insetList)
             .rowPress { folderTapped(folder) }
             .accessibilityAddTraits(.isButton)
             .accessibilityIdentifier("bookmarks.folder.\(folder.name)")
@@ -213,13 +231,14 @@ struct BookmarksScreen: View {
             Image(systemName: "plus")
                 .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(Palette.teal)
-            Text("New folder")
+            Text(String(localized: "New folder"))
                 .font(Typography.rowTitle)
                 .foregroundStyle(Palette.textPrimary)
             Spacer()
         }
         .padding(.vertical, 8)
         .padding(.horizontal, Metrics.Spacing.insetList)
+        .frame(minHeight: ScreenMetrics.tapTarget)
         .rowPress { store.addDefaultFolder() }
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("bookmarks.newFolder")
@@ -287,7 +306,7 @@ struct BookmarksScreen: View {
                 leading
                 Spacer()
             }
-            .frame(height: ScreenMetrics.navHeight)
+            .frame(minHeight: ScreenMetrics.navHeight)
             .padding(.leading, ScreenMetrics.navLeading)
             .padding(.trailing, ScreenMetrics.navTrailing)
             Text(title)
@@ -303,13 +322,20 @@ struct BookmarksScreen: View {
 
     private var editButton: some View {
         Button(
-            editing ? String(localized: "Done") : String(localized: "Edit"),
             action: {
                 withAnimation(reduceMotion ? Springs.smooth : Springs.settle.animation) {
                     editing.toggle()
                 }
             }
-        )
+        ) {
+            Text(editing ? String(localized: "Done") : String(localized: "Edit"))
+                .frame(
+                    minWidth: ScreenMetrics.tapTarget,
+                    minHeight: ScreenMetrics.tapTarget,
+                    alignment: .leading
+                )
+                .contentShape(.rect)
+        }
         .font(Typography.buttonPill)
         .foregroundStyle(Palette.textPrimary)
         .accessibilityIdentifier("bookmarks.edit")
@@ -320,7 +346,8 @@ struct BookmarksScreen: View {
             Image(systemName: "chevron.backward")
                 .font(.system(size: ScreenMetrics.backIcon, weight: .medium))
                 .foregroundStyle(Palette.textPrimary)
-                .frame(width: ScreenMetrics.navHeight, height: ScreenMetrics.navHeight)
+                .frame(width: ScreenMetrics.tapTarget, height: ScreenMetrics.tapTarget)
+                .contentShape(.rect)
                 .accessibilityLabel(Text("Back"))
         }
         .buttonStyle(.plain)
@@ -337,7 +364,7 @@ struct BookmarksScreen: View {
                 Rectangle()
                     .fill(Palette.separatorOnMist)
                     .frame(height: 0.5)
-                    .padding(.leading, ScreenMetrics.separatorInset)
+                    .padding(.leading, ScreenMetrics.folderSeparatorInset)
             }
         }
     }
@@ -378,6 +405,7 @@ private struct BookmarkRow: View {
                     sourceHosts: sourceHosts)
             }
         }
+        .padding(.horizontal, Metrics.Spacing.insetList)
         .overlay(alignment: .top) {
             if showsSeparator {
                 Rectangle()
@@ -386,7 +414,6 @@ private struct BookmarkRow: View {
                     .padding(.leading, SeparatorMetrics.inset)
             }
         }
-        .padding(.horizontal, Metrics.Spacing.insetList)
         .rowPress(perform: onOpen)
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("bookmarks.row.\(bookmark.title)")
@@ -399,8 +426,8 @@ private struct BookmarkRow: View {
     }
 
     private enum SeparatorMetrics {
-        /// The text's leading edge: the row inset, the favicon, and the gap after it.
-        static let inset: CGFloat = Metrics.Spacing.insetList + 26 + 12
+        /// The text's leading edge: the favicon or tile, and the gap after it.
+        static let inset: CGFloat = 26 + 12
     }
 }
 

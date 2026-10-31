@@ -98,14 +98,14 @@ Later launches restore the last tab, with no animation.
 - **Header:** "Archive" in `screenTitle`, with "Done" at top right.
 - **List:** rows on the mist, grouped by `DayHeader` (Yesterday, Earlier this week…). Each row: favicon, title, site, time.
 - **Actions:** tap a row to restore the tab; swipe to delete.
-- **Search:** the `BottomSearchPill` with "Search archived tabs" searches titles and addresses.
+- **Search:** the `BottomSearchPill` with "Search archived tabs" searches titles and addresses; the pill rides the keyboard.
 - **Retention:** 30 days, then deleted.
 
 ## 10 · Bookmarks
 - **Header:** "Bookmarks", with Edit (top left) and Done.
 - **Folders:** a "Folders" section of `FolderRow`s, then "Recently added", mixing `ListRow`s and `SkimPageRow`s.
 - **Edit mode:** adds "New folder", rename, reorder and delete.
-- **Search:** the `BottomSearchPill` with "Search bookmarks".
+- **Search:** the `BottomSearchPill` with "Search bookmarks"; the pill rides the keyboard.
 
 ## 11 · Settings
 - **Background:** the mist, with grouped boxes (`SettingsGroup`, frosted).
@@ -141,6 +141,7 @@ Every edge state follows one pattern: one plain line saying what happened, and o
 ### 14 · Empty list (Archive; same for Bookmarks and Installed)
 - **Layout:** the header stays. A centred block sits on the mist about 300 pt from the top: a 34 pt line icon in `labelOnMist`, a title in 16 pt semibold, and one line in `meta`.
 - **No search pill** when there's nothing to search.
+- **A search that matches nothing** shows the same block with "No results" and one line naming the list, while the pill stays to take the query back.
 - **Copy:**
   - Archive: "Nothing archived yet" / "Tabs you leave alone for a day land here, and stay for 30 days."
   - Bookmarks and Installed: see 06.

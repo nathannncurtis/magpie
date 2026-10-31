@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// A two-way segmented control on glass: a 38 pt capsule track, 3 pt inset, and the
-/// selected segment a solid card thumb with a small shadow (03 · Segmented control).
+/// A two-way segmented control on glass: a 38 pt capsule track (taller under Dynamic
+/// Type), 3 pt inset, and the selected segment a solid card thumb with a small shadow
+/// (03 · Segmented control).
 struct SegmentedControl: View {
 
     /// Layout numbers from the board.
@@ -14,6 +15,9 @@ struct SegmentedControl: View {
     let options: [String]
     @Binding var selection: Int
 
+    /// The track's height, growing with Dynamic Type the way its labels do.
+    @ScaledMetric(relativeTo: .footnote) private var trackHeight = Layout.height
+
     @Namespace private var thumb
     @Environment(\.colorScheme) private var colorScheme
 
@@ -24,7 +28,7 @@ struct SegmentedControl: View {
             }
         }
         .padding(Layout.inset)
-        .frame(height: Layout.height)
+        .frame(minHeight: trackHeight)
         .glassEffect(.regular, in: .capsule)
     }
 
