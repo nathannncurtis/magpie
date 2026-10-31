@@ -1,0 +1,52 @@
+name: Magpie
+options:
+  bundleIdPrefix: com.magpiebrowser
+  createIntermediateGroups: true
+  deploymentTarget:
+    iOS: "26.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    TARGETED_DEVICE_FAMILY: "1"
+targets:
+  Magpie:
+    type: application
+    platform: iOS
+    sources:
+      - Magpie
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.magpiebrowser.Magpie
+    info:
+      path: Magpie/Support/Info.plist
+      properties:
+        CFBundleDisplayName: Magpie
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIAppFonts:
+          - Fraunces[SOFT,WONK,opsz,wght].ttf
+        ITSAppUsesNonExemptEncryption: false
+  MagpieTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - MagpieTests
+    dependencies:
+      - target: Magpie
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  Magpie:
+    build:
+      targets:
+        Magpie: all
+        MagpieTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - MagpieTests

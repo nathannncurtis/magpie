@@ -6,3 +6,5 @@ build/
 out/
 .build/
 *.ipa
+xcodebuild.log
+shots/
