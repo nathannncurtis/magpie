@@ -169,8 +169,8 @@ final class ContentBlocker {
     /// "Updated 2 h ago" style text for the Settings row.
     // COPY: review
     nonisolated static func updatedText(from date: Date?, now: Date, locale: Locale? = nil) -> String {
-        guard let date else { return "Not updated yet" }
-        if now.timeIntervalSince(date) < 60 { return "Updated just now" }
+        guard let date else { return String(localized: "Not updated yet") }
+        if now.timeIntervalSince(date) < 60 { return String(localized: "Updated just now") }
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         if let locale {
@@ -180,7 +180,8 @@ final class ContentBlocker {
         if relative.hasSuffix("ago") {
             relative.removeLast(3)
         }
-        return "Updated \(relative.trimmingCharacters(in: .whitespaces)) ago"
+        let ago = relative.trimmingCharacters(in: .whitespaces)
+        return String(localized: "Updated \(ago) ago")
     }
 }
 

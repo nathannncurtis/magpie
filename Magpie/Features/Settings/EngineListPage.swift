@@ -11,7 +11,7 @@ struct EngineListPage: View {
     @State private var otherURL = ""
 
     var body: some View {
-        SettingsScaffold(title: "Search engine", showsBack: true) {
+        SettingsScaffold(title: String(localized: "Search engine"), showsBack: true) {
             SettingsGroup {
                 ForEach(Array(SearchEngine.builtins.enumerated()), id: \.element.id) {
                     index, engine in
@@ -41,7 +41,7 @@ struct EngineListPage: View {
     }
 
     private var otherRow: some View {
-        SettingsRow(icon: .otherEngine, title: "Other") {
+        SettingsRow(icon: .otherEngine, title: String(localized: "Other")) {
             checkmark(if: preferences.searchEngine.id == "other")
         }
         .divided(true)

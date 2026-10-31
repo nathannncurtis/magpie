@@ -160,7 +160,7 @@ enum PickableEngine: Identifiable, Equatable {
     var title: String {
         switch self {
         case .builtin(let engine): engine.displayName
-        case .other: "Other"
+        case .other: String(localized: "Other")
         }
     }
 
@@ -168,18 +168,18 @@ enum PickableEngine: Identifiable, Equatable {
     var note: String {
         switch self {
         case .builtin(let engine): Self.notes[engine.id] ?? ""
-        case .other: "Any, by search URL"
+        case .other: String(localized: "Any, by search URL")
         }
     }
 
     private static let notes = [
-        "duckduckgo": "No tracking",
-        "google": "The usual",
-        "brave": "Own index",
-        "kagi": "Paid, no ads",
-        "ecosia": "Plants trees",
-        "startpage": "Google, privately",
-        "bing": "Microsoft",
+        "duckduckgo": String(localized: "No tracking"),
+        "google": String(localized: "The usual"),
+        "brave": String(localized: "Own index"),
+        "kagi": String(localized: "Paid, no ads"),
+        "ecosia": String(localized: "Plants trees"),
+        "startpage": String(localized: "Google, privately"),
+        "bing": String(localized: "Microsoft"),
     ]
 
     /// The grid's fixed order: the seven built-ins, then Other.

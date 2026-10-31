@@ -16,7 +16,7 @@ struct EnginePickerScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            OnboardingStepLabel(title: "Search")
+            OnboardingStepLabel(title: String(localized: "Search"))
                 // 26 below the safe-area top: the gap holds wherever the status bar ends.
                 .padding(.top, 26)
             Text("Where should searches go?")
@@ -85,7 +85,7 @@ struct EnginePickerScreen: View {
     }
 
     private var continueTitle: String {
-        guard let chosenEngine else { return "Continue" }
+        guard let chosenEngine else { return String(localized: "Continue") }
         return String(localized: "Continue with \(chosenEngine.displayName)")
     }
 
