@@ -253,8 +253,10 @@ struct ModsScreen: View {
             icon: mod.icon,
             name: mod.name,
             summary: mod.summary,
-            authorLine: ModsCopy.authorLine(
-                kind: mod.kind, author: mod.author, fromLink: mod.source.isLink),
+            authorLine: landed
+                ? ModsCopy.installedJustNow
+                : ModsCopy.authorLine(
+                    kind: mod.kind, author: mod.author, fromLink: mod.source.isLink),
             notReviewed: mod.source.isLink,
             trailing: installedTrailing(for: mod, landed: landed),
             onRemove: {

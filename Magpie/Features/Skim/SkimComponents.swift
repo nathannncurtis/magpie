@@ -143,7 +143,7 @@ struct SkimControlBar: View {
             .accessibilityIdentifier("skim.share")
         } else {
             CircleButton(systemName: "square.and.arrow.up") {}
-                .foregroundStyle(Palette.textPrimary.opacity(0.35))
+                .foregroundStyle(Palette.textPrimary)
                 .frame(width: 46, height: 46)
                 .disabled(true)
                 .accessibilityLabel(Text("Share"))
