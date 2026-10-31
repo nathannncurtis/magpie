@@ -78,8 +78,6 @@ struct ReadingBar: View {
     /// How far the bar has collapsed, 0 full to 1 slim. The interactive scroll tracking
     /// drives this; without it the bar takes the discrete `isSlim`.
     var collapse: CGFloat?
-    /// Whether the menu is open: the ••• state.
-    var isMenuOpen = false
     /// Whether the page failed to load: the URL pill's error lock.
     var showsLock = false
     /// The page tint the glass takes.
@@ -156,7 +154,7 @@ struct ReadingBar: View {
                     .accessibilityIdentifier("bar.tabs")
             }
             side {
-                CircleButton(systemName: "ellipsis", isPressed: isMenuOpen, action: onMenuTap)
+                CircleButton(systemName: "ellipsis", action: onMenuTap)
                     .accessibilityLabel(Text("Menu"))
                     .accessibilityIdentifier("bar.menu")
             }
