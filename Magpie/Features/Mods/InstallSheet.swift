@@ -340,7 +340,7 @@ struct InstallSheet: View {
         guard !trimmed.isEmpty, !trimmed.contains(" ") else { return nil }
         let full = trimmed.contains("://") ? trimmed : "https://" + trimmed
         guard let url = URL(string: full) else { return nil }
-        return url.scheme == "http" || url.scheme == "https" ? url : nil
+        return ModFetcher.isSecure(url) ? url : nil
     }
 
     // MARK: Installing (05 · 06)
