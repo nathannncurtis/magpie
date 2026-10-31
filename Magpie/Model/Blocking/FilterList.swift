@@ -31,7 +31,7 @@ struct FilterList: Identifiable, Equatable, Sendable {
         ),
         FilterList(
             id: "easylist-cookie",
-            title: "Easylist Cookie List",
+            title: "EasyList Cookie List",
             url: url("https://secure.fanboy.co.nz/fanboy-cookiemonster.txt"),
             ruleSet: .cookieBanners
         ),
