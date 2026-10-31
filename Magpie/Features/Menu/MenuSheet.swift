@@ -39,7 +39,7 @@ struct MenuSheet: View {
     /// Whether the page can go back.
     let canGoBack: Bool
     /// Whether the page failed to load: the URL pill's error lock, as the bar shows it.
-    var showsLock = false
+    var showsWarning = false
     /// Whether Skim runs here: the Skim tile hides when it can't.
     var skimOffered: Bool = true
     /// Where the pinned row's bottom edge sits above the screen bottom: the floating
@@ -312,7 +312,7 @@ struct MenuSheet: View {
                 .disabled(!canGoBack)
                 .accessibilityLabel(Text("Back"))
                 .accessibilityIdentifier("bar.back")
-            URLPill(host: host, showsLock: showsLock, action: onAddressTap)
+            URLPill(host: host, showsWarning: showsWarning, action: onAddressTap)
                 .accessibilityIdentifier("bar.url")
             CircleButton(action: onTabsTap) { TabCount(count: tabCount) }
                 .accessibilityLabel(Text("Tabs"))

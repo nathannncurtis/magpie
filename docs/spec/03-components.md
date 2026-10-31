@@ -16,7 +16,7 @@ Each component is one SwiftUI view in `UI/Components/`. Sizes are in points. "Da
 
 **CircleButton**: a 48 × 48 hit area (minimum 44) holding a 20 pt symbol, with no background of its own. A disabled button keeps its place and its hit area, at 45% opacity.
 
-**URLPill**: shows the host only ("quietweb.org"), in `row` medium, centred. It is 48 tall in the full bar and 30 in the slim bar, and its tap target never drops below 44 tall. A lock icon appears only on errors; HTTPS is assumed. Tapping it opens search.
+**URLPill**: shows the host only ("quietweb.org"), in `row` medium, centred. It is 48 tall in the full bar and 30 in the slim bar, and its tap target never drops below 44 tall. A warning triangle (`exclamationmark.triangle.fill`) appears only on errors; HTTPS is assumed, so no lock ever shows. Tapping it opens search.
 
 **TabCount**: see 01 Icons. It shows the open-tab count. Above 99 it shows "∞".
 

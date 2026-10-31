@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// The URL pill (03 · Chrome): the host alone, centred, which grows to fill the bar.
-/// Tapping it opens search. A lock shows only on errors; HTTPS is assumed otherwise.
+/// Tapping it opens search. A warning triangle shows only on errors; HTTPS is assumed, so
+/// there is never a lock.
 struct URLPill: View {
 
     /// The host to show, already formatted for display.
@@ -10,8 +11,8 @@ struct URLPill: View {
     /// How far the bar has collapsed: 0 in the full bar, 1 in the slim pill.
     var collapse: CGFloat = 0
 
-    /// Whether the error lock shows.
-    var showsLock = false
+    /// Whether the error triangle shows.
+    var showsWarning = false
 
     let action: () -> Void
 
@@ -22,29 +23,29 @@ struct URLPill: View {
     /// The least the pill's tap target measures, whatever its visual height: the slim
     /// pill looks 30 tall and must still take a full-size tap.
     private static let minHitHeight: CGFloat = 44
-    /// The lock glyph, only shown on errors.
-    private static let lockSize: CGFloat = 13
-    /// The gap between the lock and the host.
+    /// The warning glyph, only shown on errors.
+    private static let warningSize: CGFloat = 13
+    /// The gap between the warning and the host.
     private static let gap: CGFloat = 8
 
     private var height: CGFloat {
         Self.fullHeight - (Self.fullHeight - Self.slimHeight) * collapse
     }
 
-    /// The pill's spoken label: the host — never empty — with the failure lock named
+    /// The pill's spoken label: the host — never empty — with the failure named
     /// when the page can't load.
     private var spokenLabel: String {
         let name = host.isEmpty ? String(localized: "Address") : host
-        guard showsLock else { return name }
+        guard showsWarning else { return name }
         return String(localized: "\(name), can't load")
     }
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: Self.gap) {
-                if showsLock {
-                    Image(systemName: "lock.fill")
-                        .font(.system(size: Self.lockSize, weight: .medium))
+                if showsWarning {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: Self.warningSize, weight: .medium))
                         .imageScale(.medium)
                 }
                 ZStack {
