@@ -266,6 +266,9 @@ struct FileSystemModDirectoryCache: ModDirectoryCache {
         if let data = try? JSONEncoder().encode(ModDirectoryCacheState(fetchedAt: fetchedAt)) {
             try? data.write(to: stateURL, options: .atomic)
         }
+        // The directory index is a cache beside the user's mods; only its files skip backups.
+        PersistedFile.excludeFromBackup(fileURL)
+        PersistedFile.excludeFromBackup(stateURL)
     }
 
     private var fileURL: URL {

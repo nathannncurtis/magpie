@@ -141,6 +141,8 @@ actor FilterListStore {
             self.directory = support.appending(component: "FilterLists", directoryHint: .isDirectory)
         }
         try? FileManager.default.createDirectory(at: self.directory, withIntermediateDirectories: true)
+        // Downloaded and compiled lists are fetched again when missing; keep them out of backups.
+        PersistedFile.excludeFromBackup(self.directory)
 
         if let session {
             self.session = session
@@ -489,7 +491,11 @@ actor FilterListStore {
     }
 
     private func write(_ data: Data, to url: URL) {
-        try? data.write(to: url, options: .atomic)
+        do {
+            try data.write(to: url, options: .atomic)
+        } catch {
+            PersistedFile.logWriteFailure(url, error: error)
+        }
     }
 
     private func persist() {
