@@ -25,6 +25,7 @@ struct SegmentedControl: View {
 
     @Namespace private var thumb
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: 0) {
@@ -40,7 +41,8 @@ struct SegmentedControl: View {
     private func segment(_ index: Int) -> some View {
         let selected = index == selection
         return Button {
-            withAnimation(Springs.settle.animation) {
+            // Reduce Motion: the thumb jumps rather than slides.
+            withAnimation(reduceMotion ? nil : Springs.settle.animation) {
                 selection = index
             }
         } label: {
