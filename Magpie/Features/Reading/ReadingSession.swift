@@ -314,9 +314,15 @@ final class ReadingSession {
         startLoad { self.page.load(url) }
     }
 
-    /// Reloads the current page: "Try again", or the connection coming back.
+    /// Reloads the current page: "Try again", or the connection coming back. A load
+    /// that failed before it committed leaves the page with no URL to reload — that
+    /// one opens the address the session was last asked for again.
     func retry() {
-        startLoad { self.page.reload() }
+        if page.url != nil {
+            startLoad { self.page.reload() }
+        } else if let url = requestedURL {
+            startLoad { self.page.load(url) }
+        }
     }
 
     /// Goes back one page.
@@ -407,6 +413,11 @@ final class ReadingSession {
         failure = PageLoadFailure(
             host: HostFormatter.host(for: requestedURL ?? page.url), isOffline: offline)
         pageBackground = nil
+        // The failure page takes the web view's place in the hierarchy, so the
+        // session's hold on it is dropped here too — a detached view held alive keeps
+        // its accessibility line open. The probe re-finds it when a load lands.
+        webView?.endEditing(true)
+        webView = nil
     }
 
     private func connectivityChanged(_ online: Bool) {
