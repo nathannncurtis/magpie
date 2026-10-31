@@ -115,9 +115,15 @@ struct AppModelPreferencesTests {
             recents: RecentSearches())
     }
 
+    /// A store of its own per test: a fixed suite name outlives the run on a device and
+    /// hands the next run the last one's choices.
+    private func freshPreferences() -> Preferences {
+        Preferences(defaults: UserDefaults(suiteName: "appmodel-prefs-tests-\(UUID().uuidString)") ?? .standard)
+    }
+
     @Test("the engine, the two rows and the archive interval come from Preferences")
     func readsFromPreferences() {
-        let preferences = Preferences(defaults: UserDefaults(suiteName: "appmodel-prefs-tests-1") ?? .standard)
+        let preferences = freshPreferences()
         preferences.searchEngine = SearchEngine.builtins[1]
         preferences.suggestionsEnabled = false
         preferences.skimEnabled = false
@@ -149,7 +155,7 @@ struct AppModelPreferencesTests {
 
     @Test("onboarding runs once, and completing it opens the app")
     func onboardingGate() {
-        let preferences = Preferences(defaults: UserDefaults(suiteName: "appmodel-prefs-tests-2") ?? .standard)
+        let preferences = freshPreferences()
         let model = makeModel(preferences: preferences)
         #expect(model.needsOnboarding)
 
@@ -161,7 +167,7 @@ struct AppModelPreferencesTests {
     @Test("Settings shows and hides")
     func settingsPresentation() {
         let model = makeModel(
-            preferences: Preferences(defaults: UserDefaults(suiteName: "appmodel-prefs-tests-3") ?? .standard))
+            preferences: freshPreferences())
         #expect(!model.showsSettings)
 
         model.showSettings()
