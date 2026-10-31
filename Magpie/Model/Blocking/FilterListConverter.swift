@@ -637,7 +637,13 @@ enum FilterListConverter {
             case "^":
                 out += "[^a-zA-Z0-9._%-]"
             default:
-                out += escapeLiteral(char)
+                if char.isASCII {
+                    out += escapeLiteral(char)
+                } else {
+                    // URLs reach the rule matcher percent-encoded, and WebKit refuses a whole
+                    // list over one non-ASCII url-filter, so match the encoded bytes instead.
+                    out += char.utf8.map { String(format: "%%%02X", $0) }.joined()
+                }
             }
         }
         if endAnchored {
@@ -647,15 +653,25 @@ enum FilterListConverter {
     }
 
     /// Passes a `/regex/` rule through only when it stays inside the syntax WebKit's rule
-    /// compiler accepts: no alternation, no counted repetition, no escape classes, no group
-    /// flags, balanced groups and classes.
+    /// compiler accepts: ASCII only, no alternation, no counted repetition, no escape classes
+    /// or backreferences, no group flags or lookaround, `^` only first and `$` only last,
+    /// one quantifier per atom, no empty groups, balanced groups and classes.
     static func validatedRegex(_ body: Substring) -> String? {
-        if body.isEmpty { return nil }
+        if body.isEmpty || !body.allSatisfy(\.isASCII) { return nil }
+        let chars = Array(body)
         var parenDepth = 0
         var classDepth = 0
         var escaped = false
         var previous: Character? = nil
-        for char in body {
+        var previousWasQuantifier = false
+        for (offset, char) in chars.enumerated() {
+            if classDepth > 0, !escaped, char != "]", char != "\\", char != "[" {
+                // Inside a class `^`, `$`, `*` and friends are literal members.
+                previous = char
+                continue
+            }
+            let quantifier = !escaped && (char == "*" || char == "+" || char == "?")
+            defer { previousWasQuantifier = quantifier }
             if escaped {
                 // Only punctuation escapes; \d, \w, \b shorthand is outside the accepted subset.
                 if char.isLetter || char.isNumber { return nil }
@@ -673,16 +689,22 @@ enum FilterListConverter {
                 if previous == nil || previous == "(" || previous == "?" { return nil }
                 parenDepth += 1
             case ")":
-                if parenDepth == 0 { return nil }
+                if parenDepth == 0 || previous == "(" { return nil }
                 parenDepth -= 1
+            case "^":
+                if offset != 0 { return nil }
+            case "$":
+                if offset != chars.count - 1 { return nil }
             case "[":
                 if classDepth > 0 { return nil }
                 classDepth += 1
             case "]":
-                if classDepth == 0 { return nil }
+                if classDepth == 0 || previous == "[" { return nil }
                 classDepth -= 1
             case "*", "+", "?":
-                if previous == nil || previous == "(" { return nil }
+                if previous == nil || previous == "(" || previous == "^" || previousWasQuantifier {
+                    return nil
+                }
             default:
                 break
             }
