@@ -87,8 +87,8 @@ struct RootView: View {
                 // by them is the wrong size to arm captures at; the sheet over the
                 // page is the piece that rides the keys.
                 .ignoresSafeArea(.keyboard, edges: searchOpen ? [] : .bottom)
-                .onAppear { model.readingScreenMounted = true }
-                .onDisappear { model.readingScreenMounted = false }
+                .onAppear { model.readingScreenAppeared() }
+                .onDisappear { model.readingScreenDisappeared() }
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("reading.screen")
             case .tabs:

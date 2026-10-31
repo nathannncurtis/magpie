@@ -89,7 +89,21 @@ final class ReadingSession {
 
     /// Whether a reading screen's web view holds this page — the current tab's, or one
     /// still on its way out after the screen moved to another tab.
-    var isOnReadingScreen = false
+    var isOnReadingScreen: Bool { readingViewHolds > 0 }
+    private var readingViewHolds = 0
+
+    /// A reading view took the page.
+    func readingViewAppeared() { readingViewHolds += 1 }
+
+    /// A reading view let the page go. Its disappearance can come before WebKit has
+    /// handed the page back, while the view is still animating out, so the hold lasts
+    /// past any transition before another web view may take the page.
+    func readingViewDisappeared() {
+        Task { [weak self] in
+            try? await Task.sleep(for: AppModel.webViewReleaseDelay)
+            self?.readingViewHolds -= 1
+        }
+    }
 
     /// The standing wait for the page's first layout, while a capture is held back.
     @ObservationIgnored private var layoutWatch: Task<Void, Never>?

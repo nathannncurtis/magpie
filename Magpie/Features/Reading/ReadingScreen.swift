@@ -239,8 +239,8 @@ struct ReadingScreen: View {
                             // A tab opened over this one swaps the view out with an
                             // animation; the root waits for it to let the page go
                             // before drawing the page unseen in a view of its own.
-                            .onAppear { session.isOnReadingScreen = true }
-                            .onDisappear { session.isOnReadingScreen = false }
+                            .onAppear { session.readingViewAppeared() }
+                            .onDisappear { session.readingViewDisappeared() }
                         WebViewProbe(session: session)
                             .frame(width: 0, height: 0)
                             .allowsHitTesting(false)
