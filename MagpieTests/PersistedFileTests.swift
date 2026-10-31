@@ -75,7 +75,7 @@ struct PersistedFileTests {
         try FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
         let json = """
             {"bookmarks":[{"id":"\(UUID().uuidString)","url":"https://a.example","title":"A",
-              "addedAt":"2026-01-01T00:00:00Z","kind":"page"}],"folders":[]}
+              "addedAt":"2026-01-01T00:00:00Z","kind":{"page":{}}}],"folders":[]}
             """
         try Data(json.utf8).write(to: home.appendingPathComponent("bookmarks.json"))
 
