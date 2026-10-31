@@ -597,12 +597,28 @@ final class AppModel {
         surfaceBeforeMods = nil
     }
 
+    /// The tab whose card is growing back into its page: the reading screen holds the
+    /// card's picture over the page until the page has drawn at its own width.
+    private(set) var cardArrival: Tab.ID?
+
     /// A tapped card: its tab becomes current and opens.
     func openTab(_ id: Tab.ID, now: Date = .now) {
         guard let tab = store.tabs.first(where: { $0.id == id }) else { return }
         store.activate(id, now: now)
         _ = ensureSession(for: tab)
+        cardArrival = tab.snapshot == nil ? nil : id
         surface = .reading(searchOpen: false)
+    }
+
+    /// The page has taken over from its card's picture.
+    func cardArrivalDone() {
+        cardArrival = nil
+    }
+
+    /// The picture a card growing back into its page carries over it, while it does.
+    var cardArrivalPicture: Data? {
+        guard let id = cardArrival, id == store.currentTabID else { return nil }
+        return store.tabs.first(where: { $0.id == id })?.snapshot
     }
 
     /// The + on the tabs screen: the launch search, which submits into a new tab.

@@ -35,6 +35,10 @@ struct ReadingScreen: View {
     /// The page area's size, kept past this screen: a session made with no reading
     /// screen up still needs a region to capture at.
     var onPageSize: (CGSize) -> Void = { _ in }
+    /// The card's picture, held over the page while the card grows back into it: the
+    /// web view re-hosts blank and lays out at the card's width for a few frames.
+    var arrivalPicture: Data? = nil
+    var onArrivalDone: () -> Void = {}
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
@@ -55,6 +59,9 @@ struct ReadingScreen: View {
     private static let snapDelay: Duration = .milliseconds(250)
     /// How long a size must hold before it counts as the screen at rest.
     private static let sizeSettleDelay: Duration = .milliseconds(200)
+    /// How long the card's picture stays over the page: the chrome spring's growth, plus
+    /// the page's first paint at full width.
+    private static let arrivalHold: Duration = .milliseconds(550)
     /// How long to let the page re-render under a new appearance before re-reading it.
     private static let tintRetryDelay: Duration = .milliseconds(600)
     /// The opacity page tints take through the glass (02 · Glass).
@@ -68,7 +75,7 @@ struct ReadingScreen: View {
             let menuBottomEdge = Metrics.Spacing.barBottomEdge(
                 safeAreaBottom: geo.safeAreaInsets.bottom)
             ZStack(alignment: .bottom) {
-                pageArea
+                pageArea(bottomClearance: menuBottomEdge + Metrics.Bar.readingHeight)
                 GlassEffectContainer {
                     if isSearchOpen {
                         searchSheet
@@ -202,8 +209,11 @@ struct ReadingScreen: View {
     }
 
     /// The page, or Magpie's own page when it can't load — one view with its tab card.
+    ///
+    /// `bottomClearance` is how far the full bar reaches up from the bottom edge: the
+    /// page's end scrolls clear of it, while the page itself still runs on under it.
     @ViewBuilder
-    private var pageArea: some View {
+    private func pageArea(bottomClearance: CGFloat) -> some View {
         if let session {
             Group {
                 if let failure = session.failure {
@@ -212,6 +222,7 @@ struct ReadingScreen: View {
                 } else {
                     ZStack {
                         WebView(session.page)
+                            .safeAreaPadding(.bottom, bottomClearance)
                             // The page starts below the status bar and runs under the
                             // bar to the bottom edge; the strip it leaves above takes
                             // the page's own top colour.
@@ -223,6 +234,23 @@ struct ReadingScreen: View {
                         WebViewProbe(session: session)
                             .frame(width: 0, height: 0)
                             .allowsHitTesting(false)
+                        if let picture = arrivalPicture.flatMap(UIImage.init(data:)) {
+                            Image(uiImage: picture)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                                .clipped()
+                                .ignoresSafeArea(edges: .bottom)
+                                .allowsHitTesting(false)
+                                .accessibilityHidden(true)
+                                .transition(.opacity)
+                        }
+                    }
+                    .task(id: arrivalPicture != nil) {
+                        guard arrivalPicture != nil else { return }
+                        try? await Task.sleep(for: Self.arrivalHold)
+                        guard !Task.isCancelled else { return }
+                        withAnimation(.easeOut(duration: 0.18)) { onArrivalDone() }
                     }
                     // One view per session: a page re-hosted on a session change has
                     // been seen to keep the old view's stale handle, and a fresh view
@@ -262,13 +290,16 @@ struct ReadingScreen: View {
     }
 
     private func scrollDidChange(_ snapshot: ScrollSnapshot) {
-        guard !reduceMotion else { return }
         // A page moves itself while it loads — layout, restored positions — and none of
         // that is the reader scrolling: the bar holds, and the reading starts after.
         if session?.page.isLoading ?? true {
             chrome.forgetOffset()
             return
         }
+        // Where the reader rests is what the tab's card should show: each scroll restarts
+        // the wait, and the picture is taken once the page holds still.
+        settleThenCapture()
+        guard !reduceMotion else { return }
         let step = chrome.scrollDidChange(offsetY: snapshot.offsetY, atEndOfPage: snapshot.atEnd)
         guard step != .unchanged else { return }
         apply(step)

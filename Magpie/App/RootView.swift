@@ -75,7 +75,9 @@ struct RootView: View {
                     onSearchDismiss: { model.closeSearchOverPage() },
                     onAddressTap: { model.openSearchOverPage() },
                     onTabsTap: { model.showTabs() },
-                    onPageSize: { model.notePageSize($0) }
+                    onPageSize: { model.notePageSize($0) },
+                    arrivalPicture: model.cardArrivalPicture,
+                    onArrivalDone: { model.cardArrivalDone() }
                 )
                 // The page never answers the keyboard. An address just submitted
                 // arrives with the keys still dropping, and a first frame squeezed
