@@ -16,9 +16,12 @@ struct PlusButton: View {
                 .imageScale(.medium)
                 .foregroundStyle(Palette.onInk)
                 .frame(width: ButtonMetrics.size, height: ButtonMetrics.size)
+                .glassEffect(.regular.tint(Palette.ink).interactive(), in: .circle)
+                .contentShape(.circle)
         }
-        .buttonStyle(.glassProminent)
-        .tint(Palette.ink)
+        // A plain style: the prominent glass style pads its label into a wider capsule,
+        // and the button is a 54 pt circle.
+        .buttonStyle(.plain)
         .accessibilityLabel(Text("New tab"))
     }
 }
