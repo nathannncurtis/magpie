@@ -1,8 +1,10 @@
 import SwiftUI
 import WebKit
 
-/// 02 · Reading: a full-bleed web view under the status bar with the ReadingBar
-/// floating at the bottom. The bar takes the page's tint and slims on scroll; the URL
+/// 02 · Reading: a web view that starts below the status bar and runs under the bar to
+/// the bottom edge, with the ReadingBar floating at the bottom. The strip above the
+/// page, under the status bar, takes the page's own top colour, so the screen still
+/// reads edge to edge. The bar takes the page's tint and slims on scroll; the URL
 /// pill opens the search sheet over the page, growing from the bar as one glass shape
 /// (05 · The bar into the sheet), and the page is one view with its tab card (05 · The
 /// page into its card).
@@ -127,6 +129,9 @@ struct ReadingScreen: View {
                 session?.titleKnown()
             }
         }
+        // The strip the page leaves above itself, under the status bar: filled with the
+        // page's own top colour, so nothing shows through from the surface before.
+        .background(topEdgeFill.ignoresSafeArea(edges: .top))
         .onChange(of: colorScheme) { _, _ in rereadPageTint() }
         .onDisappear {
             snapTask?.cancel()
@@ -205,7 +210,10 @@ struct ReadingScreen: View {
                 } else {
                     ZStack {
                         WebView(session.page)
-                            .ignoresSafeArea()
+                            // The page starts below the status bar and runs under the
+                            // bar to the bottom edge; the strip it leaves above takes
+                            // the page's own top colour.
+                            .ignoresSafeArea(edges: .bottom)
                             .webViewOnScrollGeometryChange(
                                 for: ScrollSnapshot.self,
                                 of: ScrollSnapshot.init,
@@ -237,6 +245,18 @@ struct ReadingScreen: View {
             return background.opacity(Self.pageTintOpacity)
         }
         return Palette.pageTintGlass
+    }
+
+    /// The colour of the strip above the page, under the status bar: the page's own top
+    /// colour at full strength, solid rather than glass, so the screen still reads edge
+    /// to edge with the page starting below the inset. Paper when the page has no colour
+    /// of its own to lend.
+    private var topEdgeFill: Color {
+        guard let session, session.failure == nil else { return Palette.paper }
+        if let themeColor = session.page.themeColor {
+            return themeColor
+        }
+        return session.pageBackground ?? Palette.paper
     }
 
     private func scrollDidChange(_ snapshot: ScrollSnapshot) {

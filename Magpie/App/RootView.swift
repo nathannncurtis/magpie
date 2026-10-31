@@ -21,11 +21,12 @@ struct RootView: View {
             ZStack {
                 // Pages that still owe their tab a picture keep drawing in the window,
                 // unseen, under whatever surface shows; each leaves once its picture lands.
-                // Laid out exactly as the reading screen lays out its page, full screen
-                // under every inset, so the picture matches one taken in place.
+                // Laid out exactly as the reading screen lays out its page, from below
+                // the status bar to the bottom edge, so the picture matches one taken
+                // in place.
                 ForEach(model.pagesStillDrawing, id: \.self) { session in
                     WebView(session.page)
-                        .ignoresSafeArea()
+                        .ignoresSafeArea(edges: .bottom)
                         .onAppear { session.isDrawnUnseen = true }
                         .onDisappear { session.isDrawnUnseen = false }
                         .opacity(Self.unseen)
