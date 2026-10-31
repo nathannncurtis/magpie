@@ -25,6 +25,29 @@ enum ModFetcher {
         return ModDownload(data: data, response: http)
     }
 
+    /// The most a script or list download may weigh. Anything larger is refused.
+    static let maxDownloadBytes = 8 * 1024 * 1024
+
+    /// Whether a download is small enough to keep: by its bytes, and by the length the
+    /// reply declared.
+    static func isWithinLimit(_ download: ModDownload) -> Bool {
+        guard download.data.count <= maxDownloadBytes else { return false }
+        let declared = download.response.expectedContentLength
+        return declared < 0 || declared <= Int64(maxDownloadBytes)
+    }
+
+    /// Mods only come over https: a plain-http script could be rewritten on the way. The
+    /// one exception is this device's own loopback address, which never leaves it; the
+    /// UI tests serve their fixtures from there.
+    static func isSecure(_ url: URL) -> Bool {
+        guard let host = url.host()?.lowercased(), !host.isEmpty else { return false }
+        switch url.scheme?.lowercased() {
+        case "https": return true
+        case "http": return host == "127.0.0.1" || host == "localhost"
+        default: return false
+        }
+    }
+
     /// The lowercase hex digest of some bytes.
     static func sha256Hex(of data: Data) -> String {
         SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
@@ -110,10 +133,13 @@ enum ModLinkInstaller {
         _ url: URL,
         fetch: @Sendable (URL) async throws -> ModDownload = ModFetcher.live
     ) async -> InstallLinkResult {
-        guard url.scheme == "http" || url.scheme == "https" else { return .webPage }
+        guard ModFetcher.isSecure(url) else { return .webPage }
         do {
             let download = try await fetch(url)
             guard download.response.statusCode == 200 else { return .unreachable }
+            // A redirect off https, or an oversized file, is not installed.
+            if let final = download.response.url, !ModFetcher.isSecure(final) { return .unreachable }
+            guard ModFetcher.isWithinLimit(download) else { return .unreachable }
             let text = String(decoding: download.data, as: UTF8.self)
             return InstallClassifier.classify(text)
         } catch {

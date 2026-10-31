@@ -86,6 +86,59 @@ struct ArchiveGroupingTests {
         #expect(titles(groups) == ["October", "August", "May"])
     }
 
+    @Test("a month in the current year carries no year")
+    func currentYearMonthHasNoYear() {
+        let calendar = self.calendar(in: zone)
+        let now = date(2026, 10, 28, 15, 0, calendar: calendar)
+        let tabs = [tab(at: date(2026, 3, 14, 10, 0, calendar: calendar))]
+
+        let groups = ArchiveGrouping.groups(of: tabs, now: now, calendar: calendar)
+
+        #expect(titles(groups) == ["March"])
+    }
+
+    @Test("a month in an earlier year carries its year")
+    func previousYearMonthHasYear() {
+        let calendar = self.calendar(in: zone)
+        let now = date(2026, 10, 28, 15, 0, calendar: calendar)
+        let tabs = [tab(at: date(2025, 3, 14, 10, 0, calendar: calendar))]
+
+        let groups = ArchiveGrouping.groups(of: tabs, now: now, calendar: calendar)
+
+        #expect(titles(groups) == ["March 2025"])
+    }
+
+    @Test("across the year turn, January stands alone and December names last year")
+    func acrossTheYearTurn() {
+        let calendar = self.calendar(in: zone)
+        // 2027-01-20 is a Wednesday; the week runs from Monday the 18th.
+        let now = date(2027, 1, 20, 15, 0, calendar: calendar)
+        let tabs = [
+            tab(at: date(2026, 12, 15, 10, 0, calendar: calendar)),
+            tab(at: date(2027, 1, 5, 10, 0, calendar: calendar)),
+        ]
+
+        let groups = ArchiveGrouping.groups(of: tabs, now: now, calendar: calendar)
+
+        #expect(titles(groups) == ["January", "December 2026"])
+    }
+
+    @Test("the same month in different years makes separate bands")
+    func sameMonthDifferentYears() {
+        let calendar = self.calendar(in: zone)
+        let now = date(2026, 10, 28, 15, 0, calendar: calendar)
+        let tabs = [
+            tab(at: date(2024, 10, 10, 10, 0, calendar: calendar), title: "older"),
+            tab(at: date(2026, 10, 5, 10, 0, calendar: calendar), title: "now"),
+            tab(at: date(2025, 10, 10, 10, 0, calendar: calendar), title: "last"),
+        ]
+
+        let groups = ArchiveGrouping.groups(of: tabs, now: now, calendar: calendar)
+
+        #expect(titles(groups) == ["October", "October 2025", "October 2024"])
+        #expect(groups.map { $0.tabs.map(\.title) } == [["now"], ["last"], ["older"]])
+    }
+
     @Test("rows inside a band run newest first")
     func rowsNewestFirst() {
         let calendar = self.calendar(in: zone)

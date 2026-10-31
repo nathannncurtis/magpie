@@ -53,6 +53,7 @@ struct ArchiveScreen: View {
                     list
                 }
             }
+            .readableWidth()
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             emptyBlock
                 .padding(.bottom, bottomInset)
@@ -62,6 +63,7 @@ struct ArchiveScreen: View {
                     text: $searchText
                 )
                 .padding(.horizontal, Metrics.Spacing.insetFloating)
+                .readableWidth()
                 .padding(
                     .bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset)
                 )

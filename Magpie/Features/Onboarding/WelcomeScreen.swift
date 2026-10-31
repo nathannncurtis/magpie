@@ -42,13 +42,14 @@ struct WelcomeScreen: View {
             // the way the reading bar does: its layer runs on under the home indicator
             // and the padding, read off the inset first, seats it above that edge.
             VStack(spacing: 12) {
-                PrimaryCTA(title: "Get started", action: onGetStarted)
+                PrimaryCTA(title: String(localized: "Get started"), action: onGetStarted)
                     .accessibilityIdentifier("welcome.start")
                 Text("Free and open source. No account. Nothing collected.")
                     .font(Typography.small)
                     .foregroundStyle(Palette.textOnMistSecondary)
             }
             .padding(.horizontal, 16)
+            .readableWidth()
             .padding(.bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset))
             .ignoresSafeArea(edges: .bottom)
         }

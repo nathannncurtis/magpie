@@ -69,6 +69,8 @@ final class PrivateTabTests: XCTestCase {
             .firstMatch
         land("field") { field.waitForExistence(timeout: 20) }
         field.tap()
+        // Keys up first: text typed before the keyboard is ready loses its first characters.
+        _ = app.keyboards.firstMatch.waitForExistence(timeout: 5)
         field.typeText(address + "\n")
     }
 

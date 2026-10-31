@@ -27,6 +27,11 @@ export TEST_RUNNER_MAGPIE_SHOTS_DIR="$shots"
 xcrun simctl boot "$udid" || true
 xcrun simctl bootstatus "$udid" -b
 
+# A fresh simulator covers its first keyboard with the slide-to-type tip, which eats the keys a UI test types
+# under it ("magpie test" lands as "magpietest"); mark the tip as already shown.
+xcrun simctl spawn "$udid" defaults write com.apple.keyboard.preferences DidShowContinuousPathIntroduction -bool true
+xcrun simctl spawn "$udid" defaults write com.apple.keyboard.preferences DidShowGestureKeyboardIntroduction -bool true
+
 set +e
 xcodebuild test \
   -project Magpie.xcodeproj -scheme Magpie \

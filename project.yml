@@ -18,13 +18,35 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.magpiebrowser.Magpie
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+    # The default-browser entitlement (com.apple.developer.web-browser) goes back here
+    # once Apple grants it; a profile can't carry it before then.
     info:
       path: Magpie/Support/Info.plist
       properties:
         CFBundleDisplayName: Magpie
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleURLTypes:
+          - CFBundleURLName: com.magpiebrowser.Magpie.web
+            CFBundleTypeRole: Viewer
+            CFBundleURLSchemes:
+              - http
+              - https
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoadsInWebContent: true
+        NSCameraUsageDescription: A page you visit can ask to use the camera, for a video call or a photo upload.
+        NSMicrophoneUsageDescription: A page you visit can ask to use the microphone, for a call or a voice note.
+        NSLocationWhenInUseUsageDescription: A page you visit can ask for your location, for directions or nearby results.
+        NSPhotoLibraryAddUsageDescription: Lets you save an image from a page to your photos.
+        NSLocalNetworkUsageDescription: Lets you open pages on your own network, like a router's settings.
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+          - UIInterfaceOrientationPortraitUpsideDown
         UIAppFonts:
           - Fraunces[SOFT,WONK,opsz,wght].ttf
         ITSAppUsesNonExemptEncryption: false

@@ -24,7 +24,7 @@ struct ModsDirectoryTests {
         DirectoryMod(
             id: id, name: id, descriptionText: "", author: "someone",
             kind: .userscript, version: "1.0",
-            url: URL(fileURLWithPath: "/\(id).user.js"),
+            url: URL(string: "https://mods.example.com/\(id).user.js")!,
             sha256: sha256, icon: .linkInstall())
     }
 
@@ -88,6 +88,30 @@ struct ModsDirectoryTests {
         let text = try await directory.download(index.mods[0])
         #expect(text == body)
         #expect(stub.callCount == 1)
+    }
+
+    @Test("an entry with a path-like id, a plain-http file or a short digest is refused")
+    func malformedEntries() {
+        let digest = String(repeating: "0", count: 64)
+        let good = URL(string: "https://mods.example.com/x.user.js")!
+        func make(_ id: String, _ url: URL, _ sha: String) -> DirectoryMod {
+            DirectoryMod(
+                id: id, name: id, descriptionText: "", author: "someone",
+                kind: .userscript, version: "1.0", url: url, sha256: sha, icon: .linkInstall())
+        }
+        #expect(make("x", good, digest).isWellFormed)
+        #expect(!make("../x", good, digest).isWellFormed)
+        #expect(!make("a/b", good, digest).isWellFormed)
+        #expect(!make("X", good, digest).isWellFormed)
+        #expect(!make("link-abc", good, digest).isWellFormed)
+        #expect(!make("x", URL(string: "http://mods.example.com/x.user.js")!, digest).isWellFormed)
+        #expect(!make("x", good, "0").isWellFormed)
+        #expect(
+            make("x", good, digest).draft(body: "// ==UserScript==\n// @match *://a.com/*\n// ==/UserScript==\n") != nil
+        )
+        #expect(
+            make("../x", good, digest).draft(body: "// ==UserScript==\n// @match *://a.com/*\n// ==/UserScript==\n")
+                == nil)
     }
 
     @Test("a changed file is refused")

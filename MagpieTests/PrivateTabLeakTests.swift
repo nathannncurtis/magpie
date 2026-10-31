@@ -65,7 +65,7 @@ struct PrivateTabLeakTests {
     @Test("a mod's value set on a private page is not saved")
     func modValueFromPrivatePageDropped() {
         let values = RecordingModValues()
-        let relay = ModValueRelay()
+        let relay = ModValueRelay(modID: "m", worldName: "magpie.mod.m")
         relay.values = values
 
         relay.store("1", forKey: "k", modID: "m", fromPrivatePage: true)

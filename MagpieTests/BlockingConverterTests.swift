@@ -87,6 +87,58 @@ struct BlockingConverterTests {
         #expect(skipped("/cat|dog/") == .unsupportedRegex)
     }
 
+    @Test("regex WebKit rejects is dropped before compile, the rest of the list kept")
+    func rejectedRegex() {
+        for rule in [
+            "/ad(?=s)/",  // lookahead
+            "/ad(?!s)/",  // negative lookahead
+            "/(a)b\\1/",  // backreference
+            "/ad{1,3}/",  // quantifier range
+            "/ad\\bx/",  // word boundary
+            "/реклама/",  // non-ASCII
+            "/a^b/",  // misplaced start anchor
+            "/a$b/",  // misplaced end anchor
+            "/ad+*/",  // stacked quantifiers
+            "/ad()x/",  // empty group
+            "/ad[]x/",  // empty class
+        ] {
+            let conversion = FilterListConverter.convert(rule + "\n||kept.com^")
+            #expect(conversion.stats.skipped[.unsupportedRegex] == 1, "\(rule)")
+            #expect(conversion.blockRules.count == 1, "\(rule)")
+        }
+    }
+
+    @Test("anchors and quantifiers inside a class or in place are kept")
+    func acceptedRegex() {
+        #expect(firstBlock("/^ad[^/]*\\.js$/")?.trigger.urlFilter == "^ad[^/]*\\.js$")
+        #expect(firstBlock("/ads[*+?$]/")?.trigger.urlFilter == "ads[*+?$]")
+        #expect(firstBlock("/^(ad)+x/")?.trigger.urlFilter == "^(ad)+x")
+    }
+
+    @Test("non-ASCII literal patterns match their percent-encoded form")
+    func nonASCIILiteral() {
+        let filter = firstBlock("/реклама/banner^")?.trigger.urlFilter
+        #expect(filter == "/%D1%80%D0%B5%D0%BA%D0%BB%D0%B0%D0%BC%D0%B0/banner[^a-zA-Z0-9._%-]")
+        #expect(filter?.allSatisfy(\.isASCII) == true)
+    }
+
+    @Test("unsupported syntax on one line doesn't stop the lines after it")
+    func unsupportedSyntaxContinues() {
+        let conversion = FilterListConverter.convert(
+            """
+            example.com##+js(set-constant, x, 1)
+            ||a.com^$removeparam=utm
+            ||b.com^$redirect=noop.js
+            example.com##div:has-text(Ad)
+            example.com#$#body { color: red }
+            ||kept.com^
+            ##.kept
+            """
+        )
+        #expect(conversion.blockRules.count == 2)
+        #expect(conversion.stats.skipped.values.reduce(0, +) == 5)
+    }
+
     // MARK: Options
 
     @Test("third-party and first-party map to load-type")
@@ -342,5 +394,18 @@ struct BlockingChunkingTests {
         #expect(chunks.count == 1)
         #expect(chunks[0].first?.action.type == "block")
         #expect(chunks[0].last?.action.type == "ignore-previous-rules")
+    }
+
+    @Test("a set over WebKit's per-list cap splits into lists that each fit")
+    func overTheRealCap() {
+        let cap = FilterListConverter.webKitRuleListLimit
+        let text =
+            (0..<(cap + 10)).map { "||host\($0).example^" }.joined(separator: "\n")
+            + "\n@@||ok.example^"
+        let chunks = FilterListConverter.ruleChunks(from: [FilterListConverter.convert(text)])
+        #expect(chunks.count == 2)
+        #expect(chunks.allSatisfy { $0.count <= cap })
+        #expect(chunks.map { $0.count - 1 }.reduce(0, +) == cap + 10)
+        #expect(chunks.allSatisfy { $0.last?.action.type == "ignore-previous-rules" })
     }
 }

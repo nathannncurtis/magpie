@@ -80,7 +80,8 @@ struct RootView: View {
                     onTabsTap: { model.showTabs() },
                     onPageSize: { model.notePageSize($0) },
                     arrivalPicture: model.cardArrivalPicture,
-                    onArrivalDone: { model.cardArrivalDone() }
+                    onArrivalDone: { model.cardArrivalDone() },
+                    isFinding: Bindable(model).isFindingInPage
                 )
                 // The page never answers the keyboard. An address just submitted
                 // arrives with the keys still dropping, and a first frame squeezed

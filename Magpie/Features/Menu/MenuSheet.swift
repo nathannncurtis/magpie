@@ -145,7 +145,7 @@ struct MenuSheet: View {
     @ViewBuilder private var tiles: some View {
         MenuTileRow {
             if skimOffered {
-                MenuTile(title: "Skim", action: skim) {
+                MenuTile(title: String(localized: "Skim"), action: skim) {
                     Mark(size: Metrics.Menu.tileIconSize, style: .solid)
                 }
                 .accessibilityIdentifier("menu.tile.skim")
@@ -154,7 +154,7 @@ struct MenuSheet: View {
                 .accessibilityIdentifier("menu.tile.bookmark")
             shareTile
                 .accessibilityIdentifier("menu.tile.share")
-            MenuTile(title: "Mods", action: { model.showMods() }) {
+            MenuTile(title: String(localized: "Mods"), action: { model.showMods() }) {
                 MenuTileSymbol(systemName: "puzzlepiece")
             }
             .accessibilityIdentifier("menu.tile.mods")
@@ -168,7 +168,7 @@ struct MenuSheet: View {
     /// The Bookmark tile: a tap saves the page, a second tap takes it back out, and a
     /// long press opens Bookmarks. One gesture: the press wins over the tap, never both.
     private var bookmarkTile: some View {
-        MenuTileFace(title: "Bookmark") {
+        MenuTileFace(title: String(localized: "Bookmark")) {
             Image(systemName: model.currentPageIsBookmarked ? "bookmark.fill" : "bookmark")
                 .font(.system(size: Metrics.Menu.tileIconSize, weight: .medium))
                 .imageScale(.medium)
@@ -210,14 +210,14 @@ struct MenuSheet: View {
     @ViewBuilder private var shareTile: some View {
         if let url = shareURL {
             ShareLink(item: url) {
-                MenuTileFace(title: "Share") {
+                MenuTileFace(title: String(localized: "Share")) {
                     MenuTileSymbol(systemName: "square.and.arrow.up")
                 }
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Text("Share"))
         } else {
-            MenuTileFace(title: "Share") {
+            MenuTileFace(title: String(localized: "Share")) {
                 MenuTileSymbol(systemName: "square.and.arrow.up")
             }
             .opacity(0.3)
@@ -247,14 +247,14 @@ struct MenuSheet: View {
     private var blockingGroup: some View {
         MenuGroup {
             toggleRow(
-                icon: .symbol("shield.lefthalf.filled"), title: "Block ads & trackers",
+                icon: .symbol("shield.lefthalf.filled"), title: String(localized: "Block ads & trackers"),
                 id: "menu.toggle.ads", isDivided: false,
                 isOn: Binding(
                     get: { model.blocker.blocksAdsAndTrackers },
                     set: { model.blocker.blocksAdsAndTrackers = $0 }))
 
             toggleRow(
-                icon: .cookie, title: "Block cookie banners",
+                icon: .cookie, title: String(localized: "Block cookie banners"),
                 id: "menu.toggle.cookies", isDivided: true,
                 isOn: Binding(
                     get: { model.blocker.blocksCookieBanners },
@@ -272,7 +272,7 @@ struct MenuSheet: View {
     /// The second group: where searches go, whether Skim offers, and Settings.
     private var switchGroup: some View {
         MenuGroup {
-            MenuRow(icon: .symbol("globe"), title: "Search engine") {
+            MenuRow(icon: .symbol("globe"), title: String(localized: "Search engine")) {
                 MenuValue(text: model.preferences.searchEngine.displayName)
             }
             .action {
@@ -282,13 +282,13 @@ struct MenuSheet: View {
             .accessibilityIdentifier("menu.engine")
 
             toggleRow(
-                icon: .mark, title: "Skim for me",
+                icon: .mark, title: String(localized: "Skim for me"),
                 id: "menu.toggle.skim", isDivided: true,
                 isOn: Binding(
                     get: { model.preferences.skimEnabled },
                     set: { model.preferences.skimEnabled = $0 }))
 
-            MenuRow(icon: .symbol("gearshape"), title: "Settings") {
+            MenuRow(icon: .symbol("gearshape"), title: String(localized: "Settings")) {
                 SettingsChevron()
             }
             .action {

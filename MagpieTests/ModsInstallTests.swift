@@ -115,6 +115,21 @@ struct ModsInstallTests {
         let local = try address("file:///Users/me/quiet.user.js")
         #expect(await ModLinkInstaller.inspect(local, fetch: { try await stub.call($0) }) == .webPage)
         #expect(stub.callCount == 2)
+
+        // Plain http is never fetched either, except from this device's loopback.
+        let plain = try address("http://example.com/quiet.user.js")
+        #expect(await ModLinkInstaller.inspect(plain, fetch: { try await stub.call($0) }) == .webPage)
+        #expect(stub.callCount == 2)
+        #expect(ModFetcher.isSecure(try address("http://127.0.0.1:53117/mod.user.js")))
+        #expect(!ModFetcher.isSecure(try address("http://127.0.0.1.evil.net/mod.user.js")))
+    }
+
+    @Test("an oversized download is refused")
+    func oversizedRefused() async throws {
+        let big = String(repeating: "a", count: ModFetcher.maxDownloadBytes + 1)
+        let stub = StubModFetch(replies: ["big.user.js": .ok(big)])
+        let url = try address("https://example.com/big.user.js")
+        #expect(await ModLinkInstaller.inspect(url, fetch: { try await stub.call($0) }) == .unreachable)
     }
 
     @Test("a list link is classified too")

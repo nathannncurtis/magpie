@@ -20,7 +20,9 @@ actor RecentSearches: RecentSearchStoring {
     /// Starts empty, or with `seed` already recorded, oldest first.
     init(capacity: Int = 20, seed: [String] = []) {
         self.capacity = capacity
-        self.queries = Array(seed.suffix(capacity).reversed())
+        self.queries = seed.reduce(into: []) { queries, query in
+            Self.record(query, into: &queries, capacity: capacity)
+        }
     }
 
     func recent(limit: Int) async -> [String] {
@@ -28,6 +30,11 @@ actor RecentSearches: RecentSearchStoring {
     }
 
     func record(_ query: String) async {
+        Self.record(query, into: &queries, capacity: capacity)
+    }
+
+    /// Trims the query, moves it to the front, and keeps at most `capacity`.
+    private static func record(_ query: String, into queries: inout [String], capacity: Int) {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         queries.removeAll { $0 == trimmed }

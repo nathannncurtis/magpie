@@ -40,6 +40,21 @@ struct ReadingHostTests {
     func undecodableLabel() {
         #expect(HostFormatter.host(for: URL(string: "https://xn--.de/")) == "xn--.de")
     }
+
+    @Test("a label mixing scripts stays in punycode")
+    func mixedScript() {
+        // Cyrillic а with Latin pple.
+        #expect(HostFormatter.host(for: URL(string: "https://xn--pple-43d.com/")) == "xn--pple-43d.com")
+        #expect(!IDNScript.isSingleScript("p\u{0430}ypal"))
+        #expect(!IDNScript.isSingleScript("\u{03B1}\u{0430}"))
+    }
+
+    @Test("a single-script label shows in unicode")
+    func singleScript() {
+        #expect(HostFormatter.host(for: URL(string: "https://xn--d1acpjx3f.xn--p1ai/")) == "яндекс.рф")
+        #expect(IDNScript.isSingleScript("bücher"))
+        #expect(IDNScript.isSingleScript("東京abc"))
+    }
 }
 
 @Suite("Punycode")

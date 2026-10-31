@@ -37,6 +37,8 @@ final class MenuTests: XCTestCase {
             .firstMatch
         land("field") { field.waitForExistence(timeout: 20) }
         field.tap()
+        // Keys up first: text typed before the keyboard is ready loses its first characters.
+        _ = app.keyboards.firstMatch.waitForExistence(timeout: 5)
         field.typeText("http://127.0.0.1:53117/page\n")
         let address = app.buttons["bar.url"]
         land("reading") { address.waitForExistence(timeout: 20) }

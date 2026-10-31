@@ -235,7 +235,7 @@ struct MenuArchiveRow: View {
                 }
             }
         } label: {
-            MenuRowFace(icon: .symbol("archivebox"), title: "Archive inactive tabs") {
+            MenuRowFace(icon: .symbol("archivebox"), title: String(localized: "Archive inactive tabs")) {
                 HStack(spacing: 6) {
                     Text(String(localized: "After \(Preferences.archiveIntervalLabel(interval))"))
                     Image(systemName: "chevron.up.chevron.down")

@@ -3,6 +3,7 @@
 xcuserdata/
 DerivedData/
 build/
+build-*/
 out/
 .build/
 *.ipa

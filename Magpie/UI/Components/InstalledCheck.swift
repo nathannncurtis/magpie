@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The installed mark on a mod row: a 30 pt circle in the sheen with a white check
+/// The installed mark on a mod row: a 30 pt circle in the sheen with an `onSheen` check
 /// (03 · Installed check). It is the one place in the flow that pops.
 struct InstalledCheck: View {
 
@@ -22,7 +22,7 @@ struct InstalledCheck: View {
                 .fill(Palette.sheen)
             Image(systemName: "checkmark")
                 .font(.system(size: Layout.check, weight: .semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(Palette.onSheen)
         }
         .frame(width: Layout.side, height: Layout.side)
         .scaleEffect(shown || !pops ? 1 : Layout.popFrom)

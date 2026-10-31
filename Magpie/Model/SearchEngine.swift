@@ -75,7 +75,8 @@ struct SearchEngine: Equatable, Identifiable, Sendable {
         guard trimmed.contains("%s"), !trimmed.contains(where: \.isWhitespace) else { return nil }
         let full = hasScheme(trimmed) ? trimmed : "https://" + trimmed
         guard let url = url(fromTemplate: full, inserting: "probe") else { return nil }
-        guard url.scheme == "https" || url.scheme == "http", url.host != nil else { return nil }
+        let scheme = url.scheme?.lowercased()
+        guard scheme == "https" || scheme == "http", url.host != nil else { return nil }
         return SearchEngine(
             id: "other", displayName: "Other",
             searchTemplate: full,

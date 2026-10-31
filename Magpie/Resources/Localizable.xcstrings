@@ -1,6 +1,126 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Close Menu" : {
+      "comment" : "Keyboard shortcut (Esc): folds the reading menu back into the bar",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close Menu"
+          }
+        }
+      }
+    },
+    "Close Search" : {
+      "comment" : "Keyboard shortcut (Esc): folds the search sheet or find bar away",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close Search"
+          }
+        }
+      }
+    },
+    "Close Tab" : {
+      "comment" : "Keyboard shortcut (⌘W): closes the current tab",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close Tab"
+          }
+        }
+      }
+    },
+    "Find on Page" : {
+      "comment" : "Keyboard shortcut (⌘F): opens the find bar over the page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Find on Page"
+          }
+        }
+      }
+    },
+    "Forward" : {
+      "comment" : "Keyboard shortcut (⌘]): goes forward one page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forward"
+          }
+        }
+      }
+    },
+    "New Tab" : {
+      "comment" : "Keyboard shortcut (⌘T): opens the launch search for a new tab",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Tab"
+          }
+        }
+      }
+    },
+    "Open Location" : {
+      "comment" : "Keyboard shortcut (⌘L): opens the search sheet over the page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Location"
+          }
+        }
+      }
+    },
+    "Page" : {
+      "comment" : "Keyboard shortcut overlay: the menu holding the page's shortcuts",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page"
+          }
+        }
+      }
+    },
+    "Reload Page" : {
+      "comment" : "Keyboard shortcut (⌘R): reloads the page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reload Page"
+          }
+        }
+      }
+    },
+    "Show All Tabs" : {
+      "comment" : "Keyboard shortcut (⌘⇧\\): shows the tab stack",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show All Tabs"
+          }
+        }
+      }
+    },
     "%@ — not supported yet" : {
       "comment" : "Install sheet: the unsupported grants themselves",
       "extractionState" : "manual",
@@ -33,18 +153,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ didn't install. Tap Get to try again."
-          }
-        }
-      }
-    },
-    "%@, private" : {
-      "comment" : "Spoken address pill of a private tab: the site name, then that it is private",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@, private"
           }
         }
       }
@@ -697,6 +805,18 @@
         }
       }
     },
+    "Installed just now" : {
+      "comment" : "The confirmation row's line when an install from a link lands",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installed just now"
+          }
+        }
+      }
+    },
     "Installed · %lld" : {
       "comment" : "The mods screen's installed segment, with its count",
       "extractionState" : "manual",
@@ -777,6 +897,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Licence"
+          }
+        }
+      }
+    },
+    "Links from other apps open here. Set in iOS Settings." : {
+      "comment" : "Settings: the default-browser card's line under its title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Links from other apps open here. Set in iOS Settings."
           }
         }
       }
@@ -865,14 +997,26 @@
         }
       }
     },
-    "New private tab" : {
-      "comment" : "Long-press action on the tabs screen's + button: a tab that keeps no history, cookies or snapshot",
+    "New grants" : {
+      "comment" : "Install sheet: grants a link update adds over the installed version",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "New private tab"
+            "value" : "New grants"
+          }
+        }
+      }
+    },
+    "New sites" : {
+      "comment" : "Install sheet: sites a link update adds over the installed version",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New sites"
           }
         }
       }
@@ -1081,6 +1225,30 @@
         }
       }
     },
+    "Open" : {
+      "comment" : "Settings: the default-browser card's button, which opens iOS Settings",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open"
+          }
+        }
+      }
+    },
+    "Open bookmarks" : {
+      "comment" : "VoiceOver action on the menu's Bookmark tile; does what its long press does",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open bookmarks"
+          }
+        }
+      }
+    },
     "Other" : {
       "comment" : "The engine picker's last tile, and the engine list's last row",
       "extractionState" : "manual",
@@ -1101,6 +1269,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Own index"
+          }
+        }
+      }
+    },
+    "Page picture" : {
+      "comment" : "VoiceOver label of a tab card's page snapshot",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page picture"
           }
         }
       }
@@ -1161,30 +1341,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Popular this week"
-          }
-        }
-      }
-    },
-    "Private" : {
-      "comment" : "Menu tile that opens the launch search for a private tab",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Private"
-          }
-        }
-      }
-    },
-    "Private tab" : {
-      "comment" : "Label above the launch search when the search opens a private tab",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Private tab"
           }
         }
       }
@@ -1437,18 +1593,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Skim"
-          }
-        }
-      }
-    },
-    "Skim %@" : {
-      "comment" : "VoiceOver label of the Skim pill in a suggestion row",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Skim %@"
           }
         }
       }
@@ -1729,6 +1873,18 @@
         }
       }
     },
+    "This update asks for more" : {
+      "comment" : "Install sheet title: a link update that widens where the mod runs, held for confirm",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This update asks for more"
+          }
+        }
+      }
+    },
     "Those pages are too long to read together. Try a narrower search." : {
       "comment" : "Skim couldn't finish: the sources were too large to compose from. COPY: review",
       "extractionState" : "manual",
@@ -1761,6 +1917,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Try again"
+          }
+        }
+      }
+    },
+    "Update" : {
+      "comment" : "Install sheet: confirms a held link update",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update"
           }
         }
       }

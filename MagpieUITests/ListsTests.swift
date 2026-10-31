@@ -103,6 +103,8 @@ final class ListsTests: XCTestCase {
             app: app, shots: shots, shot: "archive-fail-pill"
         )
         field.tap()
+        // Keys up first: text typed before the keyboard is ready loses its first characters.
+        _ = app.keyboards.firstMatch.waitForExistence(timeout: 5)
         field.typeText("season")
         XCTAssertFalse(
             any(app, "archive.row.rebase vs merge · git docs").exists,

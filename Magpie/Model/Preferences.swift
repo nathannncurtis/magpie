@@ -63,8 +63,8 @@ final class Preferences {
     var archiveInterval: TimeInterval {
         didSet {
             let snapped = Self.nearestStep(to: archiveInterval)
+            if archiveInterval != snapped { archiveInterval = snapped }
             guard oldValue != snapped else { return }
-            archiveInterval = snapped
             defaults.set(snapped, forKey: Key.archiveInterval)
         }
     }

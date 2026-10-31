@@ -71,6 +71,76 @@ struct ModDraft {
     var listURL: URL?
 }
 
+/// How an update went: it landed, it is held for the user to confirm, or it didn't.
+enum ModUpdateResult: Equatable, Sendable {
+    case updated
+    case held
+    case failed
+}
+
+/// What a script's new version would add over the installed one: run rules it didn't
+/// have and grants it didn't ask for. Any new `@match` or `@include` counts, even one an
+/// old rule already covers; `@grant none` is no permission.
+struct ModWidening: Equatable, Sendable {
+    /// The new rules, as written, in the new version's order.
+    var newSites: [String]
+    /// The new grants, in the new version's order.
+    var newGrants: [String]
+
+    var isEmpty: Bool { newSites.isEmpty && newGrants.isEmpty }
+
+    init(newSites: [String] = [], newGrants: [String] = []) {
+        self.newSites = newSites
+        self.newGrants = newGrants
+    }
+
+    init(from old: UserscriptMetadata?, to new: UserscriptMetadata?) {
+        guard let new else {
+            self.init()
+            return
+        }
+        let oldMatches = Set(old?.matches ?? [])
+        let oldIncludes = Set(old?.includes ?? [])
+        let oldGrants = Set(old?.grants ?? [])
+        let sites =
+            new.matches.filter { !oldMatches.contains($0) }.map(\.written)
+            + new.includes.filter { !oldIncludes.contains($0) }.map(\.written)
+        let grants = new.grants.filter { $0 != "none" && !oldGrants.contains($0) }
+        self.init(newSites: sites.uniqued(), newGrants: grants.uniqued())
+    }
+}
+
+/// A link update held for the user's word, with what it would add.
+struct PendingModUpdate: Identifiable {
+    let draft: ModDraft
+    let widening: ModWidening
+
+    var id: String { draft.id }
+}
+
+extension MatchPattern {
+    /// The rule as a script writes it.
+    var written: String { "\(scheme)://\(host)\(path)" }
+}
+
+extension URLRule {
+    /// The rule as a script writes it.
+    var written: String {
+        switch kind {
+        case .glob(let pattern): return pattern
+        case .regex(let source): return "/\(source)/"
+        }
+    }
+}
+
+extension Array where Element == String {
+    /// The strings in order, each kept once.
+    fileprivate func uniqued() -> [String] {
+        var seen: Set<String> = []
+        return filter { seen.insert($0).inserted }
+    }
+}
+
 /// What mod-installed filter lists plug into: the blocking store's `.mods` set, applied
 /// to every page while any filter-list mod is enabled (04 · 06).
 @MainActor
@@ -112,11 +182,8 @@ struct FileSystemModStoreIO: ModStoreIO {
     }
 
     func loadMods() -> [InstalledMod] {
-        guard
-            let data = try? Data(contentsOf: directory.appending(component: "mods.json")),
-            let mods = try? JSONDecoder().decode([InstalledMod].self, from: data)
-        else { return [] }
-        return mods
+        PersistedFile.decode([InstalledMod].self, from: directory.appending(component: "mods.json"))
+            ?? []
     }
 
     func save(mods: [InstalledMod]) {
@@ -141,11 +208,7 @@ struct FileSystemModStoreIO: ModStoreIO {
     }
 
     func loadValues(modID: String) -> [String: String] {
-        guard
-            let data = try? Data(contentsOf: valuesURL(for: modID)),
-            let values = try? JSONDecoder().decode([String: String].self, from: data)
-        else { return [:] }
-        return values
+        PersistedFile.decode([String: String].self, from: valuesURL(for: modID)) ?? [:]
     }
 
     func save(values: [String: String], modID: String) {
@@ -217,6 +280,9 @@ final class ModStore {
     /// re-apply them. Pages already showing a document keep running what they had.
     var onUserscriptsChanged: (@MainActor ([InstalledMod]) -> Void)?
 
+    /// A link update that would widen where the mod runs, waiting on the install sheet.
+    private(set) var pendingUpdate: PendingModUpdate?
+
     private let io: any ModStoreIO
     private let listSink: (any ModListSink)?
 
@@ -284,15 +350,17 @@ final class ModStore {
 
     /// Re-downloads a mod from where it came and replaces what it keeps: the code for a
     /// script, the metadata it carries, and the version. A download that fails, that no
-    /// longer verifies, or that turned into something else leaves the mod as it was.
+    /// longer verifies, or that turned into something else leaves the mod as it was. A
+    /// link script whose new version runs on more sites, or asks for more grants, is held
+    /// as `pendingUpdate` until the install sheet's confirm; anything else lands at once.
     @discardableResult
     func update(
         id: String,
         directory: ModDirectory,
         now: Date = Date(),
         fetch: @Sendable (URL) async throws -> ModDownload = ModFetcher.live
-    ) async -> Bool {
-        guard let current = mod(id: id) else { return false }
+    ) async -> ModUpdateResult {
+        guard let current = mod(id: id) else { return .failed }
 
         let draft: ModDraft
         switch current.source {
@@ -301,22 +369,46 @@ final class ModStore {
                 let entry = directory.entry(id: entryID),
                 let body = try? await directory.download(entry),
                 let built = entry.draft(body: body)
-            else { return false }
+            else { return .failed }
             draft = built
         case .link(let url):
             guard let fetched = await ModLinkInstaller.fetchDraft(from: url, fetch: fetch) else {
-                return false
+                return .failed
             }
-            guard fetched.kind == current.kind else { return false }
+            guard fetched.kind == current.kind else { return .failed }
+            let widening = ModWidening(from: current.script, to: fetched.script)
+            if !widening.isEmpty {
+                pendingUpdate = PendingModUpdate(draft: fetched, widening: widening)
+                return .held
+            }
             draft = fetched
         }
 
+        return apply(draft) ? .updated : .failed
+    }
+
+    /// Installs the held update, now the user has seen what it adds.
+    func confirmPendingUpdate() {
+        guard let pending = pendingUpdate else { return }
+        pendingUpdate = nil
+        apply(pending.draft)
+    }
+
+    /// Drops the held update; the mod keeps running the version it had.
+    func cancelPendingUpdate() {
+        pendingUpdate = nil
+    }
+
+    /// Replaces an installed mod with its new version, keeping its dates and state.
+    @discardableResult
+    private func apply(_ draft: ModDraft) -> Bool {
+        guard let index = mods.firstIndex(where: { $0.id == draft.id }) else { return false }
+        let current = mods[index]
         var updated = draft.installedMod(existing: current)
         updated.enabled = current.enabled
         if let body = draft.scriptBody {
             io.write(body: body, for: updated.id)
         }
-        guard let index = mods.firstIndex(where: { $0.id == id }) else { return false }
         mods[index] = updated
         changed()
         return true

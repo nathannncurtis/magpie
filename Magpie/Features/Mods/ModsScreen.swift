@@ -68,6 +68,7 @@ struct ModsScreen: View {
                     )
                 )
                 .padding(.horizontal, Layout.segmentInset)
+                .readableWidth()
                 .padding(.bottom, 10)
                 ScrollView {
                     Group {
@@ -77,6 +78,7 @@ struct ModsScreen: View {
                         }
                     }
                     .padding(.horizontal, Layout.contentInset)
+                    .readableWidth()
                     .padding(.bottom, scrollBottom)
                 }
             }
@@ -86,6 +88,7 @@ struct ModsScreen: View {
                 Spacer()
                 InstallFooter(action: { showingInstallSheet = true })
                     .padding(.horizontal, Layout.footerInset)
+                    .readableWidth()
                     .padding(
                         .bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset))
             }
@@ -100,6 +103,19 @@ struct ModsScreen: View {
             InstallSheet { draft in
                 store.install(draft)
                 land(draft.id)
+            }
+            .presentationDragIndicator(.hidden)
+            .presentationBackgroundInteraction(.disabled)
+        }
+        // A link update that would run on more sites, or ask for more, waits here for
+        // the user's word; cancel keeps the version already installed.
+        .sheet(
+            item: Binding(
+                get: { store.pendingUpdate },
+                set: { if $0 == nil { store.cancelPendingUpdate() } })
+        ) { pending in
+            InstallSheet(update: pending) { _ in
+                store.confirmPendingUpdate()
             }
             .presentationDragIndicator(.hidden)
             .presentationBackgroundInteraction(.disabled)
@@ -250,8 +266,10 @@ struct ModsScreen: View {
             icon: mod.icon,
             name: mod.name,
             summary: mod.summary,
-            authorLine: ModsCopy.authorLine(
-                kind: mod.kind, author: mod.author, fromLink: mod.source.isLink),
+            authorLine: landed
+                ? ModsCopy.installedJustNow
+                : ModsCopy.authorLine(
+                    kind: mod.kind, author: mod.author, fromLink: mod.source.isLink),
             notReviewed: mod.source.isLink,
             trailing: installedTrailing(for: mod, landed: landed),
             onRemove: {

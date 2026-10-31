@@ -192,4 +192,56 @@ struct BookmarkStoreTests {
 
         #expect(store.bookmarks.count == 1)
     }
+
+    @Test("a folder's bookmarks run newest first, and only its own")
+    func folderContentsNewestFirst() {
+        let store = BookmarkStore()
+        let folder = store.newFolder(name: "Reading")
+        let older = store.add(url: url("https://a.example"), title: "A", folder: folder.id, now: date(0))
+        store.add(url: url("https://b.example"), title: "B", now: date(5))
+        let newer = store.add(url: url("https://c.example"), title: "C", folder: folder.id, now: date(10))
+
+        #expect(store.bookmarks(inFolder: folder.id).map(\.id) == [newer.id, older.id])
+        #expect(store.count(inFolder: folder.id) == 2)
+    }
+
+    @Test("a folder made after a move goes to the end of the list")
+    func newFolderAfterMove() {
+        let store = BookmarkStore()
+        let first = store.newFolder(name: "One")
+        let second = store.newFolder(name: "Two")
+        store.moveFolders(fromOffsets: IndexSet(integer: 1), toOffset: 0)
+
+        let third = store.newFolder(name: "Three")
+
+        #expect(store.folders.map(\.id) == [second.id, first.id, third.id])
+        #expect(third.order > store.folders.map(\.order).filter { $0 != third.order }.max()!)
+    }
+
+    @Test("a favicon lands on its bookmark and in the saved index")
+    func faviconPersists() async throws {
+        let persistence = InMemoryBookmarkPersistence()
+        let store = BookmarkStore(persistence: persistence)
+        let saved = store.add(url: url("https://a.example"), title: "A", now: date(0))
+
+        store.setFavicon(Data([1, 2, 3]), for: saved.id)
+        await store.flushWrites()
+
+        #expect(store.bookmarks.first?.faviconData == Data([1, 2, 3]))
+        let reloaded = BookmarkStore(persistence: persistence)
+        await reloaded.loadIndex()
+        #expect(reloaded.bookmarks.first?.faviconData == Data([1, 2, 3]))
+    }
+
+    @Test("renames and unknown ids leave the other folders alone")
+    func unknownFolderIsANoOp() {
+        let store = BookmarkStore()
+        let folder = store.newFolder(name: "Kept")
+
+        store.renameFolder(UUID(), to: "Nope")
+        store.removeFolder(UUID())
+
+        #expect(store.folders.map(\.name) == ["Kept"])
+        #expect(store.folders.first?.id == folder.id)
+    }
 }

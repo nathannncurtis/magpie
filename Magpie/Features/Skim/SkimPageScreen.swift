@@ -51,6 +51,7 @@ struct SkimPageScreen: View {
                         shareURL: shareURL
                     )
                     .padding(.horizontal, Metrics.Spacing.insetFloating)
+                    .readableWidth()
                     .padding(
                         .bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset)
                     )
@@ -58,6 +59,7 @@ struct SkimPageScreen: View {
                 }
                 SkimQueryBar(query: page.query, onEdit: onEditQuery)
                     .padding(.horizontal, Metrics.Spacing.insetFloating)
+                    .readableWidth()
                     .padding(.top, SkimQueryBar.topGap)
                     .onGeometryChange(for: CGFloat.self) {
                         $0.frame(in: .global).minY
@@ -106,6 +108,7 @@ struct SkimPageScreen: View {
                             + Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset)
                             + Layout.barClearance)
                 }
+                .readableWidth()
                 .padding(.bottom, bottomInset)
             }
         }

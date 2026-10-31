@@ -56,8 +56,9 @@ struct DirectoryMod: Identifiable, Codable, Equatable, Sendable {
 
     /// The entry's file, verified against the digest the index carries.
     func download(fetch: @Sendable (URL) async throws -> ModDownload) async throws -> String {
+        guard isWellFormed else { throw DirectoryError.unreachable }
         let downloaded = try await fetch(url)
-        guard downloaded.response.statusCode == 200 else {
+        guard downloaded.response.statusCode == 200, ModFetcher.isWithinLimit(downloaded) else {
             throw DirectoryError.unreachable
         }
         guard ModFetcher.sha256Hex(of: downloaded.data) == sha256.lowercased() else {
@@ -69,6 +70,7 @@ struct DirectoryMod: Identifiable, Codable, Equatable, Sendable {
     /// The entry as a draft, once its file is in hand. A script file that no longer
     /// parses is refused: nothing is installed from it.
     func draft(body: String) -> ModDraft? {
+        guard isWellFormed else { return nil }
         switch kind {
         case .userscript:
             guard let script = Userscript.parse(body), script.metadata.hasRunRules else {
@@ -100,6 +102,18 @@ struct DirectoryMod: Identifiable, Codable, Equatable, Sendable {
                 scriptBody: nil,
                 listURL: url)
         }
+    }
+
+    /// Whether the entry is safe to act on: its id names a file and a content world, so
+    /// it is plain lowercase letters, digits and dashes; its file comes over https; and
+    /// its digest is a full SHA-256.
+    var isWellFormed: Bool {
+        let idCharacters = Set("abcdefghijklmnopqrstuvwxyz0123456789-")
+        let digestCharacters = Set("0123456789abcdef")
+        return !id.isEmpty && id.count <= 64 && id.allSatisfy(idCharacters.contains)
+            && !id.hasPrefix("link-")
+            && ModFetcher.isSecure(url)
+            && sha256.count == 64 && sha256.lowercased().allSatisfy(digestCharacters.contains)
     }
 
     enum DirectoryError: Error, Equatable {
@@ -266,6 +280,9 @@ struct FileSystemModDirectoryCache: ModDirectoryCache {
         if let data = try? JSONEncoder().encode(ModDirectoryCacheState(fetchedAt: fetchedAt)) {
             try? data.write(to: stateURL, options: .atomic)
         }
+        // The directory index is a cache beside the user's mods; only its files skip backups.
+        PersistedFile.excludeFromBackup(fileURL)
+        PersistedFile.excludeFromBackup(stateURL)
     }
 
     private var fileURL: URL {

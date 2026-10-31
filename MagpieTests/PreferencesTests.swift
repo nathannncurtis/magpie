@@ -80,6 +80,37 @@ struct PreferencesTests {
         #expect(preferences.archiveInterval == 3 * 24 * 3600)
     }
 
+    @Test("an off-step value snaps even when it snaps to the step already chosen")
+    func archiveSnapsToCurrentStep() {
+        let defaults = makeDefaults()
+        let preferences = Preferences(defaults: defaults)
+        preferences.archiveInterval = 3 * 24 * 3600
+
+        preferences.archiveInterval = 5 * 24 * 3600
+
+        #expect(preferences.archiveInterval == 3 * 24 * 3600)
+        #expect(Preferences(defaults: defaults).archiveInterval == 3 * 24 * 3600)
+    }
+
+    @Test("a stored off-step interval reads back as its nearest step")
+    func storedIntervalSnaps() {
+        let defaults = makeDefaults()
+        defaults.set(10 * 24 * 3600.0, forKey: "archiveInterval")
+        #expect(Preferences(defaults: defaults).archiveInterval == 7 * 24 * 3600)
+    }
+
+    @Test("a stored Other engine with no name keeps its template and reads as Other")
+    func storedOtherWithoutName() {
+        let defaults = makeDefaults()
+        defaults.set("other", forKey: "searchEngineID")
+        defaults.set("https://example.org/?q=%s", forKey: "searchEngineTemplate")
+
+        let engine = Preferences(defaults: defaults).searchEngine
+
+        #expect(engine.displayName == "Other")
+        #expect(engine.searchTemplate == "https://example.org/?q=%s")
+    }
+
     @Test("the archive labels read like the Settings row")
     func archiveLabels() throws {
         #expect(Preferences.archiveIntervalLabel(12 * 3600) == "12 hours")

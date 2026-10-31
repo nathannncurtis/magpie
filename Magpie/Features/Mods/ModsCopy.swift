@@ -15,6 +15,8 @@ enum ModsCopy {
     static var popularThisWeek: String { String(localized: "Popular this week") }
     static var get: String { String(localized: "Get") }
     static var installed: String { String(localized: "Installed") }
+    /// The confirmation row's line while a sheet install lands (06).
+    static var installedJustNow: String { String(localized: "Installed just now") }
     static var installing: String { String(localized: "Installing") }
     static var installFromURL: String { String(localized: "Install from URL") }
     static var notReviewed: String { String(localized: "Not reviewed") }
@@ -85,6 +87,12 @@ enum ModsCopy {
         }
         return line
     }
+
+    // The install sheet, holding a link update that widens where the mod runs.
+    static var updateAsksForMore: String { String(localized: "This update asks for more") }
+    static var newSites: String { String(localized: "New sites") }
+    static var newGrants: String { String(localized: "New grants") }
+    static var update: String { String(localized: "Update") }
 
     // The install sheet's warning.
     static var notInDirectory: String { String(localized: "Not in the directory.") }

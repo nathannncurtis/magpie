@@ -154,7 +154,7 @@ actor FileSystemBookmarkPersistence: BookmarkPersistence {
         guard FileManager.default.fileExists(atPath: indexURL.path) else { return nil }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode(BookmarkIndex.self, from: try Data(contentsOf: indexURL))
+        return PersistedFile.decode(BookmarkIndex.self, from: indexURL, decoder: decoder)
     }
 
     func saveIndex(_ index: BookmarkIndex) async throws {
@@ -163,7 +163,12 @@ actor FileSystemBookmarkPersistence: BookmarkPersistence {
         let data = try encoder.encode(index)
         try FileManager.default.createDirectory(
             at: indexURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try data.write(to: indexURL, options: .atomic)
+        do {
+            try data.write(to: indexURL, options: .atomic)
+        } catch {
+            PersistedFile.logWriteFailure(indexURL, error: error)
+            throw error
+        }
     }
 }
 

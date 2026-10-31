@@ -21,7 +21,8 @@ struct InstallFooter: View {
             }
             .foregroundStyle(Palette.textPrimary)
             .frame(maxWidth: .infinity)
-            .frame(height: Layout.height)
+            // Grows under Dynamic Type instead of clipping the label.
+            .frame(minHeight: Layout.height)
         }
         .buttonStyle(.glass)
         .buttonBorderShape(.capsule)

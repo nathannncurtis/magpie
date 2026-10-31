@@ -16,7 +16,7 @@ struct EnginePickerScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            OnboardingStepLabel(title: "Search")
+            OnboardingStepLabel(title: String(localized: "Search"))
                 // 26 below the safe-area top: the gap holds wherever the status bar ends.
                 .padding(.top, 26)
             Text("Where should searches go?")
@@ -24,12 +24,14 @@ struct EnginePickerScreen: View {
                 .foregroundStyle(Palette.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, Metrics.Spacing.insetList + 4)
+                .readableWidth()
                 .padding(.top, 8)
             Text("Pick one; you can switch any time from the menu.")
                 .font(Typography.row)
                 .foregroundStyle(Palette.textOnMistSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, Metrics.Spacing.insetList + 4)
+                .readableWidth()
                 .padding(.top, 8)
                 .padding(.bottom, 16)
 
@@ -42,8 +44,10 @@ struct EnginePickerScreen: View {
                     }
                 }
                 .padding(.horizontal, Metrics.Spacing.insetList)
+                .readableWidth()
                 if picked == .other {
                     otherField
+                        .readableWidth()
                         .padding(.top, 12)
                 }
             }
@@ -58,6 +62,7 @@ struct EnginePickerScreen: View {
                 action: save
             )
             .padding(.horizontal, 16)
+            .readableWidth()
             .padding(.bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset))
             .padding(.top, 12)
             .accessibilityIdentifier("picker.continue")
@@ -85,7 +90,7 @@ struct EnginePickerScreen: View {
     }
 
     private var continueTitle: String {
-        guard let chosenEngine else { return "Continue" }
+        guard let chosenEngine else { return String(localized: "Continue") }
         return String(localized: "Continue with \(chosenEngine.displayName)")
     }
 

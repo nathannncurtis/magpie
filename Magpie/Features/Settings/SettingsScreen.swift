@@ -14,44 +14,44 @@ struct SettingsScreen: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            SettingsScaffold(title: "Settings", trailing: { done }) {
+            SettingsScaffold(title: String(localized: "Settings"), trailing: { done }) {
                 DefaultBrowserCard()
-                SettingsSectionLabel(title: "Search")
+                SettingsSectionLabel(title: String(localized: "Search"))
                 SettingsGroup {
                     engineRow
                         .accessibilityIdentifier("settings.engine")
 
                     toggleRow(
-                        icon: .symbol("magnifyingglass"), title: "Suggestions",
+                        icon: .symbol("magnifyingglass"), title: String(localized: "Suggestions"),
                         id: "settings.suggestions", isDivided: true,
                         isOn: Binding(
                             get: { model.preferences.suggestionsEnabled },
                             set: { model.preferences.suggestionsEnabled = $0 }))
 
                     toggleRow(
-                        icon: .mark, title: "Skim for me",
+                        icon: .mark, title: String(localized: "Skim for me"),
                         id: "settings.skim", isDivided: true,
                         isOn: Binding(
                             get: { model.preferences.skimEnabled },
                             set: { model.preferences.skimEnabled = $0 }))
                 }
 
-                SettingsSectionLabel(title: "Privacy")
+                SettingsSectionLabel(title: String(localized: "Privacy"))
                 SettingsGroup {
                     toggleRow(
-                        icon: .symbol("shield.lefthalf.filled"), title: "Ads & trackers",
+                        icon: .symbol("shield.lefthalf.filled"), title: String(localized: "Ads & trackers"),
                         id: "settings.ads", isDivided: false,
                         isOn: Binding(
                             get: { model.blocker.blocksAdsAndTrackers },
                             set: { model.blocker.blocksAdsAndTrackers = $0 }))
                     toggleRow(
-                        icon: .cookie, title: "Cookie banners",
+                        icon: .cookie, title: String(localized: "Cookie banners"),
                         id: "settings.cookies", isDivided: true,
                         isOn: Binding(
                             get: { model.blocker.blocksCookieBanners },
                             set: { model.blocker.blocksCookieBanners = $0 }))
 
-                    SettingsRow(icon: .symbol("cellularbars"), title: "Filter lists") {
+                    SettingsRow(icon: .symbol("cellularbars"), title: String(localized: "Filter lists")) {
                         Text(
                             ContentBlocker.updatedText(
                                 from: model.blocker.lastUpdated, now: .now)
@@ -65,24 +65,24 @@ struct SettingsScreen: View {
                     .accessibilityIdentifier("settings.filterLists")
                 }
 
-                SettingsSectionLabel(title: "Tabs & more")
+                SettingsSectionLabel(title: String(localized: "Tabs & more"))
                 SettingsGroup {
-                    SettingsRow(icon: .symbol("archivebox"), title: "Archive tabs after") {
+                    SettingsRow(icon: .symbol("archivebox"), title: String(localized: "Archive tabs after")) {
                         rowValue(Preferences.archiveIntervalLabel(model.preferences.archiveInterval))
                         SettingsChevron()
                     }
                     .action { path.append(.archivePicker) }
                     .accessibilityIdentifier("settings.archive")
 
-                    SettingsRow(icon: .symbol("bookmark"), title: "Passwords") {
-                        rowValue("iOS Passwords")
+                    SettingsRow(icon: .symbol("bookmark"), title: String(localized: "Passwords")) {
+                        rowValue(String(localized: "iOS Passwords"))
                         SettingsChevron()
                     }
                     .action { openPasswords() }
                     .divided(true)
                     .accessibilityIdentifier("settings.passwords")
 
-                    SettingsRow(icon: .symbol("link"), title: "About Magpie") {
+                    SettingsRow(icon: .symbol("link"), title: String(localized: "About Magpie")) {
                         rowValue("\(Self.version) · MPL-2.0")
                         SettingsChevron()
                     }
@@ -115,7 +115,7 @@ struct SettingsScreen: View {
     }
 
     private var engineRow: some View {
-        SettingsRow(icon: .symbol("globe"), title: "Search engine") {
+        SettingsRow(icon: .symbol("globe"), title: String(localized: "Search engine")) {
             rowValue(model.preferences.searchEngine.displayName)
             SettingsChevron()
         }
@@ -192,17 +192,21 @@ struct SettingsScaffold<Trailing: View, Content: View>: View {
                 topRow
                     .padding(.horizontal, 16)
                     .frame(height: 36)
+                    .readableWidth()
                     .zIndex(1)
                 ScrollView {
-                    Text(title)
-                        .font(Typography.screenTitle)
-                        .foregroundStyle(Palette.textPrimary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 22)
-                        .padding(.bottom, 10)
-                    content()
-                    Color.clear.frame(height: 32)
+                    VStack {
+                        Text(title)
+                            .font(Typography.screenTitle)
+                            .foregroundStyle(Palette.textPrimary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 22)
+                            .padding(.bottom, 10)
+                        content()
+                        Color.clear.frame(height: 32)
+                    }
+                    .readableWidth()
                 }
             }
         }

@@ -67,7 +67,7 @@ struct SkimQueryBar: View {
                 .foregroundStyle(Palette.textPrimary)
             }
             .padding(.horizontal, Layout.sidePadding)
-            .frame(height: Layout.height)
+            .frame(minHeight: Layout.height)  // grows with Dynamic Type
             .frame(maxWidth: .infinity)
             .glassEffect(.regular, in: .capsule)
             .frame(minHeight: Layout.hitSide)
@@ -120,7 +120,7 @@ struct SkimControlBar: View {
         }
         .padding(.leading, canDigDeeper ? Layout.leadingPadding : Layout.trailingPadding)
         .padding(.trailing, Layout.trailingPadding)
-        .frame(height: Layout.height)
+        .frame(minHeight: Layout.height)  // grows with Dynamic Type
         .frame(maxWidth: .infinity)
         .glassEffect(.regular.interactive(), in: .capsule)
         .accessibilityElement(children: .contain)
@@ -139,12 +139,14 @@ struct SkimControlBar: View {
                     .frame(width: 46, height: 46)
                     .contentShape(Rectangle())
             }
+            .accessibilityLabel(Text("Share"))
             .accessibilityIdentifier("skim.share")
         } else {
             CircleButton(systemName: "square.and.arrow.up") {}
-                .foregroundStyle(Palette.textPrimary.opacity(0.35))
+                .foregroundStyle(Palette.textPrimary)
                 .frame(width: 46, height: 46)
                 .disabled(true)
+                .accessibilityLabel(Text("Share"))
         }
     }
 }
@@ -407,9 +409,9 @@ struct CitationBadge: View {
     }
 
     var body: some View {
-        Text("\(number)")
+        Text(verbatim: "\(number)")
             .font(.system(size: Layout.numberSize, weight: .semibold))
-            .foregroundStyle(.white)
+            .foregroundStyle(Palette.onSheen)
             .frame(width: Layout.size, height: Layout.size)
             .background(Circle().fill(Palette.sheen))
             .contentShape(Circle())

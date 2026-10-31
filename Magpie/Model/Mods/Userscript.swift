@@ -4,8 +4,12 @@ import Foundation
 ///
 /// The scheme is `*` (http and https) or one of http, https, file and ftp. The host is
 /// `*` (any host), `*.domain` (the domain and any subdomain) or an exact host; ports are
-/// not part of a pattern. The path is a glob that must start with a slash. A `*` in the
-/// path matches any run of characters, including slashes.
+/// not part of a pattern, so any port matches. The path is a glob that must start with a
+/// slash. A `*` in the path matches any run of characters, including slashes.
+///
+/// A subdomain label can't hold `/`, `?`, `#`, `@`, `:` or a backslash, so a `*.example.com`
+/// rule can't be satisfied by a query, fragment or userinfo that merely contains
+/// ".example.com".
 struct MatchPattern: Codable, Equatable, Hashable, Sendable {
 
     /// The scheme part as written, `*` for "http or https".
@@ -23,6 +27,8 @@ struct MatchPattern: Codable, Equatable, Hashable, Sendable {
     private static let anyHost = "*"
     /// The prefix that widens a host to its subdomains.
     private static let subdomainPrefix = "*."
+    /// Ports are not part of a pattern: any port, or none, matches.
+    private static let anyPort = "(?::[0-9]+)?"
 
     init?(raw: String) {
         guard let divider = raw.range(of: "://") else { return nil }
@@ -77,9 +83,9 @@ struct MatchPattern: Codable, Equatable, Hashable, Sendable {
             hostPart = "[^/]*"
         } else if host.hasPrefix(Self.subdomainPrefix) {
             let domain = String(host.dropFirst(Self.subdomainPrefix.count))
-            hostPart = "(?:[^/]+\\.)*" + Self.escape(domain)
+            hostPart = "(?:[^/?#@:\\\\.]+\\.)*" + Self.escape(domain) + Self.anyPort
         } else {
-            hostPart = Self.escape(host)
+            hostPart = Self.escape(host) + Self.anyPort
         }
 
         let pathPart = Self.escape(path)

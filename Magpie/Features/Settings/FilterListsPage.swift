@@ -8,7 +8,7 @@ struct FilterListsPage: View {
     @State private var updates: [FilterListUpdate] = []
 
     var body: some View {
-        SettingsScaffold(title: "Filter lists", showsBack: true) {
+        SettingsScaffold(title: String(localized: "Filter lists"), showsBack: true) {
             SettingsGroup {
                 ForEach(Array(updates.enumerated()), id: \.element.id) { index, update in
                     SettingsRow(icon: .symbol("cellularbars"), title: update.list.title) {
@@ -19,7 +19,7 @@ struct FilterListsPage: View {
                     .divided(index > 0)
                     .accessibilityIdentifier("settings.filterList.\(update.list.id)")
                 }
-                SettingsRow(icon: .symbol("arrow.clockwise"), title: "Update now") {
+                SettingsRow(icon: .symbol("arrow.clockwise"), title: String(localized: "Update now")) {
                     EmptyView()
                 }
                 .divided(!updates.isEmpty)

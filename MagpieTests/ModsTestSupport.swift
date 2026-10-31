@@ -21,8 +21,8 @@ enum StubReply {
     }
 
     private func http(_ statusCode: Int) -> HTTPURLResponse {
-        let address = URL(fileURLWithPath: "/reply")
         guard
+            let address = URL(string: "https://stub.example/reply"),
             let response = HTTPURLResponse(
                 url: address, statusCode: statusCode, httpVersion: "HTTP/1.1", headerFields: nil)
         else {

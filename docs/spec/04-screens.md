@@ -32,6 +32,7 @@ Later launches restore the last tab, with no animation.
 - **Scrolling:** collapses the bar to slim (05 · Chrome on scroll).
 - **Dark mode on pages:** never inverted. Send `Sec-CH-Prefers-Color-Scheme: dark` to Google, and inject nothing; sites with a dark theme show it themselves.
 - **Blocking:** ads and trackers, and cookie banners, are blocked with `WKContentRuleList`s compiled from the downloaded lists. They are two separate rule sets on two separate toggles.
+- **Hardware keyboard:** ⌘T new tab, ⌘L the search sheet, ⌘W close tab, ⌘R reload, ⌘[ / ⌘] back and forward, ⌘F find on page, ⌘⇧\ the tabs screen; Esc folds the search sheet, the menu, or the find bar away. The page's own shortcuts work only while reading; every one shows in the system overlay (hold ⌘).
 
 ## 03 · Tabs
 - **Layout:** a `TabStack` on the mist. The current tab is centred; the others sit to each side, with labels above.
@@ -70,6 +71,7 @@ Later launches restore the last tab, with no animation.
 - **Directory install:** while the entry's file is fetched and checked, the row's Get gives way to the 24 pt `MarkSpinner` (05 · 06). More than one can run at once, each row carrying its own mark; a Get for an entry already installing does nothing. The install stays on the Directory tab: when it lands, the row's Get becomes a popping `InstalledCheck` in place. An install that does not land shows one plain line under the card, with Get as the way to try again.
 - **Footer:** the glass `InstallFooter` pill.
 - **Installed tab:** the same rows, each with an on/off toggle and swipe-to-remove.
+- **Link update:** an update to a link-installed script that adds any `@match`, `@include` or `@grant` it didn't have is held; the install sheet shows the new version with its new sites and grants, "Update" installs it and "Cancel" keeps the old one. Anything else updates silently.
 - **Directory source:** a JSON index in a public GitHub repo. Every addition is reviewed through a pull request. It is fetched at most once a day.
 - **Mod types:**
   - userscripts, injected with `WKUserScript` per matching host
@@ -99,7 +101,7 @@ Later launches restore the last tab, with no animation.
 
 ## 09 · Archive
 - **Header:** "Archive" in `screenTitle`, with "Done" at top right.
-- **List:** rows on the mist, grouped by `DayHeader` (Yesterday, Earlier this week…). Each row: favicon, title, site, time.
+- **List:** rows on the mist, grouped by `DayHeader` (Today, Yesterday, Earlier this week, then one per month, newest first). A month band names its year only outside the current year: "October", "October 2025". Each row: favicon, title, site, time.
 - **Actions:** tap a row to restore the tab; swipe to delete.
 - **Search:** the `BottomSearchPill` with "Search archived tabs" searches titles and addresses; the pill rides the keyboard.
 - **Retention:** 30 days, then deleted.

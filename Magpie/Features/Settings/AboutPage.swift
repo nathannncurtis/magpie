@@ -3,17 +3,17 @@ import SwiftUI
 /// About Magpie (04 · 11): the version, the licence, and where the source lives.
 struct AboutPage: View {
     var body: some View {
-        SettingsScaffold(title: "About Magpie", showsBack: true) {
+        SettingsScaffold(title: String(localized: "About Magpie"), showsBack: true) {
             SettingsGroup {
-                SettingsRow(icon: .symbol("info.circle"), title: "Version") {
+                SettingsRow(icon: .symbol("info.circle"), title: String(localized: "Version")) {
                     value(Self.version)
                 }
-                SettingsRow(icon: .symbol("doc.text"), title: "Licence") {
+                SettingsRow(icon: .symbol("doc.text"), title: String(localized: "Licence")) {
                     value("MPL-2.0")
                 }
                 .divided(true)
                 .accessibilityIdentifier("settings.about.licence")
-                SettingsRow(icon: .symbol("link"), title: "Source code") {
+                SettingsRow(icon: .symbol("link"), title: String(localized: "Source code")) {
                     Image(systemName: "arrow.up.right")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(Palette.textOnMistSecondaryMeta)

@@ -85,7 +85,7 @@ struct FeaturedModCard: View {
         Group {
             if colorScheme == .dark {
                 RoundedRectangle(cornerRadius: Metrics.Radius.card, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.07), lineWidth: 0.5)
+                    .strokeBorder(Palette.separator, lineWidth: 0.5)
             }
         }
     }
@@ -134,7 +134,7 @@ private struct GoogleAnswerBoxPreview: View {
             GeometryReader { geo in
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
-                        Text("G")
+                        Text(verbatim: "G")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(palette.googleBlue)
                             .frame(width: 22, height: 22)

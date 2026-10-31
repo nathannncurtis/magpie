@@ -47,7 +47,7 @@ actor FileSystemTabPersistence: TabPersistence {
         guard FileManager.default.fileExists(atPath: indexURL.path) else { return nil }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        return try decoder.decode(TabIndex.self, from: try Data(contentsOf: indexURL))
+        return PersistedFile.decode(TabIndex.self, from: indexURL, decoder: decoder)
     }
 
     func saveIndex(_ index: TabIndex) async throws {
@@ -56,7 +56,12 @@ actor FileSystemTabPersistence: TabPersistence {
         let data = try encoder.encode(index)
         try FileManager.default.createDirectory(
             at: indexURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try data.write(to: indexURL, options: .atomic)
+        do {
+            try data.write(to: indexURL, options: .atomic)
+        } catch {
+            PersistedFile.logWriteFailure(indexURL, error: error)
+            throw error
+        }
     }
 
     func loadSnapshot(for id: Tab.ID) async -> Data? {
@@ -68,6 +73,8 @@ actor FileSystemTabPersistence: TabPersistence {
     func saveSnapshot(_ data: Data, for id: Tab.ID) async throws {
         try FileManager.default.createDirectory(
             at: snapshotsDirectory, withIntermediateDirectories: true)
+        // Snapshots are redrawn from the page; they stay out of backups.
+        PersistedFile.excludeFromBackup(snapshotsDirectory)
         try data.write(to: snapshotURL(for: id), options: .atomic)
     }
 

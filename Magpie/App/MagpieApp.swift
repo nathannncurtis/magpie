@@ -6,6 +6,10 @@ struct MagpieApp: App {
 
     @State private var model = UITestEnvironment.makeModel()
 
+    /// A link handed over before the saved tabs are in, opened once they are.
+    @State private var pendingURL: URL?
+    @State private var started = false
+
     var body: some Scene {
         WindowGroup {
             RootView()
@@ -14,8 +18,17 @@ struct MagpieApp: App {
                 .task {
                     if UITestEnvironment.isUITesting { await UITestPageServer.shared.start() }
                     await model.start()
+                    started = true
+                    if let url = pendingURL {
+                        pendingURL = nil
+                        model.openFromLaunch(url)
+                    }
                     UITestEnvironment.applySurfaceOverride(to: model)
                     await UITestEnvironment.play(UITestEnvironment.script, on: model)
+                }
+                .onOpenURL { url in
+                    guard url.scheme == "http" || url.scheme == "https" else { return }
+                    if started { model.openFromLaunch(url) } else { pendingURL = url }
                 }
                 // The app switcher keeps a picture of the screen on disk; with a
                 // private tab open, that picture is the mist.
@@ -37,6 +50,13 @@ struct MagpieApp: App {
                         Task { await model.refreshBlocking() }
                     }
                 }
+                .onReceive(
+                    NotificationCenter.default.publisher(
+                        for: UIApplication.didReceiveMemoryWarningNotification)
+                ) { _ in
+                    model.memoryWarning()
+                }
         }
+        .commands { KeyCommands(model: model) }
     }
 }

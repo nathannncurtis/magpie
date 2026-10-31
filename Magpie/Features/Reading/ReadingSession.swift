@@ -276,7 +276,9 @@ final class ReadingSession {
     init(url: URL, pageConfiguration: WebPage.Configuration? = nil) {
         initialURL = url
         requestedURL = url
-        page = pageConfiguration.map { WebPage(configuration: $0) } ?? WebPage()
+        page = WebPage(
+            configuration: pageConfiguration ?? WebPage.Configuration(),
+            navigationDecider: PageNavigationDecider())
         monitor.pathUpdateHandler = { [weak self] path in
             let online = path.status == .satisfied
             Task { @MainActor in
@@ -290,8 +292,22 @@ final class ReadingSession {
         monitor.cancel()
     }
 
+    /// The address the page has committed to: what the bar shows. A load still in
+    /// flight, or one a page started and never finished, does not speak for the page.
+    var committedURL: URL? {
+        // Idle, the page's own address is the committed one, a same-page move included;
+        // mid-load it may already name where the load is headed.
+        page.isLoading ? lastCommittedURL : page.url
+    }
+    /// The address as of the last commit, for the bar while a load is in flight.
+    private var lastCommittedURL: URL?
+
     var canGoBack: Bool {
         !page.backForwardList.backList.isEmpty
+    }
+
+    var canGoForward: Bool {
+        !page.backForwardList.forwardList.isEmpty
     }
 
     /// The site's icon link, for the tab's card and labels: an icon the page declares,
@@ -315,6 +331,8 @@ final class ReadingSession {
     /// The watch subscribes after the load is issued, and a page served fast can outrun
     /// it — the load's own sequence, in `drive`, spans every event of that load.
     func run() async {
+        // A session dropped before its task ran never starts a load.
+        guard !Task.isCancelled else { return }
         SnapshotLog.event("observer start \(logTag)")
         open(initialURL)
         while !Task.isCancelled {
@@ -324,6 +342,7 @@ final class ReadingSession {
                         "nav \(logTag) \(Self.describe(event)) url=\(loggable(page.url))")
                     if event == .committed {
                         failure = nil
+                        lastCommittedURL = page.url
                     }
                     if event == .finished {
                         await refreshPageBackground()
@@ -362,6 +381,22 @@ final class ReadingSession {
         }
     }
 
+    /// The tab let its page go: closed, archived, or pruned past the live cap. The page's
+    /// own work stops — its load and every watch on it — so nothing holds the session,
+    /// and its web content process, past the owner dropping it.
+    func close() {
+        loadTask?.cancel()
+        loadTask = nil
+        loadWatch?.cancel()
+        loadWatch = nil
+        layoutWatch?.cancel()
+        layoutWatch = nil
+        onPageSettled = nil
+        onPageTitled = nil
+        monitor.cancel()
+        page.stopLoading()
+    }
+
     /// Loads a page outright.
     func open(_ url: URL) {
         requestedURL = url
@@ -387,6 +422,13 @@ final class ReadingSession {
         guard let back = page.backForwardList.backList.last else { return }
         requestedURL = back.url
         startLoad { self.page.load(back) }
+    }
+
+    /// Goes forward one page.
+    func goForward() {
+        guard let forward = page.backForwardList.forwardList.first else { return }
+        requestedURL = forward.url
+        startLoad { self.page.load(forward) }
     }
 
     private func startLoad(

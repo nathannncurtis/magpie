@@ -81,6 +81,6 @@ extension CircleButton where Content == CircleButtonSymbol {
         CircleButton(action: {}) { TabCount(count: 4) }
         CircleButton(systemName: "ellipsis", isPressed: true) {}
     }
-    .foregroundStyle(Color(hex: 0x3A2E26))
+    .foregroundStyle(Palette.onLightPageTint)
     .padding(30)
 }
