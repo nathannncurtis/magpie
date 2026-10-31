@@ -48,6 +48,7 @@ struct PageLoadFailureView: View {
             .padding(.top, Self.buttonGap)
         }
         .padding(.horizontal, Self.sideInset)
+        .frame(maxWidth: Metrics.Column.readable)
         .padding(.bottom, Self.lift)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Palette.skimBackground)

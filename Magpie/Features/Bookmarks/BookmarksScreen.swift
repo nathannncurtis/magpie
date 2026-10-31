@@ -61,6 +61,7 @@ struct BookmarksScreen: View {
                         .transition(popTransition)
                 }
             }
+            .readableWidth()
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .animation(reduceMotion ? Springs.smooth : Springs.chrome.animation, value: openFolderID)
             emptyBlock
@@ -73,6 +74,7 @@ struct BookmarksScreen: View {
                     text: $searchText
                 )
                 .padding(.horizontal, Metrics.Spacing.insetFloating)
+                .readableWidth()
                 .padding(.bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset))
                 // The pill runs on behind the keys; the padding above, read off the safe
                 // area, is what lifts it onto them.
