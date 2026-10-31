@@ -2,8 +2,8 @@ import Foundation
 
 /// Groups archived tabs into the list's day bands: Today, Yesterday, Earlier this week,
 /// then one band per month, newest first; a month outside the current year carries its
-/// year ("October 2025"), one inside it doesn't ("October"). Rows are grouped and timed by when the tab was
-/// last read, so the archive reads like a history of being there.
+/// year ("October 2025"), one inside it doesn't ("October"). Rows are grouped and timed
+/// by when the tab was last read, so the archive reads like a history of being there.
 enum ArchiveGrouping {
 
     /// One band of the list, holding its rows.
