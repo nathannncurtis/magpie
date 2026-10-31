@@ -99,7 +99,7 @@ Later launches restore the last tab, with no animation.
 
 ## 09 · Archive
 - **Header:** "Archive" in `screenTitle`, with "Done" at top right.
-- **List:** rows on the mist, grouped by `DayHeader` (Yesterday, Earlier this week…). Each row: favicon, title, site, time.
+- **List:** rows on the mist, grouped by `DayHeader` (Today, Yesterday, Earlier this week, then one per month, newest first). A month band names its year only outside the current year: "October", "October 2025". Each row: favicon, title, site, time.
 - **Actions:** tap a row to restore the tab; swipe to delete.
 - **Search:** the `BottomSearchPill` with "Search archived tabs" searches titles and addresses; the pill rides the keyboard.
 - **Retention:** 30 days, then deleted.
