@@ -372,20 +372,40 @@ final class AppModel {
     private func fetchTabFavicon(for id: Tab.ID, at url: URL?) {
         let tab = store.tabs.first { $0.id == id } ?? store.archivedTabs.first { $0.id == id }
         guard tab?.faviconData == nil else { return }
-        fetchFavicon(at: url) { [store] in store.setFavicon($0, for: id) }
+        fetchFavicon(
+            at: url,
+            stillCurrent: { [store] in
+                (store.tabs.first { $0.id == id } ?? store.archivedTabs.first { $0.id == id })?
+                    .faviconURL == url
+            },
+            save: { [store] in store.setFavicon($0, for: id) }
+        )
     }
 
     /// The icon onto its bookmark, the same way.
     private func fetchBookmarkFavicon(for id: Bookmark.ID, at url: URL?) {
         guard bookmarks.bookmarks.first(where: { $0.id == id })?.faviconData == nil else { return }
-        fetchFavicon(at: url) { [bookmarks] in bookmarks.setFavicon($0, for: id) }
+        fetchFavicon(
+            at: url,
+            stillCurrent: { [bookmarks] in
+                bookmarks.bookmarks.first(where: { $0.id == id })?.faviconURL == url
+            },
+            save: { [bookmarks] in bookmarks.setFavicon($0, for: id) }
+        )
     }
 
-    /// One download per address, shared by every row that points at it.
-    private func fetchFavicon(at url: URL?, save: @MainActor @escaping (Data) -> Void) {
+    /// One download per address, shared by every row that points at it. A slow download
+    /// can outlast the navigation that began it, so the bytes are saved onto a row only
+    /// while it still points at the address they came from.
+    private func fetchFavicon(
+        at url: URL?,
+        stillCurrent: @MainActor @escaping () -> Bool,
+        save: @MainActor @escaping (Data) -> Void
+    ) {
         guard let url else { return }
         Task { [faviconFetcher] in
             guard let data = await faviconFetcher.favicon(at: url) else { return }
+            guard stillCurrent() else { return }
             save(data)
         }
     }

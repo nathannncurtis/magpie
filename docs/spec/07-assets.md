@@ -9,5 +9,5 @@
 | Cookie icon | Custom | 20 pt grid, 2 pt stroke, rounded caps; matches SF Symbols medium |
 | Drawn mod icons | Board 06 | Simple white glyph on a 160° gradient tile; each directory mod supplies its own icon in the index |
 | Engine favicons | Bundled PNG at 3x (30 pt → 90 px) | Google, DuckDuckGo, Brave, Kagi, Ecosia, Startpage, Bing; generic for Other |
-| Site favicons | Fetched from the site itself (`<link rel=icon>` / apple-touch-icon), cached on device | Never fetch them through a third-party favicon service, which would leak browsing |
+| Site favicons | Fetched from the site itself (`<link rel=icon>` / apple-touch-icon, preferring a raster one — an SVG the system cannot draw is skipped — and falling back to `/favicon.ico`), cached on device | Never fetch them through a third-party favicon service, which would leak browsing. An address that answers with no usable icon is left alone for ten minutes rather than re-asked on every settle |
 | Filter lists | Downloaded on first run, auto-updated | EasyList / EasyPrivacy-class for ads & trackers; a cookie-banner list (e.g. EasyList Cookie) on its own toggle. Nothing bundled |
