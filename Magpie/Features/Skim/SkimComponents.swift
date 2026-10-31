@@ -411,7 +411,7 @@ struct CitationBadge: View {
     var body: some View {
         Text(verbatim: "\(number)")
             .font(.system(size: Layout.numberSize, weight: .semibold))
-            .foregroundStyle(.white)
+            .foregroundStyle(Palette.onSheen)
             .frame(width: Layout.size, height: Layout.size)
             .background(Circle().fill(Palette.sheen))
             .contentShape(Circle())
