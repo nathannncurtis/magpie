@@ -7,7 +7,7 @@ struct ArchivePickerPage: View {
     let preferences: Preferences
 
     var body: some View {
-        SettingsScaffold(title: "Archive tabs after", showsBack: true) {
+        SettingsScaffold(title: String(localized: "Archive tabs after"), showsBack: true) {
             SettingsGroup {
                 ForEach(
                     Array(Preferences.archiveIntervalSteps.enumerated()),
