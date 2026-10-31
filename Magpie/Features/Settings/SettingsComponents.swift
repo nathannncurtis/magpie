@@ -227,6 +227,8 @@ struct SettingsToggleRow: View {
             SettingsRowFace(icon: icon, title: title) { EmptyView() }
                 .frame(minHeight: Metrics.Spacing.rowSettings)
                 .contentShape(.rect)
+                // The switch alone answers a tap on its own; the row's face flips it too.
+                .onTapGesture { isOn.wrappedValue.toggle() }
         }
         .toggleStyle(.switch)
         .tint(Palette.toggleOn)

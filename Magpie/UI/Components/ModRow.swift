@@ -88,6 +88,9 @@ struct ModRow: View {
         // The card's own colour, so the row is opaque: the swipe action under it shows
         // only where a swipe has moved the row aside, never through empty space.
         .background(Palette.card)
+        // A container, so the row's name stays its own and the Get button and switch
+        // inside keep theirs.
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("mods.row")
     }
 

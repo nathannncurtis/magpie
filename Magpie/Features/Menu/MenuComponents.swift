@@ -193,6 +193,8 @@ struct MenuToggleRow: View {
             MenuRowFace(icon: icon, title: title) { EmptyView() }
                 .frame(minHeight: Metrics.Spacing.rowMenu)
                 .contentShape(.rect)
+                // The switch alone answers a tap on its own; the row's face flips it too.
+                .onTapGesture { isOn.wrappedValue.toggle() }
         }
         .toggleStyle(.switch)
         .tint(Palette.toggleOn)
