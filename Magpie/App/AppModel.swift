@@ -660,6 +660,15 @@ final class AppModel {
         surface = .tabs
     }
 
+    /// A swipe back off the tabs screen: the current tab's page, when there is one.
+    var canLeaveTabs: Bool { store.currentTabID != nil }
+
+    /// The swipe itself: the current card grows back into its page.
+    func leaveTabs() {
+        guard let id = store.currentTabID else { return }
+        openTab(id)
+    }
+
     // MARK: Mods
 
     /// Where Done on the mods screen returns to.
@@ -927,9 +936,29 @@ final class AppModel {
         surface = .reading(searchOpen: false)
     }
 
+    /// Where a swipe back off the bookmarks returns to.
+    private var surfaceBeforeBookmarks: Surface?
+
     /// The Bookmark tile's long press, and the UI tests' way in.
     func showBookmarks() {
+        guard surface != .bookmarks else { return }
+        if case .reading(true) = surface {
+            surfaceBeforeBookmarks = .reading(searchOpen: false)
+        } else {
+            surfaceBeforeBookmarks = surface
+        }
         surface = .bookmarks
+    }
+
+    /// A swipe back off the bookmarks: whatever was up before them.
+    func closeBookmarks() {
+        let back = surfaceBeforeBookmarks
+        surfaceBeforeBookmarks = nil
+        if let back, back != .bookmarks {
+            surface = back
+        } else {
+            surface = store.tabs.isEmpty ? .launchSearch : .tabs
+        }
     }
 
     /// A tapped bookmark: a new tab, opened on the spot — or, for a Skim page,

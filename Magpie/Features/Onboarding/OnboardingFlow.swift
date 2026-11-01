@@ -15,6 +15,9 @@ struct OnboardingFlow: View {
                     preferences.hasCompletedOnboarding = true
                 }
                 .transition(.opacity)
+                .backSwipe {
+                    withAnimation(.easeInOut(duration: 0.25)) { showsPicker = false }
+                }
             } else {
                 WelcomeScreen {
                     withAnimation(.easeInOut(duration: 0.25)) { showsPicker = true }

@@ -104,6 +104,8 @@ struct SettingsScreen: View {
                 }
             }
         }
+        // Off Settings from its top page; a pushed page pops on the system's own swipe.
+        .backSwipe(isEnabled: path.isEmpty) { model.closeSettings() }
     }
 
     /// The pages Settings pushes.
