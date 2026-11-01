@@ -3,7 +3,8 @@ import SwiftUI
 /// 01 · Launch: the mist with the search sheet, its field focused with the keyboard up on
 /// arrival. Submitting a search or an address opens a new tab on the reading screen. The
 /// sheet rises from the bottom (05 · Launch); a swipe down or a tap away goes back to the
-/// stack when there are tabs to return to.
+/// stack when there are tabs to return to. With none, it folds away into the mist instead:
+/// the mark, and a bottom row (Archived, +, Settings) that always leads somewhere.
 struct LaunchScreen: View {
     let engine: SearchEngine
     /// Whether the search sheet shows its Skim pill.
@@ -20,30 +21,51 @@ struct LaunchScreen: View {
     var onSkim: (String) -> Void = { _ in }
     let onOpen: (URL) -> Void
     let onDismiss: () -> Void
+    /// Whether there are tabs a dismissal returns to; without them the sheet folds away.
+    var hasTabs: Bool = true
+    var archivedCount: Int = 0
+    var onNewTab: () -> Void = {}
+    var onNewPrivateTab: () -> Void = {}
+    var onShowArchive: () -> Void = {}
+    var onShowSettings: () -> Void = {}
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var arrived = false
+    /// The sheet folded away with no tabs to go back to: the mist, the mark and the row.
+    @State private var folded = false
+    @State private var bottomInset: CGFloat = 0
 
     /// How far up the sheet starts before it rises.
     private static let riseDistance: CGFloat = 160
+
+    private enum Layout {
+        static let markSize: CGFloat = 96
+        static let rowInset: CGFloat = 16
+    }
 
     var body: some View {
         ZStack {
             MistBackground()
                 .ignoresSafeArea()
-            SearchSheet(
-                engine: engine,
-                skimEnabled: skimEnabled,
-                suggestionsEnabled: suggestionsEnabled,
-                focusSuspended: focusSuspended,
-                initialText: initialText,
-                suggestions: suggestions,
-                recents: recents,
-                onOpen: onOpen,
-                onSkim: onSkim,
-                onDismiss: onDismiss
-            )
-            .offset(y: arrived ? 0 : Self.riseDistance)
+            if folded {
+                foldedContent
+                    .transition(.opacity)
+            } else {
+                SearchSheet(
+                    engine: engine,
+                    skimEnabled: skimEnabled,
+                    suggestionsEnabled: suggestionsEnabled,
+                    focusSuspended: focusSuspended,
+                    initialText: initialText,
+                    suggestions: suggestions,
+                    recents: recents,
+                    onOpen: onOpen,
+                    onSkim: onSkim,
+                    onDismiss: dismiss
+                )
+                .offset(y: arrived ? 0 : Self.riseDistance)
+                .transition(.move(edge: .bottom))
+            }
             if isPrivate {
                 Label(String(localized: "Private tab"), systemImage: "eye.slash")
                     .font(Typography.rowTitle)
@@ -61,8 +83,66 @@ struct LaunchScreen: View {
         .onChange(of: focusSuspended) { _, suspended in
             if !suspended { rise() }
         }
+        .onGeometryChange(for: CGFloat.self) {
+            $0.safeAreaInsets.bottom
+        } action: {
+            bottomInset = $0
+        }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("launch.screen")
+    }
+
+    /// With tabs, a dismissal goes back to the stack; without, the sheet folds away here.
+    private func dismiss() {
+        guard !hasTabs else {
+            onDismiss()
+            return
+        }
+        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
+            folded = true
+        }
+    }
+
+    /// The sheet back up, its field focused, for a new tab or a private one.
+    private func unfold(_ open: () -> Void) {
+        open()
+        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
+            folded = false
+        }
+    }
+
+    private var foldedContent: some View {
+        ZStack(alignment: .bottom) {
+            Mark(size: Layout.markSize, style: .sheen)
+                .foregroundStyle(Palette.textPrimary)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .accessibilityHidden(true)
+            // Three equal columns, so the + holds the centre whatever the chip's width.
+            HStack(spacing: 0) {
+                ArchivedChip(count: archivedCount, action: onShowArchive)
+                    .accessibilityIdentifier("launch.archive")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                PlusButton(action: { unfold(onNewTab) })
+                    .contextMenu {
+                        Button(action: { unfold(onNewPrivateTab) }) {
+                            Label(String(localized: "New private tab"), systemImage: "eye.slash")
+                        }
+                    }
+                    .accessibilityAction(named: Text(String(localized: "New private tab"))) {
+                        unfold(onNewPrivateTab)
+                    }
+                    .accessibilityIdentifier("launch.plus")
+                    .frame(maxWidth: .infinity)
+                CircleButton(systemName: "gearshape", action: onShowSettings)
+                    .foregroundStyle(Palette.textPrimary)
+                    .accessibilityLabel(Text(String(localized: "Settings")))
+                    .accessibilityIdentifier("launch.settings")
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+            .padding(.horizontal, Layout.rowInset)
+            .padding(.bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset))
+        }
+        .ignoresSafeArea(edges: .bottom)
     }
 
     private func rise() {

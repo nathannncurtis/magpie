@@ -25,6 +25,7 @@ Later launches restore the last tab, with no animation.
 - **Empty field:** show recent searches as rows, or no rows at all. Nothing else.
 - **Submitting:** a query goes to the chosen engine; a URL goes to that site. The Skim pill runs Skim (08).
 - **Opened from a page:** the bar morphs into this sheet and the sheet turns solid (02, 05 · Open search).
+- **Dismissed with no tabs:** a swipe down or a tap away folds the sheet into the mist; there is no stack to go back to, and the screen never goes blank. The mark (sheen, 96) sits in the centre, over a bottom row placed like the tabs row (03): the Archived chip on the left, + in the centre (it brings the sheet back with the keyboard up; a long-press opens a private tab), and a Settings gear on the right.
 
 ## 02 · Reading
 - **Layout:** a `WKWebView` that starts below the status bar and runs to the bottom edge under the floating `ReadingBar`. The strip above the page, under the status bar, takes the page's own top colour (`themeColor`, else its own background, else paper), so the screen still reads edge to edge.

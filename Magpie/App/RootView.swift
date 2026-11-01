@@ -54,7 +54,13 @@ struct RootView: View {
                         initialText: model.searchPrefill ?? "",
                         onSkim: { model.startSkim(query: $0) },
                         onOpen: { model.openFromLaunch($0) },
-                        onDismiss: { model.dismissLaunchSearch() }
+                        onDismiss: { model.dismissLaunchSearch() },
+                        hasTabs: !model.store.tabs.isEmpty,
+                        archivedCount: model.store.archivedTabs.count,
+                        onNewTab: { model.newTabFromTabs() },
+                        onNewPrivateTab: { model.newPrivateTab() },
+                        onShowArchive: { model.showArchive() },
+                        onShowSettings: { model.showSettings() }
                     )
                 }
             case .reading(let searchOpen):
