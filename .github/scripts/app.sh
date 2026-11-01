@@ -41,6 +41,14 @@ xcrun simctl spawn "$udid" defaults write com.apple.keyboard.preferences Keyboar
 xcrun simctl shutdown "$udid"
 xcrun simctl boot "$udid"
 xcrun simctl bootstatus "$udid" -b
+# Where the keyboard's settings stand once booted: every plist on the device that names them.
+echo "::group::keyboard settings"
+xcrun simctl spawn "$udid" defaults read com.apple.keyboard.predictive || true
+xcrun simctl spawn "$udid" defaults read com.apple.keyboard.preferences || true
+data=~/Library/Developer/CoreSimulator/Devices/$udid/data
+grep -rlas -e KeyboardPrediction -e KeyboardAutocorrection "$data" --include='*.plist' |
+  while read -r f; do echo "== ${f#"$data"/}"; plutil -p "$f" | grep -E 'Keyboard(Prediction|Autocorrection)|DidShow' || true; done
+echo "::endgroup::"
 
 set +e
 xcodebuild test \
