@@ -103,7 +103,7 @@ final class ListsTests: XCTestCase {
             field, timeout: 10, "the search pill",
             app: app, shots: shots, shot: "archive-fail-pill"
         )
-        field.tap()
+        field.tapWhenSettled()
         // Keys up first: text typed before the keyboard is ready loses its first characters.
         _ = app.keyboards.firstMatch.waitForExistence(timeout: 5)
         field.typeTextLogged("season")

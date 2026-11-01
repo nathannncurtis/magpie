@@ -114,7 +114,7 @@ final class ModsTests: XCTestCase {
 
     /// Types a link and returns, which reads it at once.
     private func typeLink(_ link: String) {
-        sheetField.tap()
+        sheetField.tapWhenSettled()
         sheetField.typeTextLogged(link)
         sheetField.typeText("\n")
     }

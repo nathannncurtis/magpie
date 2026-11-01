@@ -31,16 +31,6 @@ xcrun simctl bootstatus "$udid" -b
 # under it ("magpie test" lands as "magpietest"); mark the tip as already shown.
 xcrun simctl spawn "$udid" defaults write com.apple.keyboard.preferences DidShowContinuousPathIntroduction -bool true
 xcrun simctl spawn "$udid" defaults write com.apple.keyboard.preferences DidShowGestureKeyboardIntroduction -bool true
-# UI tests type by tapping keys; a tap that lands as the suggestion bar over the keys
-# changes is dropped or picks a suggestion ("magpie test" as "magpie tes", an address as
-# "The http://…"). No suggestions and no autocorrection, so each tap is just a key.
-xcrun simctl spawn "$udid" defaults write com.apple.keyboard.predictive KeyboardPrediction -bool false
-xcrun simctl spawn "$udid" defaults write com.apple.keyboard.preferences KeyboardAutocorrection -bool false
-# A keyboard that is already running keeps the settings it read; reboot so every process
-# starts with these.
-xcrun simctl shutdown "$udid"
-xcrun simctl boot "$udid"
-xcrun simctl bootstatus "$udid" -b
 
 set +e
 xcodebuild test \

@@ -69,6 +69,22 @@ extension XCUIElement {
         return false
     }
 
+    /// Taps once the element has stopped moving. A field on a sheet that is still rising
+    /// with the keyboard is tapped where it was, and the tap lands on whatever has moved
+    /// under that spot: a key ("r") or a suggestion ("The ") typed ahead of the text.
+    func tapWhenSettled(timeout: TimeInterval = 10) {
+        _ = waitForExistence(timeout: timeout)
+        let deadline = Date().addingTimeInterval(timeout)
+        var last = frame
+        while Date() < deadline {
+            Thread.sleep(forTimeInterval: 0.3)
+            let now = frame
+            if now == last { break }
+            last = now
+        }
+        tap()
+    }
+
     /// Types into a field and logs what landed beside what was sent, so a dropped key shows
     /// at the keystroke instead of as a wrong page steps later. A trailing return goes on
     /// its own, after the field has been read.
