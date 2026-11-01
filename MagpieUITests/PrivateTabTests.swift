@@ -70,7 +70,7 @@ final class PrivateTabTests: XCTestCase {
         let field = app.descendants(matching: .any).matching(identifier: "search.field")
             .firstMatch
         land("field") { field.waitForExistence(timeout: 20) }
-        field.tap()
+        field.tapWhenSettled()
         // Keys up first: text typed before the keyboard is ready loses its first characters.
         _ = app.keyboards.firstMatch.waitForExistence(timeout: 5)
         field.typeTextLogged(address + "\n")
