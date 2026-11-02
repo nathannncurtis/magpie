@@ -277,7 +277,7 @@ final class ReadingSession {
         initialURL = url
         requestedURL = url
         page = WebPage(
-            configuration: pageConfiguration ?? WebPage.Configuration(),
+            configuration: pageConfiguration ?? .browser(),
             navigationDecider: PageNavigationDecider())
         monitor.pathUpdateHandler = { [weak self] path in
             let online = path.status == .satisfied
