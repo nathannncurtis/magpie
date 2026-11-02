@@ -35,6 +35,8 @@ struct SearchSheet: View {
     let morphNamespace: Namespace.ID?
     let suggestions: any SuggestionProviding
     let recents: any RecentSearchStoring
+    /// The user's own hosts for inline completion, and the pasteboard.
+    let addressAssist: AddressAssist
     let onOpen: (URL) -> Void
     let onSkim: (String) -> Void
     let onDismiss: () -> Void
@@ -47,9 +49,15 @@ struct SearchSheet: View {
     @State private var fillSettled = false
     @State private var dragOffset: CGFloat = 0
     @State private var bottomInset: CGFloat = 0
-    @FocusState private var focused: Bool
+    @State private var pasteboardHasLink = false
+    @State private var focused = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+
+    /// The text the sheet opened with: the page's address, which the row for a copied link
+    /// stays up beside until the user starts typing.
+    private let carriedText: String
 
     init(
         engine: SearchEngine = .default,
@@ -61,6 +69,7 @@ struct SearchSheet: View {
         morphNamespace: Namespace.ID? = nil,
         suggestions: any SuggestionProviding = SuggestionService(),
         recents: any RecentSearchStoring = RecentSearches(),
+        addressAssist: AddressAssist = AddressAssist(),
         onOpen: @escaping (URL) -> Void,
         onSkim: @escaping (String) -> Void = { _ in },
         onDismiss: @escaping () -> Void = {}
@@ -73,6 +82,8 @@ struct SearchSheet: View {
         self.morphNamespace = morphNamespace
         self.suggestions = suggestions
         self.recents = recents
+        self.addressAssist = addressAssist
+        self.carriedText = initialText
         self.onOpen = onOpen
         self.onSkim = onSkim
         self.onDismiss = onDismiss
@@ -112,6 +123,15 @@ struct SearchSheet: View {
         }
         .task(id: text) {
             await reloadRows()
+        }
+        // Asking whether a link is there raises no prompt; it is asked again on every return
+        // to the app, since the copy usually happens elsewhere.
+        .task(id: scenePhase) {
+            guard scenePhase == .active else { return }
+            let found = await addressAssist.pasteboard.hasLink()
+            withAnimation(rowAnimation) {
+                pasteboardHasLink = found
+            }
         }
     }
 
@@ -157,8 +177,10 @@ struct SearchSheet: View {
             SearchField(
                 text: $text,
                 engineName: engine.displayName,
-                focus: $focused,
-                onSubmit: { submit(text) }
+                isFocused: $focused,
+                completion: DomainCompletion(userHosts: addressAssist.userHosts),
+                selectsCarriedText: !carriedText.isEmpty,
+                onSubmit: { submit($0) }
             )
             .padding(.horizontal, Metrics.Spacing.insetFloating)
             .padding(.top, Layout.topPadding)
@@ -175,7 +197,6 @@ struct SearchSheet: View {
                 focused = true
                 arrive()
             }
-            selectCarriedText()
         }
         .onChange(of: focusSuspended) { _, suspended in
             focused = !suspended
@@ -184,21 +205,22 @@ struct SearchSheet: View {
         }
     }
 
-    /// The address a page's sheet opens with arrives selected (04 · 02), so typing replaces
-    /// it outright.
-    private func selectCarriedText() {
-        guard !text.isEmpty else { return }
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(150))
-            UIApplication.shared.sendAction(
-                #selector(UIResponder.selectAll(_:)), to: nil, from: nil, for: nil)
-        }
+    /// Whether the first row offers the copied link: while the field is empty, or still holds
+    /// only the address it opened with.
+    private var offersPaste: Bool {
+        guard pasteboardHasLink else { return false }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty || text == carriedText
     }
 
     @ViewBuilder
     private var rowList: some View {
-        if !rows.isEmpty {
+        if offersPaste || !rows.isEmpty {
             VStack(spacing: 0) {
+                if offersPaste {
+                    PasteRow(action: openCopiedLink)
+                        .transition(.opacity)
+                }
                 ForEach(Array(rows.enumerated()), id: \.element) { index, row in
                     if index < visibleRows {
                         SuggestionRow(
@@ -215,6 +237,19 @@ struct SearchSheet: View {
                 }
             }
         }
+    }
+
+    /// Reads the pasteboard, which is what raises the system's paste prompt, and goes to
+    /// what it holds. Something that is not an address is left alone and the row goes.
+    private func openCopiedLink() {
+        guard let raw = addressAssist.pasteboard.readLink(),
+            case .url(let url)? = QueryResolver.resolve(raw, engine: engine)
+        else {
+            withAnimation(rowAnimation) { pasteboardHasLink = false }
+            return
+        }
+        focused = false
+        onOpen(url)
     }
 
     /// Folds the sheet away with the keys: the focus goes first, so the keyboard drops on

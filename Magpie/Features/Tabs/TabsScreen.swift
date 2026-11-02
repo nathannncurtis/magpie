@@ -12,6 +12,11 @@ struct TabsScreen: View {
     var onNewPrivateTab: () -> Void = {}
     var onClose: (Tab.ID) -> Void
     var onShowArchive: () -> Void
+    /// The tab just flung closed, while its undo is on offer.
+    var closedNotice: AppModel.ClosedTabNotice? = nil
+    var onUndo: () -> Void = {}
+    /// The undo ran out (its notice id) or the screen went: the close stands.
+    var onNoticeExpired: (AppModel.ClosedTabNotice.ID) -> Void = { _ in }
     /// The page's own sampled colour, for the space below a short page's picture.
     var pageBackground: (Tab.ID) -> Color? = { _ in nil }
     /// Wired to the reading screen's half of the page ↔ card transition.
@@ -21,9 +26,15 @@ struct TabsScreen: View {
     /// swallows the safe area for everything inside it, so it cannot be read there.
     @State private var bottomInset: CGFloat = 0
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     private enum ScreenMetrics {
         /// The bottom row's inset from the sides.
         static let rowInset: CGFloat = 16
+        /// How long the undo stays up.
+        static let undoDuration: Duration = .seconds(4)
+        /// The undo capsule's gap above the bottom row.
+        static let undoLift: CGFloat = 46 + 14
     }
 
     var body: some View {
@@ -47,13 +58,34 @@ struct TabsScreen: View {
             }
             bottomRow
                 .padding(.bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset))
+            if let closedNotice {
+                UndoCapsule {
+                    withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.settle.animation) {
+                        onUndo()
+                    }
+                }
+                .padding(.bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset) + ScreenMetrics.undoLift)
+                .transition(reduceMotion ? .opacity : .opacity.combined(with: .offset(y: 12)))
+                .id(closedNotice.id)
+                .task {
+                    try? await Task.sleep(for: ScreenMetrics.undoDuration)
+                    guard !Task.isCancelled else { return }
+                    withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
+                        onNoticeExpired(closedNotice.id)
+                    }
+                }
+            }
         }
+        .animation(Springs.chrome.animation, value: closedNotice?.id)
         .onGeometryChange(for: CGFloat.self) {
             $0.safeAreaInsets.bottom
         } action: {
             bottomInset = $0
         }
         .ignoresSafeArea(edges: .bottom)
+        .onDisappear {
+            if let id = closedNotice?.id { onNoticeExpired(id) }
+        }
     }
 
     private var bottomRow: some View {

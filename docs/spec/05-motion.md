@@ -44,6 +44,7 @@ Stagger lists 25–30 ms per item. Content inside a sheet starts 50 ms after the
 - **Swipe up on the bar:** the same as the tab count. The bar rises with the finger (up to 28 pt, tightening); past 56 pt, or a flick that would end 140 pt up, it opens the stack into the page → card transition above. `.impact(flexibility: .soft)` fires as the drag crosses the distance.
 - **Sideways:** the stack moves in proportion to where the drag would come to rest (its predicted end): a quarter of a stride moves one tab, a harder flick several, never past either end.
 - **Close:** fling up past 30% of the height or faster than 500 pt/s. The card follows the finger, then flies off, with `.impact(weight: .light)`. The next card re-flows over with `settle`.
+- **Undo:** the "Closed · Undo" capsule fades in with a 12 pt rise on `chrome` and goes the same way after 4 s; the tab returns on `settle`. Under Reduce Motion both are 200 ms crossfades.
 - **Open:** the tapped card grows back to full screen with `chrome`.
 
 ### 03b · Swipe the bar through tabs

@@ -149,12 +149,24 @@ final class TabStore {
         saveIndex()
     }
 
+    /// A tab just closed, with what it takes to put it back where it was.
+    struct ClosedTab: Equatable, Sendable {
+        let tab: Tab
+        /// Its place in the stack.
+        let index: Int
+        /// Whether it was the centred tab.
+        let wasCurrent: Bool
+    }
+
     /// Closes the tab. Closing the current tab hands currency to the neighbour on its
-    /// right, or the one on its left when there is no right neighbour.
-    func close(_ id: Tab.ID) {
-        guard let i = tabs.firstIndex(where: { $0.id == id }) else { return }
+    /// right, or the one on its left when there is no right neighbour. Returns the tab as
+    /// it was, in memory only, for an undo.
+    @discardableResult
+    func close(_ id: Tab.ID) -> ClosedTab? {
+        guard let i = tabs.firstIndex(where: { $0.id == id }) else { return nil }
         let wasCurrent = currentTabID == id
         let wasPrivate = tabs[i].isPrivate
+        let closed = ClosedTab(tab: tabs[i], index: i, wasCurrent: wasCurrent)
         tabs.remove(at: i)
         if wasCurrent {
             currentTabID = tabs.indices.contains(i) ? tabs[i].id : tabs.last?.id
@@ -162,9 +174,22 @@ final class TabStore {
         if wasPrivate {
             // Nothing of it was ever on disk.
             saveIndex()
-            return
+            return closed
         }
         forgetSnapshot(for: id)
+        saveIndex()
+        return closed
+    }
+
+    /// Puts a closed tab back in its place, and back at the centre when it was there. The
+    /// snapshot file closing deleted is written again.
+    func reinstate(_ closed: ClosedTab) {
+        guard !tabs.contains(where: { $0.id == closed.tab.id }) else { return }
+        tabs.insert(closed.tab, at: min(closed.index, tabs.count))
+        if closed.wasCurrent { currentTabID = closed.tab.id }
+        if !closed.tab.isPrivate, let snapshot = closed.tab.snapshot {
+            scheduleSnapshotWrite(snapshot, for: closed.tab.id)
+        }
         saveIndex()
     }
 

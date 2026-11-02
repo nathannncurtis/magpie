@@ -51,6 +51,7 @@ struct RootView: View {
                         isPrivate: model.launchIsPrivate,
                         suggestions: model.suggestions,
                         recents: model.searchRecents,
+                        addressAssist: model.addressAssist,
                         initialText: model.searchPrefill ?? "",
                         onSkim: { model.startSkim(query: $0) },
                         onOpen: { model.openFromLaunch($0) },
@@ -79,6 +80,7 @@ struct RootView: View {
                     focusSuspended: coversOverLaunch,
                     suggestions: model.suggestions,
                     recents: model.searchRecents,
+                    addressAssist: model.addressAssist,
                     onSkim: { model.startSkim(query: $0) },
                     chromeNamespace: chrome,
                     cardNamespace: cards,
@@ -111,6 +113,9 @@ struct RootView: View {
                     onNewPrivateTab: { model.newPrivateTab() },
                     onClose: { model.closeTab($0) },
                     onShowArchive: { model.showArchive() },
+                    closedNotice: model.closedTabNotice,
+                    onUndo: { model.undoCloseTab() },
+                    onNoticeExpired: { model.expireClosedTabNotice($0) },
                     pageBackground: { id in model.sessions[id]?.pageBackground },
                     transitionNamespace: cards
                 )

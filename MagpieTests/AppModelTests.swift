@@ -126,6 +126,72 @@ struct AppModelTests {
         #expect(model.surface == .launchSearch)
     }
 
+    @Test("a card flung closed on the stack offers an undo that brings the tab back")
+    func undoCloseOnTheStack() throws {
+        let model = makeModel()
+        model.openFromLaunch(url("a.example"), now: date(0))
+        let first = try #require(model.store.currentTab).id
+        model.openFromLaunch(url("b.example"), now: date(10))
+        model.showTabs()
+
+        model.closeTab(first)
+        #expect(model.closedTabNotice != nil)
+        #expect(model.store.tabs.count == 1)
+
+        model.undoCloseTab()
+        #expect(model.closedTabNotice == nil)
+        #expect(model.store.tabs.map(\.id).first == first)
+        #expect(model.store.tabs.count == 2)
+    }
+
+    @Test("an undo that ran out, or a close that left the last tab, leaves the close standing")
+    func undoExpires() throws {
+        let model = makeModel()
+        model.openFromLaunch(url("a.example"), now: date(0))
+        let first = try #require(model.store.currentTab).id
+        model.openFromLaunch(url("b.example"), now: date(10))
+        let second = try #require(model.store.currentTab).id
+        model.showTabs()
+
+        model.closeTab(first)
+        let stale = try #require(model.closedTabNotice).id
+        model.closeTab(second)
+        #expect(model.closedTabNotice == nil)
+        #expect(model.surface == .launchSearch)
+
+        model.expireClosedTabNotice(stale)
+        model.undoCloseTab()
+        #expect(model.store.tabs.isEmpty)
+    }
+
+    @Test("an old timer does not clear a newer undo")
+    func staleTimerKeepsNewerNotice() throws {
+        let model = makeModel()
+        for host in ["a.example", "b.example", "c.example"] {
+            model.openFromLaunch(url(host), now: date(0))
+        }
+        let ids = model.store.tabs.map(\.id)
+        model.showTabs()
+
+        model.closeTab(ids[0])
+        let old = try #require(model.closedTabNotice).id
+        model.closeTab(ids[1])
+
+        model.expireClosedTabNotice(old)
+        #expect(model.closedTabNotice != nil)
+    }
+
+    @Test("closing a card from a page, not the stack, offers no undo")
+    func noUndoOffPageClose() throws {
+        let model = makeModel()
+        model.openFromLaunch(url("a.example"), now: date(0))
+        model.openFromLaunch(url("b.example"), now: date(10))
+
+        model.closeCurrentTab()
+
+        #expect(model.closedTabNotice == nil)
+    }
+
     @Test("closing the last tab leaves the launch search")
     func closingLastTab() {
         let model = makeModel()
