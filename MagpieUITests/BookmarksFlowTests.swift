@@ -53,12 +53,16 @@ final class BookmarksFlowTests: XCTestCase {
         XCTAssertTrue(row.waitForExistence(timeout: 20), "the seeded bookmarks")
 
         row.swipeLeft()
-        let delete = app.buttons["Delete"]
-        if delete.waitForExistence(timeout: 2) { delete.tap() }
-
-        XCTAssertTrue(row.waitForNonExistence(timeout: 5), "the swipe deleted at once")
+        // A full swipe deletes outright; a shorter one leaves the Delete button out. The
+        // capsule lasts four seconds, so neither wait may eat into it.
         let undo = any(app, "undo.capsule")
-        XCTAssertTrue(undo.waitForExistence(timeout: 5), "the Undo capsule")
+        let delete = app.buttons["Delete"]
+        let deadline = Date.now.addingTimeInterval(5)
+        while !undo.exists, Date.now < deadline {
+            if delete.exists { delete.tap() }
+        }
+        XCTAssertTrue(undo.exists, "the Undo capsule")
+        XCTAssertFalse(row.exists, "the swipe deleted at once")
         shots.snap(app, "undo-capsule")
 
         undo.tap()
