@@ -49,6 +49,21 @@ enum StackLayout {
             height: StackMetrics.labelSlotHeight)
     }
 
+    /// How many tabs a sideways swipe moves the stack: proportional to where the drag
+    /// would come to rest (its predicted end), at least one once past the swipe fraction
+    /// of a stride, and never past either end of the stack. Left is forward.
+    static func swipeStep(
+        translation: CGFloat, predicted: CGFloat, stride: CGFloat, current: Int, count: Int
+    ) -> Int {
+        guard stride > 0, count > 0 else { return 0 }
+        // The farther of the finger and its momentum, so a slow drag still counts.
+        let reach = abs(predicted) >= abs(translation) ? predicted : translation
+        let strides = abs(reach) / stride
+        guard strides >= StackMetrics.swipeFraction else { return 0 }
+        let wanted = max(1, Int(strides.rounded())) * (reach < 0 ? 1 : -1)
+        return min(max(current + wanted, 0), count - 1) - current
+    }
+
     /// How far a card and its label sit above their rest: the flying card's flight,
     /// else the dragged card's travel. A label takes its card's lift, so it leaves with it.
     static func lift<ID: Equatable>(
@@ -116,6 +131,8 @@ struct TabStack: View {
     @State private var lockedAxis: Axis?
     @State private var flyingID: Tab.ID?
     @State private var flyOffset: CGFloat = 0
+    /// Counts cards flung closed, for the haptic.
+    @State private var closes = 0
     @State private var snapshots: [Tab.ID: Data] = [:]
     /// Whether the neighbours have slid in beside the current card.
     @State private var neighboursArrived = false
@@ -145,6 +162,7 @@ struct TabStack: View {
             .contentShape(Rectangle())
             .gesture(dragGesture(size: size, stride: stride))
             .onAppear { arriveNeighbours() }
+            .sensoryFeedback(.impact(weight: .light), trigger: closes)
 
             // Reduce Motion: the stack crossfades between its states instead of sliding.
             if reduceMotion {
@@ -289,11 +307,11 @@ struct TabStack: View {
     private func dragEnded(_ value: DragGesture.Value, size: CGSize, stride: CGFloat) {
         switch lockedAxis {
         case .horizontal:
-            let step = swipeStep(
+            let step = StackLayout.swipeStep(
                 translation: value.translation.width,
                 predicted: value.predictedEndTranslation.width,
-                stride: stride)
-            let target = min(max(currentIndex + step, 0), tabs.count - 1)
+                stride: stride, current: currentIndex, count: tabs.count)
+            let target = currentIndex + step
             withAnimation(reduceMotion ? StackMetrics.crossfade : Springs.settle.animation) {
                 if step != 0, tabs.indices.contains(target) {
                     let id = tabs[target].id
@@ -326,6 +344,7 @@ struct TabStack: View {
 
     /// The card follows the finger, then flies off; the next card slides over with settle.
     private func close(_ id: Tab.ID, cardHeight: CGFloat) {
+        closes += 1
         if reduceMotion {
             withAnimation(StackMetrics.crossfade) { onClose(id) }
             verticalDrag = 0
@@ -342,13 +361,6 @@ struct TabStack: View {
             flyingID = nil
             flyOffset = 0
         }
-    }
-
-    private func swipeStep(translation: CGFloat, predicted: CGFloat, stride: CGFloat) -> Int {
-        let threshold = stride * StackMetrics.swipeFraction
-        if translation <= -threshold || predicted <= -threshold { return 1 }
-        if translation >= threshold || predicted >= threshold { return -1 }
-        return 0
     }
 
     private func cardID(at x: CGFloat, size: CGSize, stride: CGFloat) -> Tab.ID? {
