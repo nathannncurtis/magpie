@@ -32,7 +32,7 @@ final class ModInjector {
 
     /// A page configuration carrying the mods' controller, so every page runs them.
     func pageConfiguration() -> WebPage.Configuration {
-        var configuration = WebPage.Configuration()
+        var configuration = WebPage.Configuration.browser()
         configuration.userContentController = contentController
         return configuration
     }
