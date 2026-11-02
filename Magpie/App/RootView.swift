@@ -57,7 +57,7 @@ struct RootView: View {
                         onDismiss: { model.dismissLaunchSearch() },
                         hasTabs: !model.store.tabs.isEmpty,
                         archivedCount: model.store.archivedTabs.count,
-                        onNewTab: { model.newTabFromTabs() },
+                        onNewTab: { model.newNormalTab() },
                         onNewPrivateTab: { model.newPrivateTab() },
                         onShowArchive: { model.showArchive() },
                         onShowSettings: { model.showSettings() }
@@ -69,7 +69,7 @@ struct RootView: View {
                 ReadingScreen(
                     session: model.currentSession,
                     tabID: model.store.currentTabID,
-                    tabCount: model.store.tabs.count,
+                    tabCount: model.store.tabs(inPrivate: model.currentIsPrivate).count,
                     isPrivate: model.currentIsPrivate,
                     isSearchOpen: searchOpen,
                     engine: model.engine,
@@ -103,8 +103,10 @@ struct RootView: View {
             case .tabs:
                 TabsScreen(
                     store: model.store,
+                    isPrivateMode: model.isPrivateMode,
+                    onModeChange: { model.setPrivateMode($0) },
                     onOpen: { model.openTab($0) },
-                    onNewTab: { model.newTabFromTabs() },
+                    onNewTab: { model.newNormalTab() },
                     onNewPrivateTab: { model.newPrivateTab() },
                     onClose: { model.closeTab($0) },
                     onShowArchive: { model.showArchive() },
