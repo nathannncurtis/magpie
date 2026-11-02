@@ -102,10 +102,10 @@ final class AddressFieldTests: XCTestCase {
         land("second-page") { self.app.buttons["bar.url"].waitForExistence(timeout: 20) }
         app.buttons["bar.tabs"].firstMatch.tap()
 
-        // The private stack holds only its own tab.
         let count = element("tabs.openCount")
-        land("one-private") { count.waitForLabel("1 open", timeout: 10) }
+        land("two-open") { count.waitForLabel("2 open", timeout: 10) }
         flingCurrentCardUp()
+        land("one-open") { count.waitForLabel("1 open", timeout: 10) }
 
         let undo = element("tabs.undo")
         land("undo-capsule") { undo.waitForExistence(timeout: 5) }
