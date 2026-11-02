@@ -254,7 +254,9 @@ extension AppModel {
             recents: RecentSearches(),
             modStore: modStore,
             modDirectory: fixtureDirectory(),
-            skimAvailable: UITestEnvironment.skimFaked)
+            skimAvailable: UITestEnvironment.skimFaked,
+            downloads: DownloadStore(
+                directory: scratch.appending(component: "downloads", directoryHint: .isDirectory)))
     }
 
     /// The directory over the bundled fixture index, cached warm so nothing fetches.
