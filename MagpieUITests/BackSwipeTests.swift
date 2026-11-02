@@ -116,3 +116,19 @@ extension BackSwipeTests {
         ShotWriter(test: self, prefix: "back").snap(app, "page-history")
     }
 }
+
+extension BackSwipeTests {
+
+    /// Halfway through a swipe off the archive, held still: the ground under the screen is
+    /// the mist, never an empty window. Run on its own with a screenshot taken mid-hold.
+    func testHeldSwipeShowsMist() {
+        let app = launch(surface: "archive")
+        XCTAssertTrue(element(app, "archive.screen").waitForExistence(timeout: 20), "the archive")
+        Thread.sleep(forTimeInterval: 0.6)
+        let window = app.windows.firstMatch
+        let start = window.coordinate(withNormalizedOffset: CGVector(dx: 0.005, dy: 0.5))
+        let mid = window.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.5))
+        start.press(forDuration: 0.05, thenDragTo: mid, withVelocity: .slow, thenHoldForDuration: 8)
+        XCTAssertTrue(element(app, "archive.screen").exists, "a short swipe springs back")
+    }
+}

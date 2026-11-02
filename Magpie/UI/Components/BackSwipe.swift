@@ -30,10 +30,37 @@ private struct BackSwipe: ViewModifier {
     private static let commitShare: CGFloat = 1 / 3
     /// How fast a flick has to be, in points a second, to go back from anywhere.
     private static let commitVelocity: CGFloat = 600
+    /// How far the shade along the moving edge reaches onto the ground.
+    private static let shadeWidth: CGFloat = 18
 
     func body(content: Content) -> some View {
         content
+            // The screen lifts off what is under it: a soft shade along the edge it leads with.
+            .overlay(alignment: fromRight ? .trailing : .leading) {
+                if offset > 0 {
+                    LinearGradient(
+                        colors: [.black.opacity(0.18), .clear],
+                        startPoint: fromRight ? .leading : .trailing,
+                        endPoint: fromRight ? .trailing : .leading
+                    )
+                    .frame(width: Self.shadeWidth)
+                    .offset(x: fromRight ? Self.shadeWidth : -Self.shadeWidth)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+                }
+            }
             .offset(x: fromRight ? -offset : offset)
+            // The mist stays put underneath, so the space the screen leaves is the app's
+            // own ground, never an empty window.
+            .background {
+                if offset > 0 {
+                    MistBackground()
+                        .ignoresSafeArea()
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                }
+            }
             .onGeometryChange(for: CGFloat.self, of: \.size.width) { width = $0 }
             .background(
                 EdgePan(
@@ -156,11 +183,30 @@ private struct EdgePan: UIViewRepresentable {
 
         /// Whatever else is under the edge — a list's scroll, a row's tap or press —
         /// waits to see whether this is a swipe back. Another edge swipe never does.
+        /// Only a touch that lands in the edge strip is a candidate; every other touch
+        /// never reaches this pan, so a tap or scroll anywhere else waits on nothing.
+        func gestureRecognizer(
+            _ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch
+        ) -> Bool {
+            guard let view = pan.view else { return false }
+            let x = touch.location(in: view).x
+            return pan.edges == .right ? x >= view.bounds.width - Self.edgeStrip : x <= Self.edgeStrip
+        }
+
         func gestureRecognizer(
             _ gestureRecognizer: UIGestureRecognizer,
             shouldBeRequiredToFailBy other: UIGestureRecognizer
         ) -> Bool {
             !(other is UIScreenEdgePanGestureRecognizer) && !(other.view is UIWindow)
+                && !Self.isNavigationPop(other)
+        }
+
+        /// How wide the strip along the edge is that a back swipe can start in.
+        private static let edgeStrip: CGFloat = 24
+
+        /// A pushed page's own pop: the system's swipe, which this never holds up.
+        private static func isNavigationPop(_ recognizer: UIGestureRecognizer) -> Bool {
+            (recognizer.delegate as? UINavigationController)?.interactivePopGestureRecognizer === recognizer
         }
     }
 }
