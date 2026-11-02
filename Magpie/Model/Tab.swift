@@ -23,6 +23,10 @@ struct Tab: Identifiable, Codable, Equatable, Sendable {
     var archivedAt: Date?
     /// The page snapshot shown on the tab card. Never part of the index.
     var snapshot: Data? = nil
+    /// How far down the page the reader was, in page points, when its session last let go
+    /// or the app left the foreground. A page rebuilt from its address scrolls back to it.
+    /// Absent from older index files, which decode without it.
+    var scrollOffset: Double?
     /// A private tab: never written to disk, never archived, and its pages keep their
     /// cookies and storage in memory only. Not coded, so it can never be saved.
     var isPrivate = false
@@ -35,6 +39,7 @@ struct Tab: Identifiable, Codable, Equatable, Sendable {
         faviconData: Data? = nil,
         lastActive: Date,
         archivedAt: Date? = nil,
+        scrollOffset: Double? = nil,
         isPrivate: Bool = false
     ) {
         self.id = id
@@ -44,6 +49,7 @@ struct Tab: Identifiable, Codable, Equatable, Sendable {
         self.faviconData = faviconData
         self.lastActive = lastActive
         self.archivedAt = archivedAt
+        self.scrollOffset = scrollOffset
         self.isPrivate = isPrivate
     }
 
@@ -59,6 +65,6 @@ struct Tab: Identifiable, Codable, Equatable, Sendable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, url, title, faviconURL, faviconData, lastActive, archivedAt
+        case id, url, title, faviconURL, faviconData, lastActive, archivedAt, scrollOffset
     }
 }
