@@ -89,6 +89,7 @@ struct RootView: View {
                     onPageSize: { model.notePageSize($0) },
                     arrivalPicture: model.cardArrivalPicture,
                     onArrivalDone: { model.cardArrivalDone() },
+                    onOpenLink: { model.openLinkInNewTab($0, isPrivate: $1) },
                     isFinding: Bindable(model).isFindingInPage
                 )
                 // The page never answers the keyboard. An address just submitted

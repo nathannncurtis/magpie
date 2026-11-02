@@ -41,6 +41,9 @@ struct ReadingScreen: View {
     /// web view re-hosts blank and lays out at the card's width for a few frames.
     var arrivalPicture: Data? = nil
     var onArrivalDone: () -> Void = {}
+    /// A link from the page's long-press menu, opened in a tab of its own; the flag
+    /// asks for a private one.
+    var onOpenLink: (URL, Bool) -> Void = { _, _ in }
     /// The find bar over the page (⌘F).
     var isFinding: Binding<Bool> = .constant(false)
 
@@ -143,6 +146,7 @@ struct ReadingScreen: View {
         // The strip the page leaves above itself, under the status bar: filled with the
         // page's own top colour, so nothing shows through from the surface before.
         .background(topEdgeFill.ignoresSafeArea(edges: .top))
+        .modifier(PageDialogAlert(dialogs: session?.dialogs))
         .onChange(of: colorScheme) { _, _ in rereadPageTint() }
         .onDisappear {
             snapTask?.cancel()
@@ -258,7 +262,7 @@ struct ReadingScreen: View {
                             // before drawing the page unseen in a view of its own.
                             .onAppear { session.readingViewAppeared() }
                             .onDisappear { session.readingViewDisappeared() }
-                        WebViewProbe(session: session)
+                        WebViewProbe(session: session, isPrivate: isPrivate, onOpenLink: onOpenLink)
                             .frame(width: 0, height: 0)
                             .allowsHitTesting(false)
                         if let picture = arrivalPicture.flatMap(UIImage.init(data:)) {
@@ -441,6 +445,8 @@ private struct ScrollSnapshot: Hashable {
 /// window walk, and no URL match to break on a redirect.
 private struct WebViewProbe: UIViewRepresentable {
     let session: ReadingSession
+    let isPrivate: Bool
+    let onOpenLink: (URL, Bool) -> Void
 
     func makeUIView(context: Context) -> ProbeView {
         ProbeView(session: session)
@@ -450,13 +456,25 @@ private struct WebViewProbe: UIViewRepresentable {
         // The screen's session can change under the same probe: re-bind it, or the
         // probe keeps serving the first session's view.
         view.session = session
+        view.linkMenu.isPrivate = isPrivate
+        view.linkMenu.onOpenLink = onOpenLink
         view.remember()
+        // Read here so the control ends when the page is done loading.
+        view.loadingChanged(isLoading: session.page.isLoading)
     }
 
     /// Tries again on every look: the web view can be built after the probe moves in,
     /// and swapped for a new one later.
     final class ProbeView: UIView {
         weak var session: ReadingSession?
+        private weak var refreshedView: WKWebView?
+        private weak var refreshControl: UIRefreshControl?
+        private var refreshTimeout: Task<Void, Never>?
+        /// The long-press menu on links, held here: the web view keeps its delegate weakly.
+        let linkMenu = LinkMenuDelegate()
+
+        /// How long a pull may spin before it is ended whatever the page did.
+        private static let refreshLimit: Duration = .seconds(15)
 
         init(session: ReadingSession) {
             self.session = session
@@ -478,9 +496,38 @@ private struct WebViewProbe: UIViewRepresentable {
         }
 
         func remember() {
+            installRefresh()
             guard window != nil, let session, session.webView?.window == nil else { return }
             session.webViewLookup = { [weak self] in self?.nearestWebView() }
             session.webView = nearestWebView()
+        }
+
+        /// Pull to refresh, with the system's control on the page's own scroll view.
+        private func installRefresh() {
+            guard let view = nearestWebView(), view !== refreshedView else { return }
+            let control = UIRefreshControl()
+            control.addAction(
+                UIAction { [weak self] _ in self?.pulled() }, for: .valueChanged)
+            view.scrollView.refreshControl = control
+            linkMenu.install(on: view)
+            refreshedView = view
+            refreshControl = control
+        }
+
+        private func pulled() {
+            session?.retry()
+            refreshTimeout?.cancel()
+            refreshTimeout = Task { [weak self] in
+                try? await Task.sleep(for: Self.refreshLimit)
+                guard !Task.isCancelled else { return }
+                self?.refreshControl?.endRefreshing()
+            }
+        }
+
+        func loadingChanged(isLoading: Bool) {
+            guard !isLoading, refreshControl?.isRefreshing == true else { return }
+            refreshTimeout?.cancel()
+            refreshControl?.endRefreshing()
         }
 
         /// The nearest web view in the probe's own branch of the hierarchy.

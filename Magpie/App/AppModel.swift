@@ -356,6 +356,10 @@ final class AppModel {
         }
         session.onPageSettled = { [weak self] in self?.pageSettled(for: tab.id) }
         session.onPageTitled = { [weak self] in self?.syncTab(for: tab.id) }
+        // A window the page opens on a tap is a tab beside it, private if this one is.
+        session.onOpenInNewTab = { [weak self] url in
+            self?.openLinkInNewTab(url, isPrivate: tab.isPrivate)
+        }
         pruneSessions()
         return session
     }
@@ -626,6 +630,16 @@ final class AppModel {
     func openFromLaunch(_ url: URL, now: Date = .now) {
         let tab = store.newTab(url: url, isPrivate: launchIsPrivate, now: now)
         launchIsPrivate = false
+        _ = ensureSession(for: tab)
+        searchPrefill = nil
+        surface = .reading(searchOpen: false)
+    }
+
+    /// A link opened in a tab of its own: the new tab becomes current. A private
+    /// tab's links stay private; a link can also be sent to a private tab from an
+    /// ordinary one.
+    func openLinkInNewTab(_ url: URL, isPrivate: Bool, now: Date = .now) {
+        let tab = store.newTab(url: url, isPrivate: isPrivate, now: now)
         _ = ensureSession(for: tab)
         searchPrefill = nil
         surface = .reading(searchOpen: false)
