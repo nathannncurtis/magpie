@@ -269,7 +269,7 @@ struct MenuSheet: View {
         }
     }
 
-    /// The second group: where searches go, whether Skim offers, and Settings.
+    /// The second group: where searches go, whether Skim offers, Downloads, and Settings.
     private var switchGroup: some View {
         MenuGroup {
             MenuRow(icon: .symbol("globe"), title: String(localized: "Search engine")) {
@@ -287,6 +287,16 @@ struct MenuSheet: View {
                 isOn: Binding(
                     get: { model.preferences.skimEnabled },
                     set: { model.preferences.skimEnabled = $0 }))
+
+            MenuRow(icon: .symbol("arrow.down.circle"), title: String(localized: "Downloads")) {
+                SettingsChevron()
+            }
+            .action {
+                model.showDownloads()
+                onDismiss()
+            }
+            .divided()
+            .accessibilityIdentifier("menu.downloads")
 
             MenuRow(icon: .symbol("gearshape"), title: String(localized: "Settings")) {
                 SettingsChevron()

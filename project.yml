@@ -15,6 +15,9 @@ targets:
     platform: iOS
     sources:
       - Magpie
+    dependencies:
+      - target: MagpieShare
+      - target: MagpieWidgets
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.magpiebrowser.Magpie
@@ -34,6 +37,23 @@ targets:
             CFBundleURLSchemes:
               - http
               - https
+          - CFBundleURLName: com.magpiebrowser.Magpie.link
+            CFBundleTypeRole: Viewer
+            CFBundleURLSchemes:
+              - magpie
+        # Downloads land in Documents/Downloads, which the Files app lists and edits in place.
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        UIApplicationShortcutItems:
+          - UIApplicationShortcutItemType: com.magpiebrowser.Magpie.newTab
+            UIApplicationShortcutItemTitle: New tab
+            UIApplicationShortcutItemIconSymbolName: plus
+          - UIApplicationShortcutItemType: com.magpiebrowser.Magpie.newPrivateTab
+            UIApplicationShortcutItemTitle: New private tab
+            UIApplicationShortcutItemIconSymbolName: eye.slash
+          - UIApplicationShortcutItemType: com.magpiebrowser.Magpie.search
+            UIApplicationShortcutItemTitle: Search
+            UIApplicationShortcutItemIconSymbolName: magnifyingglass
         NSAppTransportSecurity:
           NSAllowsArbitraryLoadsInWebContent: true
         NSCameraUsageDescription: A page you visit can ask to use the camera, for a video call or a photo upload.
@@ -50,6 +70,51 @@ targets:
         UIAppFonts:
           - Fraunces[SOFT,WONK,opsz,wght].ttf
         ITSAppUsesNonExemptEncryption: false
+  # Share sheet entry: hands a link to Magpie through its own URL scheme.
+  MagpieShare:
+    type: app-extension
+    platform: iOS
+    sources:
+      - MagpieShare
+      - Magpie/Model/MagpieLink.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.magpiebrowser.Magpie.Share
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+    info:
+      path: MagpieShare/Info.plist
+      properties:
+        CFBundleDisplayName: Open in Magpie
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+              NSExtensionActivationSupportsText: true
+  # The search widgets: home screen small and medium, lock screen accessory.
+  MagpieWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - MagpieWidgets
+      - Magpie/UI/Components/MarkPath.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.magpiebrowser.Magpie.Widgets
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+    info:
+      path: MagpieWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: Magpie
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
   MagpieTests:
     type: bundle.unit-test
     platform: iOS

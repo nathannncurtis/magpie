@@ -11,6 +11,7 @@ Reading ──tap URL──▶ Search sheet (01 morph)       Reading ──•�
 Reading ──tab count──▶ Tabs (03) ──Archived chip──▶ Archive (09)
 Menu ──Mods tile──▶ Mods (06) ──footer──▶ Install from URL (12)
 Menu ──Bookmark tile: tap saves, long-press──▶ Bookmarks (10)      Menu ──Settings ›──▶ Settings (11)
+Menu ──Downloads ›──▶ Downloads (18)
 First ever launch ──▶ Welcome (07a) ──▶ Engine picker (07b) ──▶ Launch (01)
 ```
 
@@ -59,7 +60,7 @@ Later launches restore the last tab, with no animation.
 - **Tiles:** Skim, Bookmark, Share, Mods, Private.
 - **Groups:**
   - (ads & trackers, cookie banners, archive timing)
-  - (search engine, Skim for me, Settings ›)
+  - (search engine, Skim for me, Downloads ›, Settings ›)
 - **Bookmark tile:** a tap saves the page, with a light haptic and the icon filling in; a long-press opens Bookmarks (10).
 - **Dismissing:** tap •••, swipe down, or tap the page.
 - **Board fix:** the static board screen 05 shows too much space above the bar. The spec value of 14 pt wins.
@@ -166,6 +167,30 @@ Every edge state follows one pattern: one plain line saying what happened, and o
 ### 17 · Install failed
 - **Layout:** the install sheet with the URL field kept. In the preview's place, a solid card with a bold reason and one line on what Magpie needs.
 - **Install** stays disabled at 30% until the link parses as a userscript or filter list.
+
+### 18 · Downloads
+- **Background:** the mist. "Downloads" in `screenTitle`, "Done" at top right; a swipe in from the leading edge goes back to the screen that opened it.
+- **What downloads:** a navigation whose response is a Content-Disposition attachment or a type the page cannot show, and a link with the `download` attribute. WebPage offers no download delegate, so the load is cancelled and the file fetched on its own, carrying the page's cookies; the page the load came out of stays as it was. Private tabs download too, into the same folder.
+- **Where it lands:** the app's Documents/Downloads, which the Files app lists and edits in place. A name already taken gets a number before its extension: "report 2.pdf".
+- **Rows:** plain rows on the mist, newest first: a file glyph, the name, then size and date. A tap opens the file in QuickLook; swipe left deletes it from disk.
+- **Toast:** a small glass capsule above the bar, on any screen. "Downloading <name>" with a spinner while it runs; "Downloaded <name>" with a check once done, held six seconds, and a tap opens the file in QuickLook. "Couldn't download <name>" when it fails; a tap dismisses.
+- **Empty:** `EmptyListState`, `arrow.down.circle`, "No downloads yet" / "Files you save from a page land here, and in the Files app."
+
+### 19 · URL scheme
+- `magpie://open?url=<encoded>` opens an http or https address in a new tab. Anything else in `url` is ignored.
+- `magpie://search?q=<encoded>` runs the query on the chosen engine in a new tab (an address typed as the query opens as one); `magpie://search` with no query opens the launch search with its keyboard up.
+- http and https links open as they always did. Pages can never load a `magpie` address.
+
+### 20 · Share extension
+- "Open in Magpie" in the share sheet takes a URL, or text with a web address in it, opens `magpie://open?url=…` and finishes. It has no interface.
+
+### 21 · Quick actions
+- Holding the app icon offers **New tab**, **New private tab** and **Search**. Each opens the launch search with its keyboard up; New private tab opens it for a private tab. They work from a cold launch (held until the saved tabs are in) and while the app runs.
+
+### 22 · Search widget
+- **Families:** small and medium on the home screen; rectangular and circular on the lock screen.
+- **Content:** the Magpie mark and a "Search" pill on the paper; the lock-screen ones show the mark in one colour. A tap opens `magpie://search`.
+- **Colours** are copied into the widget from `Theme/Colors.swift`, since a widget cannot import the app.
 
 ---
 

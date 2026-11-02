@@ -273,12 +273,20 @@ final class ReadingSession {
         return "";
         """#
 
-    init(url: URL, pageConfiguration: WebPage.Configuration? = nil) {
+    /// Where this page's downloads go.
+    private let downloads: PageDownloads?
+
+    init(url: URL, pageConfiguration: WebPage.Configuration? = nil, downloads: DownloadStore? = nil) {
         initialURL = url
         requestedURL = url
+        let configuration = pageConfiguration ?? WebPage.Configuration()
+        let pageDownloads = downloads.map {
+            PageDownloads(store: $0, cookieStore: configuration.websiteDataStore.httpCookieStore)
+        }
+        self.downloads = pageDownloads
         page = WebPage(
-            configuration: pageConfiguration ?? WebPage.Configuration(),
-            navigationDecider: PageNavigationDecider())
+            configuration: configuration,
+            navigationDecider: PageNavigationDecider(downloads: pageDownloads))
         monitor.pathUpdateHandler = { [weak self] path in
             let online = path.status == .satisfied
             Task { @MainActor in
@@ -501,6 +509,8 @@ final class ReadingSession {
 
     private func fail(with error: Error) {
         guard !Task.isCancelled else { return }
+        // The load a download came out of ends cancelled; the page stays as it was.
+        if downloads?.consumesFailure() == true { return }
         let underlying: Error
         if case WebPage.NavigationError.failedProvisionalNavigation(let inner) = error {
             underlying = inner

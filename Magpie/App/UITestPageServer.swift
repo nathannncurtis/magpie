@@ -120,12 +120,16 @@ final class UITestPageServer: @unchecked Sendable {
     private func reply(to request: Data) -> Data {
         let route = Self.route(of: request)
         let page = Self.page(for: route)
-        let head = [
+        var lines = [
             "HTTP/1.1 200 OK",
             "Content-Type: \(Self.contentType(for: route)); charset=utf-8",
             "Content-Length: \(page.utf8.count)",
             "Connection: close",
-        ].joined(separator: "\r\n")
+        ]
+        if route == "/download.txt" {
+            lines.append("Content-Disposition: attachment; filename=\"magpie-sample.txt\"")
+        }
+        let head = lines.joined(separator: "\r\n")
         var reply = Data((head + "\r\n\r\n").utf8)
         reply.append(Data(page.utf8))
         return reply
@@ -152,6 +156,8 @@ final class UITestPageServer: @unchecked Sendable {
             return UITestModFixtures.userscript
         case "/mod.list.txt":
             return UITestModFixtures.filterList
+        case "/download.txt":
+            return "A file saved from the stub server.\n"
         default:
             return shell(title: "magpie test", path: route, block: "#2B8A5A")
         }
@@ -162,7 +168,7 @@ final class UITestPageServer: @unchecked Sendable {
         switch route {
         case "/mod.user.js":
             return "text/javascript"
-        case "/mod.list.txt":
+        case "/mod.list.txt", "/download.txt":
             return "text/plain"
         default:
             return "text/html"
