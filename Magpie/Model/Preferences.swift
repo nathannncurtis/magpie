@@ -31,6 +31,7 @@ final class Preferences {
         static let skimEnabled = "skimEnabled"
         static let archiveInterval = "archiveInterval"
         static let hasCompletedOnboarding = "hasCompletedOnboarding"
+        static let desktopSiteHosts = "desktopSiteHosts"
     }
 
     /// The engine searches run on.
@@ -77,6 +78,14 @@ final class Preferences {
         }
     }
 
+    /// The sites that load their desktop version, by host without the www prefix.
+    private(set) var desktopSiteHosts: Set<String> {
+        didSet {
+            guard oldValue != desktopSiteHosts else { return }
+            defaults.set(desktopSiteHosts.sorted(), forKey: Key.desktopSiteHosts)
+        }
+    }
+
     @ObservationIgnored private let defaults: UserDefaults
 
     init(defaults: UserDefaults = .standard) {
@@ -102,6 +111,32 @@ final class Preferences {
         skimEnabled = defaults.bool(forKey: Key.skimEnabled)
         archiveInterval = Self.nearestStep(to: defaults.double(forKey: Key.archiveInterval))
         hasCompletedOnboarding = defaults.bool(forKey: Key.hasCompletedOnboarding)
+        desktopSiteHosts = Set(defaults.stringArray(forKey: Key.desktopSiteHosts) ?? [])
+    }
+
+    /// The key a site is remembered by: its host, lowercased, without a www prefix, so a
+    /// site and its www twin share one choice. Nil for an address with no host.
+    static func siteKey(for url: URL?) -> String? {
+        guard let host = url?.host(percentEncoded: false)?.lowercased(), !host.isEmpty else {
+            return nil
+        }
+        return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
+    }
+
+    /// Whether the site at this address loads its desktop version.
+    func usesDesktopSite(for url: URL?) -> Bool {
+        guard let key = Self.siteKey(for: url) else { return false }
+        return desktopSiteHosts.contains(key)
+    }
+
+    /// Turns the desktop version on or off for the site at this address.
+    func setDesktopSite(_ on: Bool, for url: URL?) {
+        guard let key = Self.siteKey(for: url) else { return }
+        if on {
+            desktopSiteHosts.insert(key)
+        } else {
+            desktopSiteHosts.remove(key)
+        }
     }
 
     /// The step nearest any interval, so a stored value outside the steps still reads as one.

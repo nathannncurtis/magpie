@@ -132,6 +132,15 @@ struct RootView: View {
                 )
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("bookmarks.screen")
+            case .history:
+                HistoryScreen(
+                    store: model.history,
+                    onOpen: { model.openHistoryEntry($0) },
+                    onDone: { model.closeHistory() }
+                )
+                .backSwipe { model.closeHistory() }
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("history.screen")
             case .mods:
                 ModsScreen(
                     directory: model.modDirectory,

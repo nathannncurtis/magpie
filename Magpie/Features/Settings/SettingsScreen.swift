@@ -63,6 +63,13 @@ struct SettingsScreen: View {
                     .action { path.append(.filterLists) }
                     .divided(true)
                     .accessibilityIdentifier("settings.filterLists")
+
+                    SettingsRow(icon: .symbol("trash"), title: String(localized: "Clear browsing data")) {
+                        SettingsChevron()
+                    }
+                    .action { path.append(.clearData) }
+                    .divided(true)
+                    .accessibilityIdentifier("settings.clearData")
                 }
 
                 SettingsSectionLabel(title: String(localized: "Tabs & more"))
@@ -99,6 +106,8 @@ struct SettingsScreen: View {
                     FilterListsPage(blocker: model.blocker)
                 case .archivePicker:
                     ArchivePickerPage(preferences: model.preferences)
+                case .clearData:
+                    ClearBrowsingDataPage()
                 case .about:
                     AboutPage()
                 }
@@ -113,6 +122,7 @@ struct SettingsScreen: View {
         case engineList
         case filterLists
         case archivePicker
+        case clearData
         case about
     }
 
