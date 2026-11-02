@@ -139,10 +139,11 @@ final class ReadingSession {
     /// Whether the first load's commit counts as a visit; off when the page is a saved tab
     /// coming back, which was noted when it was first opened.
     var recordsInitialCommit = true
-    /// The history entry the last commit was reported for. A commit reaches the session
-    /// from both the standing watch and the load's own sequence, and a reload commits on
-    /// the entry already there: neither is a new visit.
-    @ObservationIgnored private var notedItem: WebPage.BackForwardList.Item.ID?
+    /// The last commit reported, and when. A commit reaches the session from both the
+    /// standing watch and the load's own sequence, moments apart: the second is no visit.
+    @ObservationIgnored private var lastNoted: (url: URL, at: Date)?
+    /// Whether the load under way reloads the page that was up: the same visit, not a new one.
+    @ObservationIgnored private var isReloading = false
 
     /// Called when the page's title lands, so the tab's label follows the page itself —
     /// the settle moments can stop before a title arrives.
@@ -486,9 +487,13 @@ final class ReadingSession {
 
     private func noteCommitted() {
         guard let url = page.url else { return }
-        let item = page.backForwardList.currentItem?.id
-        if let item, item == notedItem { return }
-        notedItem = item
+        let now = Date.now
+        if let lastNoted, lastNoted.url == url, now.timeIntervalSince(lastNoted.at) < 0.5 { return }
+        lastNoted = (url, now)
+        if isReloading {
+            isReloading = false
+            return
+        }
         if !recordsInitialCommit {
             recordsInitialCommit = true
             if url == initialURL { return }
@@ -582,6 +587,7 @@ final class ReadingSession {
             startLoad { self.page.load(url) }
         } else if page.url != nil {
             startLoad { self.page.reload() }
+            isReloading = true
         } else if let url = requestedURL {
             startLoad { self.page.load(url) }
         }
@@ -609,6 +615,7 @@ final class ReadingSession {
         failure = nil
         committedThisLoad = false
         pageBackground = nil
+        isReloading = false
         topColor = nil
         // The page being left does not keep speaking for the one arriving: its icon
         // goes with it, read afresh once the new page has settled.
