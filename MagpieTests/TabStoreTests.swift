@@ -26,7 +26,7 @@ struct TabStoreTests {
     }
 
     @Test("select centers a tab without marking it active")
-    func selectCentresWithoutTouching() {
+    func selectCentersWithoutTouching() {
         let store = TabStore()
         let first = store.newTab(title: "A", now: date(0))
         store.newTab(title: "B", now: date(10))
