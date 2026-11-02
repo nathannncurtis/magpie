@@ -199,4 +199,23 @@ struct ArchiveGroupingTests {
         let dateText = ArchiveGrouping.rowTime(of: older, now: now, calendar: calendar)
         #expect(dateText.contains("12"))
     }
+
+    @Test("a row in the current year never names the year; an older one does")
+    func rowDatesNameOnlyOlderYears() {
+        let calendar = self.calendar(in: zone)
+        let now = date(2026, 10, 28, 15, 0, calendar: calendar)
+
+        let thisYear = tab(at: date(2026, 9, 30, 10, 0, calendar: calendar))
+        let earlierThisYear = tab(at: date(2026, 1, 2, 10, 0, calendar: calendar))
+        let lastYear = tab(at: date(2025, 12, 31, 10, 0, calendar: calendar))
+
+        let sep = ArchiveGrouping.rowTime(of: thisYear, now: now, calendar: calendar)
+        let jan = ArchiveGrouping.rowTime(of: earlierThisYear, now: now, calendar: calendar)
+        let old = ArchiveGrouping.rowTime(of: lastYear, now: now, calendar: calendar)
+
+        #expect(sep.contains("30"))
+        #expect(!sep.contains("2026"))
+        #expect(!jan.contains("2026"))
+        #expect(old.contains("2025"))
+    }
 }

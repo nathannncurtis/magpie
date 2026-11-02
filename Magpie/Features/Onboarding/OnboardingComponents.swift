@@ -8,17 +8,9 @@ struct PrimaryCTA: View {
     var action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.system(.callout, weight: .semibold))
-                .foregroundStyle(Palette.onInk)
-                .frame(maxWidth: .infinity)
-                .frame(minHeight: Metrics.Bar.primaryCTAHeight)
-        }
-        .buttonStyle(.glassProminent)
-        .tint(Palette.ink)
-        .disabled(isDisabled)
-        .opacity(isDisabled ? 0.4 : 1)
+        Button(title, action: action)
+            .buttonStyle(.primary(.bar))
+            .disabled(isDisabled)
     }
 }
 
@@ -73,7 +65,7 @@ struct EngineTile: View {
                 if isSelected {
                     // A 2 pt ring right on the tile's edge, sitting outside it as the
                     // board's 2 px shadow ring does.
-                    RoundedRectangle(cornerRadius: Metrics.Radius.tile, style: .continuous)
+                    RoundedRectangle(cornerRadius: Metrics.Radius.engineTile, style: .continuous)
                         .stroke(Palette.ink, lineWidth: 2)
                         .padding(-1)
                 }
@@ -99,13 +91,13 @@ struct EngineTile: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 30, height: 30)
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: Metrics.Radius.tile, style: .continuous))
         } else {
             ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                RoundedRectangle(cornerRadius: Metrics.Radius.tile, style: .continuous)
                     .fill(Palette.engineTileOtherGlyph)
                 Image(systemName: "plus")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(Typography.icon(.small))
                     .foregroundStyle(Palette.textPrimary)
             }
             .frame(width: 30, height: 30)
@@ -115,7 +107,7 @@ struct EngineTile: View {
     /// The tile's background: glass, denser once picked with the ink ring, or Other's
     /// outline.
     @ViewBuilder private var tileFill: some View {
-        let shape = RoundedRectangle(cornerRadius: Metrics.Radius.tile, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: Metrics.Radius.engineTile, style: .continuous)
         if case .other = engine {
             shape
                 .fill(Palette.engineTileOther)
@@ -137,7 +129,7 @@ struct EngineTile: View {
             Circle()
                 .fill(Palette.ink)
             Image(systemName: "checkmark")
-                .font(.system(size: 12, weight: .semibold))
+                .font(Typography.icon(.small))
                 .foregroundStyle(Palette.onInk)
         }
         .frame(width: 22, height: 22)

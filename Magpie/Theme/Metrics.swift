@@ -45,16 +45,25 @@ enum Metrics {
         static let gapSectionBottom: CGFloat = 7
     }
 
+    /// The least a control measures, so a tap never lands on less.
+    static let tapTarget: CGFloat = 44
+
     /// Corner radii, all in the continuous (squircle) style.
     enum Radius {
         /// Sheet top corners, matching the device corners.
         static let sheetTop: CGFloat = 38
-        /// Content cards: mods, featured, folder tiles. The band runs 22-24.
-        static let card: CGFloat = 24
-        /// Grouped boxes: menu groups, settings groups.
+        /// Grouped boxes: menu groups, settings groups, mod cards.
         static let boxGrouped: CGFloat = 20
+        /// Text fields set on a screen's surface.
+        static let field: CGFloat = 14
+        /// Chips and answer tiles.
+        static let chip: CGFloat = 12
+        /// Small tiles: an engine's favicon tile, a skeleton bar.
+        static let tile: CGFloat = 8
+        /// Tags and badges.
+        static let badge: CGFloat = 6
         /// Engine tiles, at the upper end of the 18-20 tile band.
-        static let tile: CGFloat = 20
+        static let engineTile: CGFloat = 20
         /// Menu tiles, source cards and preview boxes, at the lower end of the 18-20 band.
         static let tileSmall: CGFloat = 18
         /// The search field's outer ring.

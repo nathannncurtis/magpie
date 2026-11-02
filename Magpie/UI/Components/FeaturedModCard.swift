@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The featured mod: a solid card with a 150 pt hand-drawn preview of what the mod does,
+/// The featured mod: a grouped card with a 150 pt hand-drawn preview of what the mod does,
 /// then the mod itself (03 · Featured mod card).
 struct FeaturedModCard: View {
 
@@ -17,8 +17,6 @@ struct FeaturedModCard: View {
     /// The install just landed, so the check pops (05 · 06).
     var pops = false
     var onGet: () -> Void
-
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(spacing: 0) {
@@ -58,10 +56,8 @@ struct FeaturedModCard: View {
             }
             .padding(EdgeInsets(top: 12, leading: 14, bottom: 14, trailing: 14))
         }
-        .background(Palette.card, in: RoundedRectangle(cornerRadius: Metrics.Radius.card, style: .continuous))
-        .clipShape(RoundedRectangle(cornerRadius: Metrics.Radius.card, style: .continuous))
-        .shadow(color: Palette.tabCardShadow, radius: 15, y: 14)
-        .overlay(cardHairline)
+        .clipShape(RoundedRectangle(cornerRadius: Metrics.Radius.boxGrouped, style: .continuous))
+        .groupedSurface()
         .accessibilityIdentifier("mods.featured")
     }
 
@@ -76,16 +72,6 @@ struct FeaturedModCard: View {
                     .font(.system(size: 34, weight: .medium))
                     .foregroundStyle(.white.opacity(0.55))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-        }
-    }
-
-    /// Dark's hairline ring; light carries its shadow alone.
-    private var cardHairline: some View {
-        Group {
-            if colorScheme == .dark {
-                RoundedRectangle(cornerRadius: Metrics.Radius.card, style: .continuous)
-                    .strokeBorder(Palette.separator, lineWidth: 0.5)
             }
         }
     }
@@ -176,9 +162,9 @@ private struct GoogleAnswerBoxPreview: View {
             }
         }
         .padding(EdgeInsets(top: 9, leading: 11, bottom: 9, trailing: 11))
-        .background(palette.answerTile, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(palette.answerTile, in: RoundedRectangle(cornerRadius: Metrics.Radius.chip, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
+            RoundedRectangle(cornerRadius: Metrics.Radius.chip, style: .continuous)
                 .strokeBorder(palette.ring, lineWidth: 1.5)
         )
         .shadow(color: palette.ringShadow, radius: 7, y: 3)

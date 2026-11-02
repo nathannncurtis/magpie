@@ -7,6 +7,7 @@ struct SkimFailedScreen: View {
 
     let query: String
     let line: String
+    let onDone: () -> Void
     let onShowResults: () -> Void
     let onRetry: () -> Void
 
@@ -14,6 +15,7 @@ struct SkimFailedScreen: View {
         /// The query as typed sits this far below the status bar, inside the safe
         /// area, so it holds on any device.
         static let queryBelowStatusBar: CGFloat = 8
+        static let queryClearsDone: CGFloat = 72
         static let stillMark: Double = 0.55
         static let titleGap: CGFloat = 18
         static let lineGap: CGFloat = 14
@@ -57,12 +59,22 @@ struct SkimFailedScreen: View {
             }
             .ignoresSafeArea(edges: .top)
             VStack(spacing: 0) {
+                ScreenHeader(
+                    title: nil,
+                    trailing: { HeaderDoneButton(id: "skim.done", action: onDone) })
+                Spacer(minLength: 0)
+            }
+            VStack(spacing: 0) {
                 Text(query)
                     .font(Typography.small)
                     .foregroundStyle(Palette.textOnMistSecondary)
+                    .lineLimit(1)
+                    // Clear of the Done at the trailing edge, and of its mirror.
+                    .padding(.horizontal, Layout.queryClearsDone)
                     .padding(.top, Layout.queryBelowStatusBar)
                 Spacer(minLength: 0)
             }
+            .allowsHitTesting(false)
             VStack {
                 Spacer()
                 footer
@@ -83,24 +95,14 @@ struct SkimFailedScreen: View {
     /// The results on the engine, then a second try.
     private var footer: some View {
         VStack(spacing: Layout.footerGap) {
-            Button(action: onShowResults) {
-                Text("Show search results")
-                    .font(Typography.buttonBar)
-                    // The ink flips light in dark; the label flips with it.
-                    .foregroundStyle(Palette.onInk)
-                    .frame(maxWidth: .infinity)
-                    .frame(minHeight: Layout.ctaHeight)  // grows with Dynamic Type
-                    .contentShape(.capsule)
-            }
-            .buttonStyle(.glassProminent)
-            .tint(Palette.ink)
-            .accessibilityIdentifier("skim.showResults")
+            Button(String(localized: "Show search results"), action: onShowResults)
+                .buttonStyle(.primary(.bar))
+                .accessibilityIdentifier("skim.showResults")
 
             Button(String(localized: "Try again"), action: onRetry)
-                .font(Typography.row)
-                .fontWeight(.semibold)
+                .font(Typography.buttonPill)
                 .foregroundStyle(Palette.textPrimary)
-                .frame(minWidth: 44, minHeight: 44)
+                .frame(minWidth: Metrics.tapTarget, minHeight: Metrics.tapTarget)
                 .contentShape(Rectangle())
                 .accessibilityIdentifier("skim.retry")
         }
@@ -118,6 +120,7 @@ struct SkimFailedScreen: View {
         query: "seasoning carbon steel",
         line: String(
             localized: "Only \(1) of \(3) pages could be read. That's not enough to Skim."),
+        onDone: {},
         onShowResults: {},
         onRetry: {})
 }

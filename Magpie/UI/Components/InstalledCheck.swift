@@ -6,7 +6,6 @@ struct InstalledCheck: View {
 
     private enum Layout {
         static let side: CGFloat = 30
-        static let check: CGFloat = 13
         static let popFrom: CGFloat = 0.5
     }
 
@@ -21,7 +20,7 @@ struct InstalledCheck: View {
             Circle()
                 .fill(Palette.sheen)
             Image(systemName: "checkmark")
-                .font(.system(size: Layout.check, weight: .semibold))
+                .font(Typography.icon(.small))
                 .foregroundStyle(Palette.onSheen)
         }
         .frame(width: Layout.side, height: Layout.side)

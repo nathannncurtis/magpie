@@ -46,6 +46,10 @@ final class ModsTests: XCTestCase {
         app.buttons["segment.1"].tap()
         land("installed-empty") { emptyState.waitForExistence(timeout: 10) }
         shots.snap(app, "mods-installed-empty")
+        let done = app.descendants(matching: .any)["mods.done"].firstMatch
+        land("done-visible") { done.waitForExistence(timeout: 10) }
+        done.tap()
+        land("done-leaves") { screen.waitForNonExistence(timeout: 10) }
 
         // 04 · the install sheet: a userscript link reads out as a preview and a warning.
         openSheet(appearance: appearance)

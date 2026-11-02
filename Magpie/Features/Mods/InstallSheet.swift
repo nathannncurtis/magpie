@@ -12,15 +12,14 @@ struct InstallSheet: View {
         static let sideInset: CGFloat = 16
         static let titleBottom: CGFloat = 12
         static let fieldHeight: CGFloat = 46
-        static let fieldRadius: CGFloat = 14
+        static let fieldRadius = Metrics.Radius.field
         static let ringWidth: CGFloat = 1.5
         static let fieldGap: CGFloat = 9
         static let previewRadius = Metrics.Radius.tileSmall
         static let previewPadding: CGFloat = 14
         static let labelWidth: CGFloat = 64
-        static let warnRadius: CGFloat = 14
+        static let warnRadius = Metrics.Radius.field
         static let buttonHeight: CGFloat = 50
-        static let buttonRadius: CGFloat = 25
         static let buttonsTop: CGFloat = 14
         static let markSide: CGFloat = 24
         static let minimumInstallMs: UInt64 = 600
@@ -63,7 +62,7 @@ struct InstallSheet: View {
             SheetGrabber()
                 .padding(.bottom, 8)
             Text(update == nil ? ModsCopy.installFromURL : ModsCopy.updateAsksForMore)
-                .font(.system(size: 16, weight: .semibold))
+                .font(Typography.emptyTitle)
                 .foregroundStyle(Palette.textPrimary)
                 .padding(.bottom, Layout.titleBottom)
             if update == nil {
@@ -121,7 +120,7 @@ struct InstallSheet: View {
     private var field: some View {
         HStack(spacing: Layout.fieldGap) {
             Image(systemName: "link")
-                .font(.system(size: 15, weight: .medium))
+                .font(Typography.icon(.small))
                 .foregroundStyle(Palette.textTertiary)
             TextField(
                 String(localized: "example.com/mod.user.js"),
@@ -236,7 +235,7 @@ struct InstallSheet: View {
         }
         return VStack(alignment: .leading, spacing: 4) {
             Text(title)
-                .font(.system(size: 15, weight: .semibold))
+                .font(Typography.rowTitle)
                 .foregroundStyle(Palette.textPrimary)
             Text(line)
                 .font(Typography.meta)
@@ -291,20 +290,16 @@ struct InstallSheet: View {
                     MarkSpinner(size: Layout.markSide)
                 case .ticked:
                     Image(systemName: "checkmark")
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(Typography.icon(.small))
                 default:
                     Text(update == nil ? ModsCopy.install : ModsCopy.update)
                 }
             }
-            .frame(maxWidth: .infinity)
-            .frame(minHeight: Layout.buttonHeight)
         }
-        .font(Typography.buttonPill)
-        .foregroundStyle(Palette.onInk)
-        .background(Palette.ink, in: Capsule())
-        .opacity(installable ? 1 : 0.3)
-        .disabled(!installable)
-        .buttonStyle(PressScale())
+        .buttonStyle(.primary(.sheet))
+        // Busy, it stays ink behind the mark and the tick; only a link that cannot be
+        // installed reads as unavailable.
+        .disabled(!installable && !installing)
         .accessibilityLabel(installing ? Text(ModsCopy.installing) : Text(ModsCopy.install))
         .accessibilityIdentifier("mods.sheet.install")
     }
@@ -368,7 +363,9 @@ struct InstallSheet: View {
     // MARK: Installing (05 · 06)
 
     private func install() {
-        guard let result = readyResult, result.isInstallable, let url = inspectedURL else { return }
+        guard !installing, let result = readyResult, result.isInstallable, let url = inspectedURL else {
+            return
+        }
         guard let draft = update?.draft ?? ModLinkInstaller.draft(from: result, url: url) else { return }
         let started = Date()
         phase = .installing
@@ -469,18 +466,5 @@ private struct SheetGrabber: View {
             .frame(width: 38, height: 5)
             .padding(.top, 8)
             .accessibilityHidden(true)
-    }
-}
-
-/// The press the install carries: a small settle to 0.96 while held.
-private struct PressScale: ButtonStyle {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.96 : 1)
-            .animation(
-                reduceMotion ? .easeInOut(duration: 0.2) : Springs.settle.animation,
-                value: configuration.isPressed)
     }
 }

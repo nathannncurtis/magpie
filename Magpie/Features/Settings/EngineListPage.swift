@@ -12,7 +12,7 @@ struct EngineListPage: View {
 
     var body: some View {
         SettingsScaffold(title: String(localized: "Search engine"), showsBack: true) {
-            SettingsGroup {
+            GroupedBox {
                 ForEach(Array(SearchEngine.builtins.enumerated()), id: \.element.id) {
                     index, engine in
                     builtinRow(engine, isDivided: index > 0)
@@ -79,11 +79,11 @@ struct EngineListPage: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 11)
             .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                RoundedRectangle(cornerRadius: Metrics.Radius.field, style: .continuous)
                     .fill(Palette.searchFieldFill)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                RoundedRectangle(cornerRadius: Metrics.Radius.field, style: .continuous)
                     .strokeBorder(
                         otherIsValid ? AnyShapeStyle(Palette.ink) : AnyShapeStyle(Palette.engineTileOtherOutline),
                         lineWidth: 1)
@@ -101,7 +101,7 @@ struct EngineListPage: View {
             Button("Use this URL") { saveOther() }
                 .font(Typography.buttonPill)
                 .foregroundStyle(otherIsValid ? Palette.teal : Palette.textTertiary)
-                .frame(minHeight: 44, alignment: .leading)
+                .frame(minHeight: Metrics.tapTarget, alignment: .leading)
                 .contentShape(.rect)
                 .disabled(!otherIsValid)
                 .accessibilityIdentifier("settings.otherSave")

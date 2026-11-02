@@ -8,22 +8,10 @@ struct ModsScreen: View {
 
     /// Layout numbers from the board.
     private enum Layout {
-        /// The header's inset from the sides.
-        static let headerInset: CGFloat = 20
-        /// The segments' inset from the sides.
-        static let segmentInset: CGFloat = 20
-        /// The scrolling content's inset from the sides.
-        static let contentInset: CGFloat = 14
-        /// The card of rows' own side padding.
-        static let cardPadding: CGFloat = 14
-        /// The section title's margins: 20 above, 8 below, 6 at the sides.
-        static let sectionTop: CGFloat = 20
-        static let sectionBottom: CGFloat = 8
-        static let sectionSide: CGFloat = 6
         /// The hint line's margins under the installed card.
         static let hintInset: CGFloat = 8
-        /// How far down the empty state sits from the content's top.
-        static let emptyOffset: CGFloat = 140
+        /// The card of rows' own side padding.
+        static let cardPadding: CGFloat = 14
         /// The scroll's own margin below its content, before the footer's clearance.
         static let contentBottom: CGFloat = 16
         static let footerInset: CGFloat = 14
@@ -59,7 +47,9 @@ struct ModsScreen: View {
             MistBackground()
                 .ignoresSafeArea()
             VStack(alignment: .leading, spacing: 0) {
-                header
+                ScreenHeader(
+                    title: ModsCopy.title, titleID: "mods.title",
+                    trailing: { HeaderDoneButton(id: "mods.done", action: onDone) })
                 SegmentedControl(
                     options: [ModsCopy.directory, ModsCopy.installedSegment(store.mods.count)],
                     selection: Binding(
@@ -67,7 +57,7 @@ struct ModsScreen: View {
                         set: { segment = Segment(rawValue: $0) ?? .directory }
                     )
                 )
-                .padding(.horizontal, Layout.segmentInset)
+                .padding(.horizontal, Metrics.Spacing.insetList)
                 .readableWidth()
                 .padding(.bottom, 10)
                 ScrollView {
@@ -77,10 +67,18 @@ struct ModsScreen: View {
                         case .installed: installedContent
                         }
                     }
-                    .padding(.horizontal, Layout.contentInset)
                     .readableWidth()
                     .padding(.bottom, scrollBottom)
                 }
+            }
+            if segment == .installed && store.mods.isEmpty {
+                // The quiet block lays over the whole screen, held to the safe height.
+                EmptyListState(
+                    icon: "puzzlepiece", title: ModsCopy.emptyTitle, message: ModsCopy.emptyLine
+                )
+                .padding(.bottom, bottomInset)
+                .allowsHitTesting(false)
+                .accessibilityIdentifier("mods.empty")
             }
             // The footer rides the bottom edge the way the other floating bars do;
             // the scroll's padding keeps its last row clear of it.
@@ -138,23 +136,6 @@ struct ModsScreen: View {
             + Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset)
     }
 
-    private var header: some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text(ModsCopy.title)
-                .font(Typography.screenTitleSmall)
-                .foregroundStyle(Palette.textPrimary)
-            Spacer()
-            Button(ModsCopy.done, action: onDone)
-                .font(Typography.rowTitle)
-                .foregroundStyle(Palette.textPrimary)
-                .frame(minWidth: 44, minHeight: 44)
-                .contentShape(Rectangle())
-                .accessibilityIdentifier("mods.done")
-        }
-        .padding(.horizontal, Layout.headerInset)
-        .padding(.bottom, 14)
-    }
-
     // MARK: Directory
 
     private var directoryContent: some View {
@@ -167,15 +148,9 @@ struct ModsScreen: View {
                     pops: newlyInstalled.contains(featured.id),
                     onGet: { install(featured) }
                 )
-                .padding(.bottom, 4)
+                .padding(.horizontal, Metrics.Spacing.insetList)
             }
-            Text(ModsCopy.popularThisWeek)
-                .font(Typography.sectionTitle)
-                .foregroundStyle(Palette.textPrimary)
-                .padding(
-                    EdgeInsets(
-                        top: Layout.sectionTop, leading: Layout.sectionSide,
-                        bottom: Layout.sectionBottom, trailing: Layout.sectionSide))
+            SectionLabel(title: ModsCopy.popularThisWeek)
             rowsCard(directory.popular) { entry in
                 ModRow(
                     icon: entry.icon,
@@ -191,9 +166,9 @@ struct ModsScreen: View {
                     .padding(
                         EdgeInsets(
                             top: 12,
-                            leading: Layout.hintInset,
+                            leading: Metrics.Spacing.insetList + Layout.hintInset,
                             bottom: 0,
-                            trailing: Layout.hintInset)
+                            trailing: Metrics.Spacing.insetList + Layout.hintInset)
                     )
                     .accessibilityIdentifier("mods.installFailed")
             }
@@ -244,9 +219,7 @@ struct ModsScreen: View {
 
     private var installedContent: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if store.mods.isEmpty {
-                emptyState
-            } else {
+            if !store.mods.isEmpty {
                 rowsCard(store.mods) { mod in
                     installedRow(mod)
                 }
@@ -255,7 +228,8 @@ struct ModsScreen: View {
                     .foregroundStyle(Palette.textOnMistSecondary)
                     .padding(
                         EdgeInsets(
-                            top: 12, leading: Layout.hintInset, bottom: 0, trailing: Layout.hintInset))
+                            top: 12, leading: Metrics.Spacing.insetList + Layout.hintInset,
+                            bottom: 0, trailing: Metrics.Spacing.insetList + Layout.hintInset))
             }
         }
     }
@@ -301,47 +275,25 @@ struct ModsScreen: View {
                 insertion: .offset(y: 8).combined(with: .opacity), removal: .opacity)
     }
 
-    // Board 14's empty pattern: a line icon, a 16 pt title, one line, far down.
-    private var emptyState: some View {
-        VStack(spacing: 6) {
-            Image(systemName: "puzzlepiece")
-                .font(.system(size: 34, weight: .regular))
-                .foregroundStyle(Palette.labelOnMist)
-            Text(ModsCopy.emptyTitle)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Palette.textPrimary)
-            Text(ModsCopy.emptyLine)
-                .font(Typography.meta)
-                .foregroundStyle(Palette.textOnMistSecondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.top, Layout.emptyOffset)
-        .accessibilityIdentifier("mods.empty")
-    }
-
     // MARK: Shared
 
-    /// A solid card of rows, separators between them (board's `.mcard`). Rows are
-    /// identified by the mod each holds, so a row keeps its state as the list moves.
+    /// A grouped box of rows, hairlines between them. Rows are identified by the mod each
+    /// holds, so a row keeps its state as the list moves.
     private func rowsCard<Item: Identifiable, Row: View>(
         _ items: [Item], @ViewBuilder row: @escaping (Item) -> Row
     ) -> some View {
-        VStack(spacing: 0) {
+        GroupedBox {
             ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                 row(item)
+                    .padding(.horizontal, Layout.cardPadding)
                 if index < items.count - 1 {
                     Rectangle()
-                        .fill(Palette.separator)
-                        .frame(height: 1)
+                        .fill(Palette.separatorOnMist)
+                        .frame(height: 0.5)
+                        .padding(.horizontal, Layout.cardPadding)
                 }
             }
         }
-        .padding(.horizontal, Layout.cardPadding)
-        .padding(.vertical, 4)
-        .background(Palette.card, in: RoundedRectangle(cornerRadius: Metrics.Radius.card, style: .continuous))
-        .clipShape(RoundedRectangle(cornerRadius: Metrics.Radius.card, style: .continuous))
-        .shadow(color: Palette.tabCardShadow, radius: 15, y: 14)
     }
 
     /// An install from the sheet has landed: the Installed segment takes over, and the

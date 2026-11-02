@@ -4,7 +4,7 @@ import SwiftUI
 struct AboutPage: View {
     var body: some View {
         SettingsScaffold(title: String(localized: "About Magpie"), showsBack: true) {
-            SettingsGroup {
+            GroupedBox {
                 SettingsRow(icon: .symbol("info.circle"), title: String(localized: "Version")) {
                     value(Self.version)
                 }
@@ -15,7 +15,7 @@ struct AboutPage: View {
                 .accessibilityIdentifier("settings.about.licence")
                 SettingsRow(icon: .symbol("link"), title: String(localized: "Source code")) {
                     Image(systemName: "arrow.up.right")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(Typography.icon(.small))
                         .foregroundStyle(Palette.textOnMistSecondaryMeta)
                 }
                 .action { openSource() }
