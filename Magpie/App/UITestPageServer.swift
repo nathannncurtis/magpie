@@ -148,6 +148,8 @@ final class UITestPageServer: @unchecked Sendable {
             return shell(title: "magpie test", path: route, block: "#B3410C")
         case "/page":
             return shell(title: "magpie test page", path: route, block: "#2B62C2")
+        case "/mode":
+            return modeProbe
         case "/mod.user.js":
             return UITestModFixtures.userscript
         case "/mod.list.txt":
@@ -156,6 +158,25 @@ final class UITestPageServer: @unchecked Sendable {
             return shell(title: "magpie test", path: route, block: "#2B8A5A")
         }
     }
+
+    /// A page that says which version of itself it loaded: "mode: desktop" when the
+    /// browser identifies as a computer, "mode: mobile" otherwise.
+    private static let modeProbe = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>magpie test mode</title>
+        </head>
+        <body>
+        <h1 id="mode">mode: loading</h1>
+        <script>
+        document.getElementById("mode").textContent =
+            /Macintosh/.test(navigator.userAgent) ? "mode: desktop" : "mode: mobile";
+        </script>
+        </body>
+        </html>
+        """
 
     /// What each route serves; mods' files are not pages.
     private static func contentType(for route: String) -> String {

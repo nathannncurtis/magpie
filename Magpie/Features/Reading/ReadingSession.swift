@@ -124,6 +124,9 @@ final class ReadingSession {
     /// Called whenever the page settles or moves, so the tab can take what it now shows.
     var onPageSettled: (@MainActor () -> Void)?
 
+    /// Called with the address each time a top-level load commits, so the history can note it.
+    var onPageCommitted: (@MainActor (URL) -> Void)?
+
     /// Called when the page's title lands, so the tab's label follows the page itself —
     /// the settle moments can stop before a title arrives.
     var onPageTitled: (@MainActor () -> Void)?
@@ -341,12 +344,17 @@ final class ReadingSession {
         return "";
         """#
 
-    init(url: URL, pageConfiguration: WebPage.Configuration? = nil) {
+    init(
+        url: URL, pageConfiguration: WebPage.Configuration? = nil,
+        prefersDesktop: @escaping @MainActor (URL?) -> Bool = { _ in false }
+    ) {
         initialURL = url
         requestedURL = url
+        var decider = PageNavigationDecider()
+        decider.prefersDesktop = prefersDesktop
         page = WebPage(
             configuration: pageConfiguration ?? .browser(),
-            navigationDecider: PageNavigationDecider())
+            navigationDecider: decider)
         monitor.pathUpdateHandler = { [weak self] path in
             let online = path.status == .satisfied
             Task { @MainActor in
@@ -413,6 +421,7 @@ final class ReadingSession {
                         failure = nil
                         committedThisLoad = true
                         lastCommittedURL = page.url
+                        noteCommitted()
                     }
                     if event == .finished {
                         await refreshPageBackground()
@@ -440,6 +449,11 @@ final class ReadingSession {
                 return
             }
         }
+    }
+
+    private func noteCommitted() {
+        guard let url = page.url else { return }
+        onPageCommitted?(url)
     }
 
     /// Tells the owner the page settled. A title and the first paint can land after the
@@ -505,6 +519,7 @@ final class ReadingSession {
         layoutWatch = nil
         onPageSettled = nil
         onPageTitled = nil
+        onPageCommitted = nil
         monitor.cancel()
         page.stopLoading()
     }
@@ -624,8 +639,12 @@ final class ReadingSession {
     private func drive<Events: AsyncSequence>(_ events: Events) async
     where Events.Element == WebPage.NavigationEvent, Events.Failure == Error {
         do {
+            // A page served fast can commit before the session-wide watch subscribes;
+            // this load's own events are never missed. A commit seen by both is one
+            // visit: the history keeps consecutive repeats once.
             for try await event in events where event == .committed {
                 committedThisLoad = true
+                noteCommitted()
             }
             SnapshotLog.event("load finished \(logTag)")
             settle()

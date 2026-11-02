@@ -11,6 +11,7 @@ Reading ──tap URL──▶ Search sheet (01 morph)       Reading ──•�
 Reading ──tab count──▶ Tabs (03) ──Archived chip──▶ Archive (09)
 Menu ──Mods tile──▶ Mods (06) ──footer──▶ Install from URL (12)
 Menu ──Bookmark tile: tap saves, long-press──▶ Bookmarks (10)      Menu ──Settings ›──▶ Settings (11)
+Menu ──History ›──▶ History (18)       Settings ──Clear browsing data ›──▶ Clear browsing data (19)
 First ever launch ──▶ Welcome (07a) ──▶ Engine picker (07b) ──▶ Launch (01)
 ```
 
@@ -59,7 +60,8 @@ Later launches restore the last tab, with no animation.
 - **Tiles:** Skim, Bookmark, Share, Mods, Private.
 - **Groups:**
   - (ads & trackers, cookie banners, archive timing)
-  - (search engine, Skim for me, Settings ›)
+  - (search engine, Skim for me, Desktop site, History ›, Settings ›)
+- **Desktop site:** a toggle shown while a page with a site is up. It flips desktop mode for that host, remembered per host (a site and its www twin share the choice), and the page reloads. Magpie applies it through the navigation decider's preferences on every top-level navigation (`preferredContentMode`: `.desktop` when on, `.recommended` when off).
 - **Bookmark tile:** a tap saves the page, with a light haptic and the icon filling in; a long-press opens Bookmarks (10).
 - **Dismissing:** tap •••, swipe down, or tap the page.
 - **Board fix:** the static board screen 05 shows too much space above the bar. The spec value of 14 pt wins.
@@ -119,7 +121,7 @@ Later launches restore the last tab, with no animation.
 - **Default browser:** the `DefaultBrowserCard` sits on top until Magpie is the default.
 - **Groups:**
   - **Search:** Search engine › · Suggestions [toggle] · Skim for me [toggle]
-  - **Privacy:** Ads & trackers [toggle] · Cookie banners [toggle] · Filter lists ("Updated 2 h ago" ›)
+  - **Privacy:** Ads & trackers [toggle] · Cookie banners [toggle] · Filter lists ("Updated 2 h ago" ›) · Clear browsing data ›
   - **Tabs & more:** Archive tabs after ("1 day" ›) · Passwords ("iOS Passwords" ›, which opens iOS Passwords) · About Magpie ("1.0 · MPL-2.0" ›)
 - There is no account and no sync.
 
@@ -172,6 +174,22 @@ Every edge state follows one pattern: one plain line saying what happened, and o
 - **Install** stays disabled at 30% until the link parses as a userscript or filter list.
 
 ---
+
+## 18 · History
+- **Header:** "History" in `screenTitle`, with "Done" at top right; a swipe in from the leading edge goes back too. The header lives in one small view in the screen's file so the shared header can replace it.
+- **Record:** each committed top-level navigation in a normal tab: address, title, time. Private tabs leave nothing. The same address twice in a row is one entry; only web pages count. The list keeps the last 5,000 visits. The title is filled in once the page names itself.
+- **List:** rows on the mist, grouped by `DayHeader` as in the archive (09). Each row: site tile, title (the site while untitled), site, time.
+- **Actions:** tap a row to open it in a new tab; swipe left to remove it. "Clear history…" ends the list, in red, and asks "Clear all history?" before it clears. It hides while a search narrows the list.
+- **Search:** the `BottomSearchPill` with "Search history" filters titles and sites; the pill rides the keyboard.
+- **Empty:** "No history yet" / "Pages you visit show up here." (drafted, `// COPY: review`); no pill. A search with no match: "No results" / "Nothing in your history matches that search."
+- **Entry:** Menu · History ›. The menu folds and History opens over the page; Done or a back swipe returns to it.
+
+## 19 · Clear browsing data
+- **Where:** pushed from Settings · Privacy, in the Settings page frame (`SettingsScaffold`, `SettingsGroup`), with a back button.
+- **Toggles:** History · Cookies and site data · Cache. All on to begin with.
+- **Clear:** a destructive button under the group, disabled when nothing is ticked. It asks "Clear browsing data?" / "This can't be undone. Open pages reload." before it runs.
+- **What it does:** History empties the history store. Cookies and site data removes every website data type the default store keeps except the caches; Cache removes the disk, memory, offline and fetch caches; both through `removeData(ofTypes:modifiedSince: .distantPast)`. Private tabs keep their own throwaway store and are untouched. When website data goes, the live pages reload so none keeps showing what was cleared.
+- **Done:** "Cleared." shows under the button until a toggle changes.
 
 ## Dark mode, all screens
 - **Mist:** turns ink, with teal glowing through (01 Mist dark column).

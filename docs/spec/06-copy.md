@@ -17,11 +17,13 @@ Put all strings in `Localizable.xcstrings`; English only at 1.0.
 | Welcome | "magpie" · "The browser you shape." · "Get started" · "Free and open source. No account. Nothing collected." |
 | Engine picker | "Where should searches go?" · "Pick one; you can switch any time from the menu." · tile notes (04 · 07b) · "Other" / "Any, by search URL" · "Continue with {engine}" |
 | Search | Skim pill: "Skim" |
-| Menu | Tiles: "Skim" · "Bookmark" · "Share" · "Mods"; rows: "Block ads & trackers" · "Block cookie banners" · "Archive inactive tabs" / "After 1 day" · "Search engine" · "Skim for me" |
+| Menu | Tiles: "Skim" · "Bookmark" · "Share" · "Mods"; rows: "Block ads & trackers" · "Block cookie banners" · "Archive inactive tabs" / "After 1 day" · "Search engine" · "Skim for me" · "Desktop site" · "History" |
 | Tabs | "Archived · {n}" · "{n} open" |
 | Skim working | "Reading {n} pages" · "Cancel" |
 | Skim page | "From {n} pages · read on this phone" · "Sources" · "Dig deeper · up to 10" |
 | Archive | "Archive" · "Yesterday" · "Earlier this week" · "Search archived tabs" · "Done" |
+| History | "History" · "Search history" · "Clear history…" · "Clear all history?" · "Clear history" |
+| Clear browsing data | "Clear browsing data" · "History" · "Cookies and site data" · "Cache" · "Clear" · "Clear browsing data?" / "This can't be undone. Open pages reload." · "Cleared." |
 | Bookmarks | "Bookmarks" · "Edit" · "Folders" · "Recently added" · "New folder" · "Skim page · {folder}" · "Search bookmarks" |
 | Settings | "Settings" · "Make Magpie your default browser" / "Links from other apps open here. Set in iOS Settings." / "Open" · section labels: "Search", "Privacy", "Tabs & more" · rows (04 · 11) · "Updated {time} ago" · "iOS Passwords" · "About Magpie" · "{version} · MPL-2.0" |
 | Mods | "Mods" · "Directory" · "Installed · {n}" · "Popular this week" · "Get" · "Install from URL" |
@@ -34,8 +36,9 @@ Put all strings in `Localizable.xcstrings`; English only at 1.0.
 | Mods · Installed | "Not reviewed" · "{type} · {author} · from a link" · "Swipe a mod left to remove it. Off keeps it, but it stops running." |
 | Mods · Directory install failed | "{name} didn't install. Tap Get to try again." (drafted, `// COPY: review`) |
 | Empty Archive | "Nothing archived yet" / "Tabs you leave alone for a day land here, and stay for 30 days." |
-| No search results | "No results" / "Nothing in the archive matches that search." · "No bookmarks match that search." |
+| No search results | "No results" / "Nothing in the archive matches that search." · "No bookmarks match that search." · "Nothing in your history matches that search." |
 | Empty Bookmarks | "No bookmarks yet" / "Tap Bookmark in the menu to keep a page here." (drafted, `// COPY: review`) |
+| Empty History | "No history yet" / "Pages you visit show up here." (drafted, `// COPY: review`) |
 | Empty Installed | "Nothing installed" / "Mods from the directory or a link show up here." (drafted, `// COPY: review`) |
 | Offline | "Can't reach {host}" / "You're offline. It'll load when you're back." · "Try again" |
 | Stalled load | "This page stopped loading" / "It took too long. Try again in a moment." · "Try again" |

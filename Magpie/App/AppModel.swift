@@ -16,6 +16,8 @@ enum Surface: Equatable {
     case archive
     /// The bookmarks, over whatever screen opened it.
     case bookmarks
+    /// The history, over whatever screen opened it.
+    case history
     /// The mods screen.
     case mods
     /// A Skim run: working, its finished page, or the failure that stopped it.
@@ -42,6 +44,8 @@ final class AppModel {
     let blocker: ContentBlocker
     /// The saved bookmarks and their folders.
     let bookmarks: BookmarkStore
+    /// The pages visited in normal tabs.
+    let history: HistoryStore
     /// Where the search sheet's suggestion rows come from.
     let suggestions: any SuggestionProviding
     /// Recent searches.
@@ -129,6 +133,7 @@ final class AppModel {
         preferences: Preferences? = nil,
         blocker: ContentBlocker? = nil,
         bookmarks: BookmarkStore = BookmarkStore(),
+        history: HistoryStore = HistoryStore(),
         suggestions: any SuggestionProviding = SuggestionService(),
         recents: any RecentSearchStoring = RecentSearches(),
         modStore: ModStore? = nil,
@@ -146,6 +151,7 @@ final class AppModel {
                 store: NoRuleSets(), defaults: Self.freshDefaults())
         self.blocker = blocker
         self.bookmarks = bookmarks
+        self.history = history
         self.suggestions = suggestions
         self.recents = recents
         let mods = modStore ?? ModStore(listSink: blocker)
@@ -169,6 +175,7 @@ final class AppModel {
             preferences: Preferences(),
             blocker: ContentBlocker(store: FilterListStore()),
             bookmarks: BookmarkStore(persistence: FileSystemBookmarkPersistence()),
+            history: HistoryStore(persistence: FileSystemHistoryPersistence()),
             modDirectory: ModDirectory())
     }
 
@@ -185,6 +192,7 @@ final class AppModel {
         await store.loadIndex()
         armLaunchIntro()
         await bookmarks.loadIndex()
+        await history.loadIndex()
         fillMissingFavicons()
         refreshArchive(now: now)
         await blocker.attach(modInjector.contentController)
@@ -368,7 +376,8 @@ final class AppModel {
         }
         let session = ReadingSession(
             url: tab.url ?? Self.blankPage,
-            pageConfiguration: configuration)
+            pageConfiguration: configuration,
+            prefersDesktop: { [preferences] url in preferences.usesDesktopSite(for: url) })
         session.logTag = "tab=\(tab.id.uuidString.prefix(4))"
         session.isPrivate = tab.isPrivate
         session.viewportSize = restingPageSize
@@ -379,6 +388,10 @@ final class AppModel {
         }
         session.onPageSettled = { [weak self] in self?.pageSettled(for: tab.id) }
         session.onPageTitled = { [weak self] in self?.syncTab(for: tab.id) }
+        let isPrivate = tab.isPrivate
+        session.onPageCommitted = { [weak self] url in
+            self?.history.record(url: url, isPrivate: isPrivate, now: .now)
+        }
         pruneSessions()
         return session
     }
@@ -473,6 +486,9 @@ final class AppModel {
     /// Brings the tab in step with its page: where it is, what it's called, its site's icon.
     private func syncTab(for id: Tab.ID) {
         guard let session = sessions[id] else { return }
+        if let url = session.page.url, !session.isPrivate, !session.page.isLoading {
+            history.updateTitle(session.page.title, for: url)
+        }
         store.update(
             id: id,
             url: session.page.url,
@@ -1010,6 +1026,70 @@ final class AppModel {
         } else {
             surface = store.tabs.isEmpty ? .launchSearch : .tabs
         }
+    }
+
+    // MARK: History and site data
+
+    /// Where a swipe back off the history returns to.
+    private var surfaceBeforeHistory: Surface?
+
+    /// The menu's History row, and the UI tests' way in.
+    func showHistory() {
+        guard surface != .history else { return }
+        if case .reading(true) = surface {
+            surfaceBeforeHistory = .reading(searchOpen: false)
+        } else {
+            surfaceBeforeHistory = surface
+        }
+        surface = .history
+    }
+
+    /// Done, or a swipe back off the history: whatever was up before it.
+    func closeHistory() {
+        let back = surfaceBeforeHistory
+        surfaceBeforeHistory = nil
+        if let back, back != .history {
+            surface = back
+        } else {
+            surface = store.tabs.isEmpty ? .launchSearch : .tabs
+        }
+    }
+
+    /// A tapped history row: a new tab, opened on the spot.
+    func openHistoryEntry(_ url: URL, now: Date = .now) {
+        surfaceBeforeHistory = nil
+        openFromLaunch(url, now: now)
+    }
+
+    /// Clear browsing data: what was ticked goes, and the live pages load again so none
+    /// keeps showing what was cleared.
+    func clearBrowsingData(_ kinds: BrowsingDataKinds) async {
+        if kinds.history { history.clear() }
+        let types = kinds.websiteDataTypes
+        if !types.isEmpty {
+            await WKWebsiteDataStore.default().removeData(ofTypes: types, modifiedSince: .distantPast)
+            for session in sessions.values where !session.isPrivate {
+                session.retry()
+            }
+        }
+    }
+
+    /// Whether the current page's site loads its desktop version.
+    var currentSiteIsDesktop: Bool {
+        preferences.usesDesktopSite(for: store.currentTab?.url)
+    }
+
+    /// Whether the current tab shows a page whose site the Desktop site row can speak for.
+    var canChooseDesktopSite: Bool {
+        Preferences.siteKey(for: store.currentTab?.url) != nil
+    }
+
+    /// The Desktop site row: remembers the choice for the page's site, then loads the
+    /// page again so it takes effect.
+    func setDesktopSite(_ on: Bool) {
+        guard let tab = store.currentTab else { return }
+        preferences.setDesktopSite(on, for: tab.url)
+        currentSession?.retry()
     }
 
     /// A tapped bookmark: a new tab, opened on the spot — or, for a Skim page,

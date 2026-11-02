@@ -249,6 +249,7 @@ extension AppModel {
             blocker: ContentBlocker(store: blockerStore, defaults: blockingDefaults),
             bookmarks: BookmarkStore(
                 persistence: FileSystemBookmarkPersistence(directory: scratch)),
+            history: HistoryStore(persistence: FileSystemHistoryPersistence(directory: scratch)),
             suggestions: StubSuggestionProvider(
                 rowsByPrefix: ["magpie test", "magpie test page", "magpie test search"]),
             recents: RecentSearches(),
