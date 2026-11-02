@@ -94,7 +94,7 @@ final class SkimTests: XCTestCase {
             ) == .completed
         }
 
-        // Done leaves the page, the same as cancelling.
+        // Done leaves the page, the same as canceling.
         land("page-done") { self.element("skim.done").waitForExistence(timeout: 10) }
         element("skim.done").tap()
         land("page-left") { self.element("skim.page").waitForNonExistence(timeout: 10) }
@@ -112,7 +112,7 @@ final class SkimTests: XCTestCase {
         Thread.sleep(forTimeInterval: 0.5)
         shots.snap(app, "skim-failed")
 
-        // Done leaves the failure, the same as cancelling.
+        // Done leaves the failure, the same as canceling.
         land("failed-done") { self.element("skim.done").waitForExistence(timeout: 10) }
         element("skim.done").tap()
         land("failed-left") { self.element("skim.failed").waitForNonExistence(timeout: 10) }

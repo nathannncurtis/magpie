@@ -33,7 +33,7 @@ enum NavigationPolicy: Equatable {
 }
 
 /// Where a page's downloads go, and a note that one was just handed over, so the
-/// cancelled load that follows is not shown as a page that failed.
+/// canceled load that follows is not shown as a page that failed.
 @MainActor
 final class PageDownloads {
     private let store: DownloadStore
@@ -51,7 +51,7 @@ final class PageDownloads {
         store.start(DownloadJob(request: request, suggestedName: suggestedName), cookieStore: cookieStore)
     }
 
-    /// Whether a load failure just now is the cancelled load of a download; true once.
+    /// Whether a load failure just now is the canceled load of a download; true once.
     func consumesFailure(now: Date = .now) -> Bool {
         defer { handedOverAt = nil }
         guard let handedOverAt else { return false }
@@ -88,7 +88,7 @@ struct PageNavigationDecider: WebPage.NavigationDeciding {
         switch policy {
         case .allow:
             // A link with the download attribute. WebPage has no download delegate, so
-            // the page's load is cancelled and the file fetched on its own.
+            // the page's load is canceled and the file fetched on its own.
             if action.shouldPerformDownload, let downloads, Self.isWeb(url) {
                 downloads.start(action.request, suggestedName: nil)
                 return .cancel

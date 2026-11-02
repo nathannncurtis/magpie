@@ -19,7 +19,7 @@ enum ReadableForeground {
 
     /// The tint's relative luminance, WCAG-style, as resolved under the appearance. The
     /// tint's own opacity is left out: the glass sits over the page the tint was taken
-    /// from, so what shows through it is that same colour, not a fixed material base.
+    /// from, so what shows through it is that same color, not a fixed material base.
     static func luminance(_ tint: Color, scheme: ColorScheme) -> Double {
         let style: UIUserInterfaceStyle = scheme == .dark ? .dark : .light
         let traits = UITraitCollection(userInterfaceStyle: style)
@@ -34,7 +34,7 @@ enum ReadableForeground {
             + 0.0722 * linear(channels.blue)
     }
 
-    /// One colour's straight sRGB channels, or nil where they can't be read.
+    /// One color's straight sRGB channels, or nil where they can't be read.
     private static func channels(
         of color: UIColor
     ) -> (red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat)? {

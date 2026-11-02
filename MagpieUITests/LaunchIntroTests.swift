@@ -32,7 +32,7 @@ final class LaunchIntroTests: XCTestCase {
         app.launch()
 
         // Mid-draw: the value flips the moment the stroke starts; a second inside the
-        // held draw puts the shot partway along its centreline, no bead yet.
+        // held draw puts the shot partway along its centerline, no bead yet.
         let intro = app.descendants(matching: .any)["launch.intro"].firstMatch
         XCTAssertTrue(intro.waitForExistence(timeout: 20), "the intro")
         waitValue(intro, "drawing", timeout: 10)

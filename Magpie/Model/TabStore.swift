@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-/// The open tabs in stack order, the tab the stack centres on, and the archive.
+/// The open tabs in stack order, the tab the stack centers on, and the archive.
 ///
 /// Every change schedules a write of the JSON index; snapshots are written as their own
 /// files. All work with the index happens on the main actor and all file work inside the
@@ -11,7 +11,7 @@ import Observation
 final class TabStore {
     /// The open tabs, in stack order.
     private(set) var tabs: [Tab] = []
-    /// The centred tab; the one auto-archive never takes.
+    /// The centered tab; the one auto-archive never takes.
     private(set) var currentTabID: Tab.ID?
     /// The archived tabs, oldest first.
     private(set) var archivedTabs: [Tab] = []
@@ -39,7 +39,7 @@ final class TabStore {
         tabs.filter { $0.isPrivate == isPrivate }
     }
 
-    /// The tab a mode centres on: the one it last had current, else its last tab.
+    /// The tab a mode centers on: the one it last had current, else its last tab.
     func currentTabID(inPrivate isPrivate: Bool) -> Tab.ID? {
         if let id = rememberedCurrent[isPrivate],
             tabs.contains(where: { $0.id == id && $0.isPrivate == isPrivate })
@@ -181,12 +181,12 @@ final class TabStore {
         let tab: Tab
         /// Its place in the stack.
         let index: Int
-        /// Whether it was the centred tab.
+        /// Whether it was the centered tab.
         let wasCurrent: Bool
     }
 
-    /// Closes the tab. Closing the current tab hands currency to the neighbour of its own
-    /// mode on its right, or the one on its left when there is no right neighbour. Returns
+    /// Closes the tab. Closing the current tab hands currency to the neighbor of its own
+    /// mode on its right, or the one on its left when there is no right neighbor. Returns
     /// the tab as it was, in memory only, for an undo.
     @discardableResult
     func close(_ id: Tab.ID) -> ClosedTab? {
@@ -210,7 +210,7 @@ final class TabStore {
         return closed
     }
 
-    /// Puts a closed tab back in its place, and back at the centre when it was there. The
+    /// Puts a closed tab back in its place, and back at the center when it was there. The
     /// snapshot file closing deleted is written again.
     func reinstate(_ closed: ClosedTab) {
         guard !tabs.contains(where: { $0.id == closed.tab.id }) else { return }

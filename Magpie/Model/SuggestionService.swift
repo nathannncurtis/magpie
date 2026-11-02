@@ -41,7 +41,7 @@ struct SuggestionService: SuggestionProviding {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return [] }
 
-        // Debounce: a superseded call is cancelled while it sleeps and leaves quietly.
+        // Debounce: a superseded call is canceled while it sleeps and leaves quietly.
         do {
             try await Task.sleep(for: debounce)
         } catch {

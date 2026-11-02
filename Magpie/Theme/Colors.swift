@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 extension Color {
-    /// An sRGB colour from a 0xRRGGBB value, at the given opacity.
+    /// An sRGB color from a 0xRRGGBB value, at the given opacity.
     init(hex: UInt32, opacity: Double = 1) {
         let red = Double((hex >> 16) & 0xFF) / 255
         let green = Double((hex >> 8) & 0xFF) / 255
@@ -11,7 +11,7 @@ extension Color {
     }
 }
 
-/// Every colour token, each with a light and a dark value that follow the system appearance.
+/// Every color token, each with a light and a dark value that follow the system appearance.
 enum Palette {
 
     // MARK: Brand
@@ -40,7 +40,7 @@ enum Palette {
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
-    /// The sheen's middle stop, for the fills that must be one solid colour.
+    /// The sheen's middle stop, for the fills that must be one solid color.
     static let sheenMid = Color(hex: 0x10B981)
     /// Numbers and glyphs on the sheen, dark in both modes: white falls short of contrast on it.
     static let onSheen = dynamic(light: 0x101115, dark: 0x101115)
@@ -82,7 +82,7 @@ enum Palette {
     static let toggleOn = dynamic(light: 0x101115, dark: 0x5EEAD4)
     /// A toggle in its off state.
     static let toggleOff = dynamic(light: 0xDADAD4, dark: 0xFFFFFF, darkOpacity: 0.16)
-    /// The default reading-bar tint when the site gives no colour.
+    /// The default reading-bar tint when the site gives no color.
     static let pageTintGlass = dynamic(
         light: 0xFFF6EE, lightOpacity: 0.55, dark: 0x2C241E, darkOpacity: 0.55)
     /// The background of a warning box.
@@ -220,7 +220,7 @@ enum Palette {
 }
 
 private extension Palette {
-    /// A colour that switches with the system appearance.
+    /// A color that switches with the system appearance.
     static func dynamic(
         light: UInt32, lightOpacity: Double = 1, dark: UInt32, darkOpacity: Double = 1
     ) -> Color {
@@ -234,7 +234,7 @@ private extension Palette {
 }
 
 private extension UIColor {
-    /// An sRGB colour from a 0xRRGGBB value, at the given opacity.
+    /// An sRGB color from a 0xRRGGBB value, at the given opacity.
     convenience init(hex: UInt32, opacity: Double) {
         let red = CGFloat((hex >> 16) & 0xFF) / 255
         let green = CGFloat((hex >> 8) & 0xFF) / 255

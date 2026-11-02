@@ -24,12 +24,11 @@ enum SkimFailureLines {
         String(localized: "Only \(read) of \(attempted) pages could be read. That's not enough to Skim.")
     }
 
-    // COPY: review — 06 still has these lines to write.
-    static let refused = String(localized: "It couldn't be put together from those pages. Try again in a moment.")
+    static let refused = String(localized: "Couldn't put those pages together. Try again.")
     static let tooLong = String(localized: "Those pages are too long to read together. Try a narrower search.")
     static let engineDown = String(
-        localized: "The search results didn't come back. Check the connection and try again.")
-    static let generic = String(localized: "That didn't work. Try again in a moment.")
+        localized: "Search results didn't load. Check your connection and try again.")
+    static let generic = String(localized: "That didn't work. Try again.")
 
     static func compose(_ error: SkimComposeError) -> String {
         switch error {

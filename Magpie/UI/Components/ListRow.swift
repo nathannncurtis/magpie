@@ -79,7 +79,7 @@ struct ListFavicon: View {
 }
 
 /// A stand-in tile while no favicon has been fetched, keyed to the host so a page keeps
-/// its colour across launches.
+/// its color across launches.
 struct HostTile: View {
     let host: String?
     var size: CGFloat

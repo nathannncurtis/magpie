@@ -46,7 +46,7 @@ struct SegmentedControl: View {
         let selected = index == selection
         return Button {
             // Reduce Motion: the thumb jumps rather than slides.
-            withAnimation(reduceMotion ? nil : Springs.settle.animation) {
+            withAnimation(Springs.settle.unlessReduced(reduceMotion: reduceMotion)) {
                 selection = index
             }
         } label: {
@@ -64,7 +64,7 @@ struct SegmentedControl: View {
                     }
                 }
                 // The hit area, standing taller than the track it sits on: the frame is
-                // centred in the track, so the visuals stay the board's and a finger
+                // centered in the track, so the visuals stay the board's and a finger
                 // still gets its 44 pt.
                 .frame(minHeight: Layout.hitHeight)
                 .contentShape(Capsule())

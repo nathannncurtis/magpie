@@ -74,7 +74,7 @@ final class PageDialogs: WebPage.DialogPresenting {
         presentNextSoon()
     }
 
-    /// The page is going away: every dialog it still holds is cancelled, so none of its
+    /// The page is going away: every dialog it still holds is canceled, so none of its
     /// scripts stay suspended.
     func cancelAll() {
         let pending = waiting

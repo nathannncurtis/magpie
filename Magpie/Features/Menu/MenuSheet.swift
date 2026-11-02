@@ -247,14 +247,14 @@ struct MenuSheet: View {
     private var blockingGroup: some View {
         MenuGroup {
             toggleRow(
-                icon: .symbol("shield.lefthalf.filled"), title: String(localized: "Block ads & trackers"),
+                icon: .symbol("shield.lefthalf.filled"), title: String(localized: "Ads & trackers"),
                 id: "menu.toggle.ads", isDivided: false,
                 isOn: Binding(
                     get: { model.blocker.blocksAdsAndTrackers },
                     set: { model.blocker.blocksAdsAndTrackers = $0 }))
 
             toggleRow(
-                icon: .cookie, title: String(localized: "Block cookie banners"),
+                icon: .cookie, title: String(localized: "Cookie banners"),
                 id: "menu.toggle.cookies", isDivided: true,
                 isOn: Binding(
                     get: { model.blocker.blocksCookieBanners },
@@ -374,7 +374,7 @@ struct MenuSheet: View {
         .foregroundStyle(Palette.textPrimary)
     }
 
-    // MARK: Behaviour
+    // MARK: Behavior
 
     /// Follows a swipe down; a long enough or hard enough drag dismisses.
     private var dismissDrag: some Gesture {
@@ -414,7 +414,7 @@ struct MenuSheet: View {
     /// first. Under Reduce Motion, one crossfade brings the whole menu.
     private func arrive() {
         if reduceMotion {
-            withAnimation(.easeInOut(duration: 0.2)) {
+            withAnimation(Springs.crossfade) {
                 fillSettled = true
                 arrived = Set(Layout.Block.allCases)
             }

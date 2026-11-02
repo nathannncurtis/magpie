@@ -8,7 +8,7 @@ The live reference is the Motion section of the design board, `docs/design/`.
 3. **Glass grows out of what you touched.** Nothing appears from nowhere.
 4. **Chrome follows the finger.** Scroll-driven changes are interactive, not triggered by timers.
 5. **Only confirmations bounce:** the install check and the bead dropping into the mark.
-6. **Reduce Motion:** every moment becomes a crossfade of about 200 ms, and the ambient mist drift stops.
+6. **Reduce Motion:** every moment becomes a crossfade of about 200 ms, and the ambient mist drift stops. The swap lives in one place, `Springs`: `spring.resolved(reduceMotion:)` gives the crossfade, `spring.unlessReduced(reduceMotion:)` gives no animation, and no screen picks its own reduced timing. Fades and ambient loops use the named `Springs` tokens, not literal curves.
 
 ## Springs
 
@@ -40,7 +40,7 @@ Stagger lists 25–30 ms per item. Content inside a sheet starts 50 ms after the
 ### 03 · Tab stack
 - **Trigger:** tap the tab count.
 - **Page → card:** the page scales to 0.62 and its corner radius grows to 26 (screen) as it lands. Spring: `chrome`.
-- **Neighbours:** slide in from the sides 40 ms behind. Labels and the bottom row fade in.
+- **Neighbors:** slide in from the sides 40 ms behind. Labels and the bottom row fade in.
 - **Swipe up on the bar:** the same as the tab count. The bar rises with the finger (up to 28 pt, tightening); past 56 pt, or a flick that would end 140 pt up, it opens the stack into the page → card transition above. `.impact(flexibility: .soft)` fires as the drag crosses the distance.
 - **Sideways:** the stack moves in proportion to where the drag would come to rest (its predicted end): a quarter of a stride moves one tab, a harder flick several, never past either end.
 - **Close:** fling up past 30% of the height or faster than 500 pt/s. The card follows the finger, then flies off, with `.impact(weight: .light)`. The next card re-flows over with `settle`.

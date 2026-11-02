@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 04 · 15, the page can't load: Magpie's own page on `skimBackground`, centred — one
+/// 04 · 15, the page can't load: Magpie's own page on `skimBackground`, centered — one
 /// plain line on what happened, one way forward. The bar stays, at its default tint.
 struct PageLoadFailureView: View {
 
@@ -14,7 +14,7 @@ struct PageLoadFailureView: View {
     private static let titleGap: CGFloat = 4
     private static let buttonGap: CGFloat = 8
     private static let sideInset: CGFloat = 44
-    /// The block sits this far above centre.
+    /// The block sits this far above center.
     private static let lift: CGFloat = 80
     /// The "Try again" capsule, its height a full-size tap target.
     private static let buttonPaddingH: CGFloat = 22

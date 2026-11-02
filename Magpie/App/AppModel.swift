@@ -128,7 +128,7 @@ final class AppModel {
         store.tabs(inPrivate: isPrivateMode)
     }
 
-    /// The tab the current mode centres on.
+    /// The tab the current mode centers on.
     var modeCurrentTabID: Tab.ID? {
         store.currentTabID(inPrivate: isPrivateMode)
     }
@@ -346,7 +346,7 @@ final class AppModel {
     private var linkAwaitingOnboarding: URL?
 
     /// A link handed over by another app: opened in a new tab, with nothing left covering
-    /// it. Settings closes and a Skim run is cancelled first; onboarding is not skipped,
+    /// it. Settings closes and a Skim run is canceled first; onboarding is not skipped,
     /// so its link waits and opens the moment onboarding is done.
     func openExternalLink(_ url: URL, now: Date = .now) {
         if needsOnboarding {
@@ -641,7 +641,7 @@ final class AppModel {
         pageSettled(for: tab.id)
     }
 
-    /// How long capture triggers wait for their neighbours: geometry, session and URL
+    /// How long capture triggers wait for their neighbors: geometry, session and URL
     /// landing in the same frame are one moment, one capture.
     private static let captureDebounce: Duration = .milliseconds(150)
 
@@ -663,7 +663,7 @@ final class AppModel {
     /// one capture runs at a time, and a trigger that lands while one runs asks for
     /// exactly one rerun after it — the page and its view answer one caller at a time,
     /// and captures left to overlap have been seen to starve each other into nil.
-    /// Nothing is cancelled mid-flight. A real trigger resets the retry ladder.
+    /// Nothing is canceled mid-flight. A real trigger resets the retry ladder.
     private func captureSnapshot(for id: Tab.ID, trigger: String) {
         captureRetries[id]?.cancel()
         captureRetries[id] = nil
@@ -727,7 +727,7 @@ final class AppModel {
                 retryAttempts[id] = 0
                 store.setSnapshot(data, for: id)
                 SnapshotLog.event("\(trigger) stored \(data.count)B tab=\(id.uuidString.prefix(4))")
-                // The page's own colour is sampled only now that a picture exists: at
+                // The page's own color is sampled only now that a picture exists: at
                 // commit time the page has not painted yet, and script there has been
                 // seen to stall the load.
                 if session.pageBackground == nil {
@@ -822,7 +822,7 @@ final class AppModel {
         return store.tabs.indices.contains(target) ? store.tabs[target] : nil
     }
 
-    /// A sideways swipe on the bar: the page moves to the neighbouring tab.
+    /// A sideways swipe on the bar: the page moves to the neighboring tab.
     func stepTab(_ delta: Int) {
         guard let tab = adjacentTab(delta) else { return }
         openTab(tab.id)

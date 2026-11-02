@@ -1,8 +1,8 @@
 # 01 · Foundations
 
-Put these values in one `Theme` file: a Swift enum of `Color` / `Font` / `CGFloat` constants. Every colour has a light value and a dark value, and the two switch with the system appearance through an asset catalog colour set or `Color(light:dark:)`.
+Put these values in one `Theme` file: a Swift enum of `Color` / `Font` / `CGFloat` constants. Every color has a light value and a dark value, and the two switch with the system appearance through an asset catalog color set or `Color(light:dark:)`.
 
-## Brand colours
+## Brand colors
 
 | Token | Light | Dark | Use |
 |---|---|---|---|
@@ -34,7 +34,7 @@ Light `teal` was darkened from #0D7F74 to pass WCAG AA (4.5:1) on paper and the 
 | `tag` (engine tag in field) | #F1F0EB | #FFFFFF @ 8% |
 | `toggleOn` (a switched-on toggle) | #101115 | #5EEAD4 |
 | `toggleOff` | #DADAD4 | #FFFFFF @ 16% |
-| `pageTintGlass` (default reading-bar tint when the site gives no colour) | #FFF6EE @ 55% | #2C241E @ 55% |
+| `pageTintGlass` (default reading-bar tint when the site gives no color) | #FFF6EE @ 55% | #2C241E @ 55% |
 | `warningBackground` / `warningText` / `warningStrong` | #FBEFE6 / #6B3A22 / #4A2412 | #E39272 @ 14% / #F0C3AE / #FFD9C7 |
 | `scrim` behind sheets | #101816 @ 18–22% | #000000 @ 32% |
 
@@ -134,7 +134,7 @@ Never use heavy drop shadows.
   - check → `checkmark`
   - link → `link`
   - ••• → `ellipsis`
-- **Tab count:** a 22 pt rounded square (radius 7) with a 1.8 pt stroke in the current colour, holding the count at 11.5 pt bold. It is not an SF Symbol.
+- **Tab count:** a 22 pt rounded square (radius 7) with a 1.8 pt stroke in the current color, holding the count at 11.5 pt bold. It is not an SF Symbol.
 
 ## The mark
 
@@ -142,8 +142,8 @@ The mark is "6d · the cradle": one brushstroke that drops, sweeps under a sheen
 
 - **Source:** `docs/design/assets/mark-6d.svg`. Export it to a PDF vector asset with Preserve Vector Data.
 - **Versions:**
-  - `mark.stroke` is the stroke alone, a template image tinted with the current colour.
+  - `mark.stroke` is the stroke alone, a template image tinted with the current color.
   - `mark.bead` is the sheen-gradient circle.
   - `mark.tile` is the app icon art: a paper stroke on an ink tile.
-- **Drawing it:** for the draw-on animation, reveal the stroke with a trimmed mask path along its centreline: `M170 96 L150 140 C96 250 140 420 300 420 C400 420 440 330 380 286 L330 250` in the 600-unit space, with a 170-unit round-cap stroke, animating `trim(to:)` from 0 to 1. The bead then scales in from 0 with the snap spring (see 05).
-- **Small mark** in pills and buttons: 13–20 pt, the stroke only, in the current colour.
+- **Drawing it:** for the draw-on animation, reveal the stroke with a trimmed mask path along its centerline: `M170 96 L150 140 C96 250 140 420 300 420 C400 420 440 330 380 286 L330 250` in the 600-unit space, with a 170-unit round-cap stroke, animating `trim(to:)` from 0 to 1. The bead then scales in from 0 with the snap spring (see 05).
+- **Small mark** in pills and buttons: 13–20 pt, the stroke only, in the current color.

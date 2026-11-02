@@ -53,7 +53,6 @@ struct ClearBrowsingDataPage: View {
             .accessibilityIdentifier("settings.clearData.clear")
 
             if didClear {
-                // COPY: review — drafted, not on the boards.
                 Text(String(localized: "Cleared."))
                     .font(Typography.meta)
                     .foregroundStyle(Palette.textOnMistSecondaryMeta)

@@ -103,7 +103,7 @@ struct LaunchScreen: View {
             onDismiss()
             return
         }
-        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
+        withAnimation(Springs.chrome.resolved(reduceMotion: reduceMotion)) {
             folded = true
         }
     }
@@ -111,7 +111,7 @@ struct LaunchScreen: View {
     /// The sheet back up, its field focused, for a new tab or a private one.
     private func unfold(_ open: () -> Void) {
         open()
-        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
+        withAnimation(Springs.chrome.resolved(reduceMotion: reduceMotion)) {
             folded = false
         }
     }
@@ -122,7 +122,7 @@ struct LaunchScreen: View {
                 .foregroundStyle(Palette.textPrimary)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .accessibilityHidden(true)
-            // Three equal columns, so the + holds the centre whatever the chip's width.
+            // Three equal columns, so the + holds the center whatever the chip's width.
             HStack(spacing: 0) {
                 ArchivedChip(count: archivedCount, action: onShowArchive)
                     .accessibilityIdentifier("launch.archive")
@@ -152,7 +152,7 @@ struct LaunchScreen: View {
 
     private func rise() {
         guard !arrived else { return }
-        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
+        withAnimation(Springs.chrome.resolved(reduceMotion: reduceMotion)) {
             arrived = true
         }
     }

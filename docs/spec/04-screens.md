@@ -30,26 +30,26 @@ Later launches restore the last tab, with no animation.
 - **Inline completion:** a typed host-like prefix (letters, digits, dots and hyphens only) is finished in the field with the rest selected, from the hosts of the user's tabs and bookmarks first, then a short bundled list of well-known sites. Typing replaces the selection, Delete removes it, Return and moving the caret accept it. Suggestions follow what was typed, not the completion.
 - **Carried address:** the address a page's sheet opens with arrives selected, so typing replaces it.
 - **Opened from a page:** the bar morphs into this sheet and the sheet turns solid (02, 05 · Open search).
-- **Dismissed with no tabs:** a swipe down or a tap away folds the sheet into the mist; there is no stack to go back to, and the screen never goes blank. The mark (sheen, 96) sits in the centre, over a bottom row placed like the tabs row (03): the Archived chip on the left, + in the centre (it brings the sheet back with the keyboard up; a long-press opens a private tab), and a Settings gear on the right.
+- **Dismissed with no tabs:** a swipe down or a tap away folds the sheet into the mist; there is no stack to go back to, and the screen never goes blank. The mark (sheen, 96) sits in the center, over a bottom row placed like the tabs row (03): the Archived chip on the left, + in the center (it brings the sheet back with the keyboard up; a long-press opens a private tab), and a Settings gear on the right.
 - **Private:** "Private tab" in a glass capsule above the sheet (`eye.slash`), on the night mist. Recents and Skim stay off (03). A swipe down returns to the private stack.
 
 ## 02 · Reading
-- **Layout:** a `WKWebView` that starts below the status bar and runs to the bottom edge under the floating `ReadingBar`. The strip above the page, under the status bar, takes the page's own top colour (`themeColor`, else its own background, else paper), so the screen still reads edge to edge.
-- **Bar tint:** comes from the page's `themeColor`, or `underPageBackgroundColor` when there's no theme colour.
+- **Layout:** a `WKWebView` that starts below the status bar and runs to the bottom edge under the floating `ReadingBar`. The strip above the page, under the status bar, takes the page's own top color (`themeColor`, else its own background, else paper), so the screen still reads edge to edge.
+- **Bar tint:** comes from the page's `themeColor`, or `underPageBackgroundColor` when there's no theme color.
 - **Scrolling:** collapses the bar to slim (05 · Chrome on scroll).
 - **Dark mode on pages:** never inverted. Send `Sec-CH-Prefers-Color-Scheme: dark` to Google, and inject nothing; sites with a dark theme show it themselves.
 - **Blocking:** ads and trackers, and cookie banners, are blocked with `WKContentRuleList`s compiled from the downloaded lists. They are two separate rule sets on two separate toggles.
-- **Page interactions:** a `target=_blank` link opens a new tab, which becomes current (private if the page's tab is); a window a script opens with no tap behind it is dropped. A page's alert, confirm and prompt show as an alert over the reading screen, titled with the site's host. A long press on a link offers Open in New Tab, Open in Private Tab, Copy Link and Share, over the system link preview. Pulling the page down reloads it, with the system refresh control.
+- **Page interactions:** a `target=_blank` link opens a new tab, which becomes current (private if the page's tab is); a window a script opens with no tap behind it is dropped. A page's alert, confirm and prompt show as an alert over the reading screen, titled with the site's host. A long press on a link offers Open in new tab, Open in private tab, Copy link and Share, over the system link preview. Pulling the page down reloads it, with the system refresh control.
 - **Hardware keyboard:** ⌘T new tab, ⌘L the search sheet, ⌘W close tab, ⌘R reload, ⌘[ / ⌘] back and forward, ⌘F find on page, ⌘⇧\ the tabs screen; Esc folds the search sheet, the menu, or the find bar away. The page's own shortcuts work only while reading; every one shows in the system overlay (hold ⌘).
 
 ## 03 · Tabs
-- **Layout:** a `TabStack` on the mist. The current tab is centred; the others sit to each side, with labels above.
-- **Modes:** two stacks, never mixed. A glass two-segment control sits at the top centre, below the status bar: "Tabs" | "Private" (the Private segment carries `eye.slash`; `tabs.mode.normal`, `tabs.mode.private`). It is always one tap. The screen shows only the tabs of the current mode, and the open count counts them. Each mode remembers its own current tab. Flipping swaps the stack with `Springs.chrome` (a crossfade under Reduce Motion). The mode follows the page being read: opening a private tab puts the screen in private mode, an ordinary one in ordinary mode.
+- **Layout:** a `TabStack` on the mist. The current tab is centered; the others sit to each side, with labels above.
+- **Modes:** two stacks, never mixed. A glass two-segment control sits at the top center, below the status bar: "Tabs" | "Private" (the Private segment carries `eye.slash`; `tabs.mode.normal`, `tabs.mode.private`). It is always one tap. The screen shows only the tabs of the current mode, and the open count counts them. Each mode remembers its own current tab. Flipping swaps the stack with `Springs.chrome` (a crossfade under Reduce Motion). The mode follows the page being read: opening a private tab puts the screen in private mode, an ordinary one in ordinary mode.
 - **Gestures:** fling up to close; tap to open; swipe sideways to move through the stack.
-- **Undo close:** after a card is flung closed, a glass capsule "Closed · Undo" sits above the bottom row for 4 seconds. Undo puts the tab back in its place in the stack and at the centre. Only the latest close can be undone; leaving the screen, or closing the last tab, ends it. A private tab comes back too, for as long as the capsule is up and no longer.
+- **Undo close:** after a card is flung closed, a glass capsule "Closed · Undo" sits above the bottom row for 4 seconds. Undo puts the tab back in its place in the stack and at the center. Only the latest close can be undone; leaving the screen, or closing the last tab, ends it. A private tab comes back too, for as long as the capsule is up and no longer.
 - **Bottom row:** the Archived chip (opens 09), the open count, and + (opens the launch search sheet, 01, on the mist, as a new tab). The row sits like the bars (foundations · bottom controls), its bottom edge `max(26, safe-area-bottom − 8)` above the physical bottom; the stack keeps clear of the status bar and the switch. + follows the mode: in private mode it opens a private tab. A long-press on + offers the other kind ("New private tab" in ordinary mode, "New tab" in private mode).
-- **Private mode:** the screen sits on the night mist (`MistBackground(night:)`: `nightInk` to `nightInkDeep` with the teal faint through it), dark whatever the system appearance; the glass chrome keeps its usual treatment. The menu's Private tile switches to private mode and opens a private tab's launch search (01). A private tab keeps nothing: no saved place in the stack, no snapshot, no recent searches, no Skim, no auto-archive, no favicon fetch. Its cookies and site data live in one in-memory store shared by private tabs and dropped with the last one. The bar's pill and the tab's label carry `eye.slash`, collapsed or full; VoiceOver reads ", private" after the name. A private page's top strip under the status bar is the page's own colour, as for any page. With a private tab open, the app switcher's picture is the mist with `eye.slash`.
-- **Private, empty:** with no private tab, a centred glass card on the night mist: `eye.slash`, "Private tabs", "Nothing here is saved. Closing the last private tab clears its cookies and history.", and a "New private tab" button. Closing the last private tab leaves this card.
+- **Private mode:** the screen sits on the night mist (`MistBackground(night:)`: `nightInk` to `nightInkDeep` with the teal faint through it), dark whatever the system appearance; the glass chrome keeps its usual treatment. The menu's Private tile switches to private mode and opens a private tab's launch search (01). A private tab keeps nothing: no saved place in the stack, no snapshot, no recent searches, no Skim, no auto-archive, no favicon fetch. Its cookies and site data live in one in-memory store shared by private tabs and dropped with the last one. The bar's pill and the tab's label carry `eye.slash`, collapsed or full; VoiceOver reads ", private" after the name. A private page's top strip under the status bar is the page's own color, as for any page. With a private tab open, the app switcher's picture is the mist with `eye.slash`.
+- **Private, empty:** with no private tab, a centered glass card on the night mist: `eye.slash`, "Private tabs", "Nothing here is saved. Closing the last private tab clears its cookies and history.", and a "New private tab" button. Closing the last private tab leaves this card.
 - **Leaving private mode:** flipping back to Tabs keeps the private tabs for the session, so they are there when the screen flips again. They are never saved to disk. With no ordinary tab, flipping to Tabs opens the ordinary launch search (01); a swipe down on it lands on the private stack, the only one left. Closing the last ordinary tab leaves the ordinary launch search.
 - **Auto-archive:** tabs untouched for the set time move to Archive. The default is 1 day, adjustable from 12 hours to 30 days, ON by default.
 
@@ -157,7 +157,7 @@ Every edge state follows one pattern: one plain line saying what happened, and o
 - **Footer:** the `InstallFooter` stays.
 
 ### 14 · Empty list (Archive; same for Bookmarks and Installed)
-- **Layout:** the header stays. A centred block sits on the mist with its top at 0.35 of the screen's safe height (about 270 pt on a standard phone), laid over the whole screen rather than under the header: a 34 pt line icon in `labelOnMist`, a title in 16 pt semibold, and one line in `meta`.
+- **Layout:** the header stays. A centered block sits on the mist with its top at 0.35 of the screen's safe height (about 270 pt on a standard phone), laid over the whole screen rather than under the header: a 34 pt line icon in `labelOnMist`, a title in 16 pt semibold, and one line in `meta`.
 - **No search pill** when there's nothing to search.
 - **A search that matches nothing** shows the same block with "No results" and one line naming the list, while the pill stays to take the query back.
 - **Copy:**
@@ -165,7 +165,7 @@ Every edge state follows one pattern: one plain line saying what happened, and o
   - Bookmarks and Installed: see 06.
 
 ### 15 · Page can't load
-- **Layout:** Magpie's own page on `skimBackground` (dark #121316), centred: a 40 pt globe-with-slash line icon in `textTertiary`, a title in 18 pt semibold, one line in `body` `textSecondary`, and an ink capsule "Try again" (paper in dark), never under 44 tall.
+- **Layout:** Magpie's own page on `skimBackground` (dark #121316), centered: a 40 pt globe-with-slash line icon in `textTertiary`, a title in 18 pt semibold, one line in `body` `textSecondary`, and an ink capsule "Try again" (paper in dark), never under 44 tall.
 - **The bar stays**, at its default tint.
 - **Offline:** the page reloads by itself when the connection returns (`NWPathMonitor`).
 - **Other failures** follow the same layout with different copy (see 06).
@@ -185,7 +185,7 @@ Every edge state follows one pattern: one plain line saying what happened, and o
 
 ### 20 · Downloads
 - **Background:** the mist. "Downloads" in `screenTitle`, "Done" at top right; a swipe in from the leading edge goes back to the screen that opened it.
-- **What downloads:** a navigation whose response is a Content-Disposition attachment or a type the page cannot show, and a link with the `download` attribute. WebPage offers no download delegate, so the load is cancelled and the file fetched on its own, carrying the page's cookies; the page the load came out of stays as it was. Private tabs download too, into the same folder.
+- **What downloads:** a navigation whose response is a Content-Disposition attachment or a type the page cannot show, and a link with the `download` attribute. WebPage offers no download delegate, so the load is canceled and the file fetched on its own, carrying the page's cookies; the page the load came out of stays as it was. Private tabs download too, into the same folder.
 - **Where it lands:** the app's Documents/Downloads, which the Files app lists and edits in place. A name already taken gets a number before its extension: "report 2.pdf".
 - **Rows:** plain rows on the mist, newest first: a file glyph, the name, then size and date. A tap opens the file in QuickLook; swipe left deletes it from disk.
 - **Toast:** a small glass capsule above the bar, on any screen. "Downloading <name>" with a spinner while it runs; "Downloaded <name>" with a check once done, held six seconds, and a tap opens the file in QuickLook. "Couldn't download <name>" when it fails; a tap dismisses.
@@ -204,8 +204,8 @@ Every edge state follows one pattern: one plain line saying what happened, and o
 
 ### 24 · Search widget
 - **Families:** small and medium on the home screen; rectangular and circular on the lock screen.
-- **Content:** the Magpie mark and a "Search" pill on the paper; the lock-screen ones show the mark in one colour. A tap opens `magpie://search`.
-- **Colours** are copied into the widget from `Theme/Colors.swift`, since a widget cannot import the app.
+- **Content:** the Magpie mark and a "Search" pill on the paper; the lock-screen ones show the mark in one color. A tap opens `magpie://search`.
+- **Colors** are copied into the widget from `Theme/Colors.swift`, since a widget cannot import the app.
 
 ---
 
@@ -215,7 +215,7 @@ Every edge state follows one pattern: one plain line saying what happened, and o
 - **List:** rows on the mist, grouped by `DayHeader` as in the archive (09). Each row: site tile, title (the site while untitled), site, time.
 - **Actions:** tap a row to open it in a new tab; swipe left to remove it. "Clear history…" ends the list, in red, and asks "Clear all history?" before it clears. It hides while a search narrows the list.
 - **Search:** the `BottomSearchPill` with "Search history" filters titles and sites; the pill rides the keyboard.
-- **Empty:** "No history yet" / "Pages you visit show up here." (drafted, `// COPY: review`); no pill. A search with no match: "No results" / "Nothing in your history matches that search."
+- **Empty:** "No history yet" / "Pages you visit show up here."; no pill. A search with no match: "No results" / "Nothing in your history matches that search."
 - **Entry:** Menu · History ›. The menu folds and History opens over the page; Done or a back swipe returns to it.
 
 ## 19 · Clear browsing data

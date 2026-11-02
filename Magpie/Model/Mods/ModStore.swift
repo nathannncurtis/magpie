@@ -7,13 +7,13 @@ enum ModKind: String, Codable, Equatable, Sendable {
     case filterList
 }
 
-/// A mod's icon: a white glyph on a two-colour, 160-degree gradient tile. Directory mods
+/// A mod's icon: a white glyph on a two-color, 160-degree gradient tile. Directory mods
 /// carry theirs in the index; a link install gets a plain one.
 struct ModIconSpec: Codable, Equatable, Hashable, Sendable {
 
     /// An SF Symbol name.
     var glyph: String
-    /// The gradient's two colours, as "#RRGGBB".
+    /// The gradient's two colors, as "#RRGGBB".
     var gradient: [String]
 
     /// The plain icon a link install gets.

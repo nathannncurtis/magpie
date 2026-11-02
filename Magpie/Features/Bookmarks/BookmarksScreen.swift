@@ -57,11 +57,11 @@ struct BookmarksScreen: View {
             }
             .readableWidth()
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .animation(reduceMotion ? Springs.smooth : Springs.chrome.animation, value: openFolderID)
+            .animation(Springs.chrome.resolved(reduceMotion: reduceMotion), value: openFolderID)
             emptyBlock
                 .padding(.bottom, bottomInset)
                 .transition(.opacity)
-                .animation(reduceMotion ? Springs.smooth : Springs.chrome.animation, value: openFolderID)
+                .animation(Springs.chrome.resolved(reduceMotion: reduceMotion), value: openFolderID)
             if pillWanted {
                 BottomSearchPill(
                     placeholder: String(localized: "Search bookmarks"),
@@ -103,7 +103,6 @@ struct BookmarksScreen: View {
     private var emptyBlock: some View {
         if let folder = openFolder {
             if store.bookmarks(inFolder: folder.id).isEmpty {
-                // COPY: review — drafted, not on the boards.
                 EmptyListState(
                     icon: "bookmark",
                     title: String(localized: "Nothing in this folder"),
@@ -112,7 +111,6 @@ struct BookmarksScreen: View {
                 .accessibilityIdentifier("bookmarks.folder.empty")
             }
         } else if store.bookmarks.isEmpty && store.folders.isEmpty {
-            // COPY: review — drafted, not on the boards.
             EmptyListState(
                 icon: "bookmark",
                 title: String(localized: "No bookmarks yet"),
@@ -332,7 +330,7 @@ struct BookmarksScreen: View {
             title: editing ? String(localized: "Save") : String(localized: "Edit"),
             edge: .leading, id: "bookmarks.edit"
         ) {
-            withAnimation(reduceMotion ? Springs.smooth : Springs.settle.animation) {
+            withAnimation(Springs.settle.resolved(reduceMotion: reduceMotion)) {
                 editing.toggle()
             }
         }

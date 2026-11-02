@@ -5,7 +5,7 @@ import UIKit
 /// 5 pt white ring with an outer hairline and the soft shadow. The stack names the size;
 /// the picture sits at the card's exact width, aspect kept, from the top — the whole
 /// page width shows, its depth crops away, and a page shorter than the card runs on in
-/// its own colour below the picture.
+/// its own color below the picture.
 ///
 /// A `namespace` wires the card into the page ↔ card transition: both geometry effects
 /// are keyed by the tab id, so the reading screen can match against it.
@@ -52,7 +52,7 @@ struct TabCard: View {
     private var content: some View {
         if let image = snapshot.flatMap(UIImage.init(data:)), image.size.width > 0 {
             // The card is the page shrunk: the picture at the card's exact width, aspect
-            // kept, from the top; below it the page's own colour, so a short page reads
+            // kept, from the top; below it the page's own color, so a short page reads
             // as the page continuing rather than a gap.
             ZStack(alignment: .top) {
                 Rectangle().fill(continuation(of: image))
@@ -95,14 +95,14 @@ struct TabCard: View {
                 + " frame=\(Int(frame.width))x\(Int(frame.height))")
     }
 
-    /// What the card shows where the picture stops: the page's sampled colour, else the
-    /// snapshot's own last row, else the card colour.
+    /// What the card shows where the picture stops: the page's sampled color, else the
+    /// snapshot's own last row, else the card color.
     private func continuation(of image: UIImage) -> Color {
-        pageBackground ?? Self.lastRowColour(of: image) ?? Palette.card
+        pageBackground ?? Self.lastRowColor(of: image) ?? Palette.card
     }
 
-    /// The snapshot's own colour at its very bottom, so a short page runs on as itself.
-    private static func lastRowColour(of image: UIImage) -> Color? {
+    /// The snapshot's own color at its very bottom, so a short page runs on as itself.
+    private static func lastRowColor(of image: UIImage) -> Color? {
         guard let cg = image.cgImage else { return nil }
         let row = CGRect(x: 0, y: cg.height - 1, width: cg.width, height: 1)
         guard

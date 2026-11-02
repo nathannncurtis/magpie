@@ -36,7 +36,7 @@ struct SearchComponentsTests {
         #expect(bounds.minY >= 0 && bounds.maxY <= MarkPath.units)
         #expect(bounds.width > MarkPath.units / 2)
         #expect(bounds.height > MarkPath.units / 2)
-        // Fitting the mark keeps its aspect and centres it.
+        // Fitting the mark keeps its aspect and centers it.
         let square = CGRect(x: 0, y: 0, width: 100, height: 100)
         let fitted = MarkPath.brushPath().applying(MarkGeometry.transform(into: square))
             .boundingRect
@@ -44,9 +44,9 @@ struct SearchComponentsTests {
         #expect(abs(fitted.midY - square.midY) < 1)
     }
 
-    @Test("the reveal centreline lives in the artwork's space")
+    @Test("the reveal centerline lives in the artwork's space")
     func markCentreline() {
-        let bounds = MarkGeometry.centreline().boundingRect
+        let bounds = MarkGeometry.centerline().boundingRect
         #expect(bounds.minX >= 0 && bounds.maxX <= MarkPath.units)
         #expect(bounds.minY >= 0 && bounds.maxY <= MarkPath.units)
     }

@@ -60,7 +60,7 @@ protocol SkimComposing: Sendable {
 }
 
 /// Composes a Skim page with the on-device model. Sources that together do not
-/// fit are summarised first, one session each, then the page is composed from
+/// fit are summarized first, one session each, then the page is composed from
 /// the summaries.
 struct SkimComposer: SkimComposing {
 
@@ -111,7 +111,7 @@ struct SkimComposer: SkimComposing {
     }
 
     /// The text to compose from: each source as-is when they all fit, otherwise
-    /// each source summarised into its share of the window.
+    /// each source summarized into its share of the window.
     private func fittedTexts(query: String, sources: [ReadPage]) async throws -> [String] {
         let budget =
             max(

@@ -247,7 +247,7 @@ struct ModsScreen: View {
             notReviewed: mod.source.isLink,
             trailing: installedTrailing(for: mod, landed: landed),
             onRemove: {
-                withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.settle.animation) {
+                withAnimation(Springs.settle.resolved(reduceMotion: reduceMotion)) {
                     store.remove(id: mod.id)
                 }
             }
@@ -300,7 +300,7 @@ struct ModsScreen: View {
     /// new row rises in with its check popping.
     private func land(_ id: String) {
         newlyInstalled.insert(id)
-        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.settle.animation) {
+        withAnimation(Springs.settle.resolved(reduceMotion: reduceMotion)) {
             segment = .installed
             landedModID = id
         }
@@ -314,7 +314,7 @@ struct ModsScreen: View {
             try? await Task.sleep(for: .seconds(2))
             // The UI tests hold it further, until their shot has caught it.
             guard !UITestEnvironment.holdsInstallCheck, landedModID == id else { return }
-            withAnimation(.easeInOut(duration: 0.2)) {
+            withAnimation(Springs.crossfade) {
                 landedModID = nil
             }
         }

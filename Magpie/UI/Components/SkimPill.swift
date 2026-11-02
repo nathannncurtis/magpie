@@ -54,7 +54,7 @@ struct SkimPill: View {
                 .overlay(alignment: .top) { highlight }
                 .clipShape(.capsule)
                 // The capsule itself is half the row's height; the tap takes the whole
-                // 44 pt band the pill sits in, centred on it.
+                // 44 pt band the pill sits in, centered on it.
                 .frame(minHeight: Layout.hitHeight)
                 .contentShape(Rectangle())
             }

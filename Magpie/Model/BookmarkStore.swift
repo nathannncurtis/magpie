@@ -79,7 +79,7 @@ struct BookmarkFolder: Identifiable, Codable, Equatable, Sendable {
 }
 
 /// The six folder tints. The values are the glyph's two panels: the dark back panel and
-/// the light front panel. Folders keep their colour in dark mode, so neither value
+/// the light front panel. Folders keep their color in dark mode, so neither value
 /// follows the appearance.
 enum FolderTint: String, Codable, CaseIterable, Sendable {
     /// The board's Kitchen orange.

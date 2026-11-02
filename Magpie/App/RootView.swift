@@ -215,7 +215,7 @@ struct RootView: View {
         .statusBarInk(statusBarInk)
     }
 
-    /// Over a page the status bar sits on the page's own colours, so its ink follows what
+    /// Over a page the status bar sits on the page's own colors, so its ink follows what
     /// is under it; everywhere else, and under a full screen, it is the system's.
     private var statusBarInk: StatusBarInk {
         guard case .reading = model.surface, !coversOverLaunch else { return .automatic }
@@ -248,7 +248,7 @@ struct RootView: View {
     private static let toastBottom: CGFloat = 96
 
     private var transition: Animation? {
-        reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation
+        Springs.chrome.resolved(reduceMotion: reduceMotion)
     }
 }
 

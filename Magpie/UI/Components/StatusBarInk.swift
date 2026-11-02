@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 /// The status bar's ink: the system's own for the appearance, or forced dark or light so
-/// the clock and battery read over a strip of page colour (04 · 04, the top strip).
+/// the clock and battery read over a strip of page color (04 · 04, the top strip).
 enum StatusBarInk: Equatable {
     case automatic
     case dark

@@ -89,7 +89,7 @@ private struct BackSwipe: ViewModifier {
             instant.disablesAnimations = true
             withTransaction(instant) { offset = 0 }
         } else {
-            withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
+            withAnimation(Springs.chrome.resolved(reduceMotion: reduceMotion)) {
                 offset = 0
             }
         }

@@ -89,7 +89,6 @@ struct HistoryScreen: View {
     @ViewBuilder
     private var emptyBlock: some View {
         if store.entries.isEmpty {
-            // COPY: review — drafted, not on the boards.
             EmptyListState(
                 icon: "clock",
                 title: String(localized: "No history yet"),

@@ -23,7 +23,7 @@ struct TabsScreen: View {
     var onUndo: () -> Void = {}
     /// The undo ran out (its notice id) or the screen went: the close stands.
     var onNoticeExpired: (AppModel.ClosedTabNotice.ID) -> Void = { _ in }
-    /// The page's own sampled colour, for the space below a short page's picture.
+    /// The page's own sampled color, for the space below a short page's picture.
     var pageBackground: (Tab.ID) -> Color? = { _ in nil }
     /// Wired to the reading screen's half of the page ↔ card transition.
     var transitionNamespace: Namespace.ID? = nil
@@ -71,7 +71,7 @@ struct TabsScreen: View {
                 .padding(.bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset))
             if let closedNotice {
                 UndoCapsule {
-                    withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.settle.animation) {
+                    withAnimation(Springs.settle.resolved(reduceMotion: reduceMotion)) {
                         onUndo()
                     }
                 }
@@ -81,7 +81,7 @@ struct TabsScreen: View {
                 .task {
                     try? await Task.sleep(for: ScreenMetrics.undoDuration)
                     guard !Task.isCancelled else { return }
-                    withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
+                    withAnimation(Springs.chrome.resolved(reduceMotion: reduceMotion)) {
                         onNoticeExpired(closedNotice.id)
                     }
                 }
@@ -111,7 +111,7 @@ struct TabsScreen: View {
             selection: Binding(
                 get: { isPrivateMode ? 1 : 0 },
                 set: { index in
-                    withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
+                    withAnimation(Springs.chrome.resolved(reduceMotion: reduceMotion)) {
                         onModeChange(index == 1)
                     }
                 }

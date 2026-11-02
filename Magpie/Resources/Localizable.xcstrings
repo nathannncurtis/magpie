@@ -1,50 +1,38 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "Close Menu" : {
+    "Close menu" : {
       "comment" : "Keyboard shortcut (Esc): folds the reading menu back into the bar",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Close Menu"
+            "value" : "Close menu"
           }
         }
       }
     },
-    "Close Search" : {
+    "Close search" : {
       "comment" : "Keyboard shortcut (Esc): folds the search sheet or find bar away",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Close Search"
+            "value" : "Close search"
           }
         }
       }
     },
-    "Close Tab" : {
-      "comment" : "Keyboard shortcut (⌘W): closes the current tab",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Close Tab"
-          }
-        }
-      }
-    },
-    "Find on Page" : {
+    "Find on page" : {
       "comment" : "Keyboard shortcut (⌘F): opens the find bar over the page",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Find on Page"
+            "value" : "Find on page"
           }
         }
       }
@@ -61,26 +49,14 @@
         }
       }
     },
-    "New Tab" : {
-      "comment" : "Keyboard shortcut (⌘T): opens the launch search for a new tab",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New Tab"
-          }
-        }
-      }
-    },
-    "Open Location" : {
+    "Open location" : {
       "comment" : "Keyboard shortcut (⌘L): opens the search sheet over the page",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Location"
+            "value" : "Open location"
           }
         }
       }
@@ -97,26 +73,26 @@
         }
       }
     },
-    "Reload Page" : {
+    "Reload page" : {
       "comment" : "Keyboard shortcut (⌘R): reloads the page",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reload Page"
+            "value" : "Reload page"
           }
         }
       }
     },
-    "Show All Tabs" : {
+    "Show all tabs" : {
       "comment" : "Keyboard shortcut (⌘⇧\\): shows the tab stack",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Show All Tabs"
+            "value" : "Show all tabs"
           }
         }
       }
@@ -289,18 +265,6 @@
         }
       }
     },
-    "After %@" : {
-      "comment" : "Menu archive row's value, %@ being like 1 day",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "After %@"
-          }
-        }
-      }
-    },
     "Also grants" : {
       "comment" : "Install sheet: grants the shim cannot honour",
       "extractionState" : "manual",
@@ -333,18 +297,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Archive"
-          }
-        }
-      }
-    },
-    "Archive inactive tabs" : {
-      "comment" : "Menu row: how long a tab sits untouched before it archives",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Archive inactive tabs"
           }
         }
       }
@@ -393,30 +345,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Back"
-          }
-        }
-      }
-    },
-    "Block ads & trackers" : {
-      "comment" : "Menu toggle row",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Block ads & trackers"
-          }
-        }
-      }
-    },
-    "Block cookie banners" : {
-      "comment" : "Menu toggle row",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Block cookie banners"
           }
         }
       }
@@ -518,7 +446,7 @@
       }
     },
     "Close tab" : {
-      "comment" : "Tab card: VoiceOver action that closes the tab",
+      "comment" : "Tab card: VoiceOver action that closes the tab; Keyboard shortcut (⌘W): closes the current tab",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -853,14 +781,14 @@
         }
       }
     },
-    "It couldn't be put together from those pages. Try again in a moment." : {
-      "comment" : "Skim couldn't finish: the pages wouldn't compose. COPY: review",
+    "Couldn't put those pages together. Try again." : {
+      "comment" : "Skim couldn't finish: the pages wouldn't compose",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "It couldn't be put together from those pages. Try again in a moment."
+            "value" : "Couldn't put those pages together. Try again."
           }
         }
       }
@@ -889,14 +817,14 @@
         }
       }
     },
-    "Licence" : {
-      "comment" : "About row: the app's licence",
+    "License" : {
+      "comment" : "About row: the app's license",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Licence"
+            "value" : "License"
           }
         }
       }
@@ -1022,7 +950,7 @@
       }
     },
     "New tab" : {
-      "comment" : "Tabs screen button that opens the launch search as a new tab",
+      "comment" : "Tabs screen button that opens the launch search as a new tab; Keyboard shortcut (⌘T): opens the launch search for a new tab",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -1789,14 +1717,14 @@
         }
       }
     },
-    "That didn't work. Try again in a moment." : {
-      "comment" : "Skim couldn't finish: the page wouldn't compose. COPY: review",
+    "That didn't work. Try again." : {
+      "comment" : "Skim couldn't finish: the page wouldn't compose",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "That didn't work. Try again in a moment."
+            "value" : "That didn't work. Try again."
           }
         }
       }
@@ -1849,14 +1777,14 @@
         }
       }
     },
-    "The search results didn't come back. Check the connection and try again." : {
-      "comment" : "Skim couldn't finish: the engine's results page wouldn't load. COPY: review",
+    "Search results didn't load. Check your connection and try again." : {
+      "comment" : "Skim couldn't finish: the engine's results page wouldn't load",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The search results didn't come back. Check the connection and try again."
+            "value" : "Search results didn't load. Check your connection and try again."
           }
         }
       }
@@ -1886,7 +1814,7 @@
       }
     },
     "Those pages are too long to read together. Try a narrower search." : {
-      "comment" : "Skim couldn't finish: the sources were too large to compose from. COPY: review",
+      "comment" : "Skim couldn't finish: the sources were too large to compose from",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2125,14 +2053,14 @@
         }
       }
     },
-    "the sites it names: %@" : {
+    "Sites it names: %@" : {
       "comment" : "Install sheet: where a script with only @include rules runs",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "the sites it names: %@"
+            "value" : "Sites it names: %@"
           }
         }
       }
