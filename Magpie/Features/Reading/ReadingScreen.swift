@@ -27,6 +27,8 @@ struct ReadingScreen: View {
     var focusSuspended: Bool = false
     var suggestions: any SuggestionProviding
     var recents: any RecentSearchStoring
+    /// The user's hosts and the pasteboard, for the sheet's field.
+    var addressAssist = AddressAssist()
     var onSkim: (String) -> Void = { _ in }
     var chromeNamespace: Namespace.ID? = nil
     var cardNamespace: Namespace.ID? = nil
@@ -195,6 +197,7 @@ struct ReadingScreen: View {
             morphNamespace: chromeNamespace,
             suggestions: suggestions,
             recents: recents,
+            addressAssist: addressAssist,
             onOpen: onSearchSubmit,
             onSkim: onSkim,
             onDismiss: onSearchDismiss)

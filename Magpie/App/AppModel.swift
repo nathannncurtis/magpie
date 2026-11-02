@@ -89,6 +89,22 @@ final class AppModel {
         surface == .launchSearch ? launchIsPrivate : currentIsPrivate
     }
 
+    /// What the address field draws on: the hosts of the open and archived tabs and the
+    /// bookmarks, freshest tabs first, and the pasteboard. Private tabs stay out of it.
+    var addressAssist: AddressAssist {
+        let tabs = (store.tabs + store.archivedTabs.reversed())
+            .filter { !$0.isPrivate }
+            .sorted { $0.lastActive > $1.lastActive }
+            .compactMap(\.host)
+        let saved = bookmarks.bookmarks.compactMap(\.host)
+        var seen = Set<String>()
+        let hosts = (tabs + saved).filter { seen.insert($0).inserted }
+        let pasteboard: any PasteboardLinkSource =
+            UITestEnvironment.pasteboardLink.map { FixedPasteboardLink(value: $0) }
+            ?? SystemPasteboardLink()
+        return AddressAssist(userHosts: hosts, pasteboard: pasteboard)
+    }
+
     /// The recents the search reads and writes: a private search keeps nothing.
     var searchRecents: any RecentSearchStoring {
         searchIsPrivate ? PrivateRecents(base: recents) : recents
@@ -729,14 +745,42 @@ final class AppModel {
     /// A flung card. Closing the last tab leaves the launch search.
     func closeTab(_ id: Tab.ID) {
         dropSession(id)
-        store.close(id)
+        let closed = store.close(id)
         if !store.hasPrivateTabs {
             // The last private tab gone: its cookies and storage go with it.
             privateDataStore = nil
         }
         if store.tabs.isEmpty {
+            closedTabNotice = nil
             surface = .launchSearch
+        } else {
+            // Only a card flung on the stack offers an undo, and only the latest one.
+            closedTabNotice = surface == .tabs ? closed.map(ClosedTabNotice.init) : nil
         }
+    }
+
+    /// The tab just flung closed, on offer for an undo until the notice runs out. Held in
+    /// memory only, so a private tab is back only within the session.
+    struct ClosedTabNotice: Identifiable, Equatable {
+        let id = UUID()
+        let closed: TabStore.ClosedTab
+    }
+
+    /// The notice on the tabs screen, if a card was just closed.
+    private(set) var closedTabNotice: ClosedTabNotice?
+
+    /// The notice's Undo: the tab comes back where it was.
+    func undoCloseTab() {
+        guard let notice = closedTabNotice else { return }
+        closedTabNotice = nil
+        store.reinstate(notice.closed)
+    }
+
+    /// The notice ran out, or the stack was left: the close stands. A later notice is left
+    /// alone, so a slow timer cannot clear a newer one.
+    func expireClosedTabNotice(_ id: ClosedTabNotice.ID? = nil) {
+        guard id == nil || closedTabNotice?.id == id else { return }
+        closedTabNotice = nil
     }
 
     // MARK: Keyboard

@@ -24,6 +24,9 @@ Later launches restore the last tab, with no animation.
 - **Suggestions:** up to 3 rows, coming from the chosen engine's suggest API. The first row's Skim pill is primed (ink). The rows stagger in once as the list arrives; typing animates the rows it adds or drops, never resetting the list.
 - **Empty field:** show recent searches as rows, or no rows at all. Nothing else.
 - **Submitting:** a query goes to the chosen engine; a URL goes to that site. The Skim pill runs Skim (08).
+- **Copied link:** when the pasteboard probably holds a web address and the field is empty (or still holds only the page's own address), the first row reads "Go to copied link" and opens it in one tap. The sheet only asks whether a link is there, which raises no paste prompt; the pasteboard is read when the row is tapped, so the row cannot show where it goes.
+- **Inline completion:** a typed host-like prefix (letters, digits, dots and hyphens only) is finished in the field with the rest selected, from the hosts of the user's tabs and bookmarks first, then a short bundled list of well-known sites. Typing replaces the selection, Delete removes it, Return and moving the caret accept it. Suggestions follow what was typed, not the completion.
+- **Carried address:** the address a page's sheet opens with arrives selected, so typing replaces it.
 - **Opened from a page:** the bar morphs into this sheet and the sheet turns solid (02, 05 · Open search).
 - **Dismissed with no tabs:** a swipe down or a tap away folds the sheet into the mist; there is no stack to go back to, and the screen never goes blank. The mark (sheen, 96) sits in the centre, over a bottom row placed like the tabs row (03): the Archived chip on the left, + in the centre (it brings the sheet back with the keyboard up; a long-press opens a private tab), and a Settings gear on the right.
 
@@ -38,6 +41,7 @@ Later launches restore the last tab, with no animation.
 ## 03 · Tabs
 - **Layout:** a `TabStack` on the mist. The current tab is centred; the others sit to each side, with labels above.
 - **Gestures:** fling up to close; tap to open; swipe sideways to move through the stack.
+- **Undo close:** after a card is flung closed, a glass capsule "Closed · Undo" sits above the bottom row for 4 seconds. Undo puts the tab back in its place in the stack and at the centre. Only the latest close can be undone; leaving the screen, or closing the last tab, ends it. A private tab comes back too, for as long as the capsule is up and no longer.
 - **Bottom row:** the Archived chip (opens 09), the open count, and + (opens the launch search sheet, 01, on the mist, as a new tab). The row sits like the bars (foundations · bottom controls), its bottom edge `max(26, safe-area-bottom − 8)` above the physical bottom; the stack keeps clear of the status bar.
 - **Private tab:** a long-press on + (or the menu's Private tile) opens the launch search for a private tab, "Private tab" in a glass capsule above the sheet. A private tab keeps nothing: no saved place in the stack, no snapshot, no recent searches, no Skim, no auto-archive, no favicon fetch. Its cookies and site data live in one in-memory store shared by private tabs and dropped with the last one. The bar's pill and the tab's label carry `eye.slash`; VoiceOver reads ", private" after the name. With a private tab open, the app switcher's picture is the mist with `eye.slash`.
 - **Auto-archive:** tabs untouched for the set time move to Archive. The default is 1 day, adjustable from 12 hours to 30 days, ON by default.

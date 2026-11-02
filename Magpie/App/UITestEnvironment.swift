@@ -55,6 +55,16 @@ enum UITestEnvironment {
         return nil
     }
 
+    /// A link the search sheet finds on the pasteboard (`-uiTestingPasteboard=<url>`), so
+    /// the tests never depend on the system's paste prompt.
+    static var pasteboardLink: String? {
+        let prefix = "-uiTestingPasteboard="
+        for argument in launchArguments where argument.hasPrefix(prefix) {
+            return String(argument.dropFirst(prefix.count))
+        }
+        return nil
+    }
+
     /// Whether the seeded lists stay empty, for the empty states.
     static var listsEmpty: Bool {
         launchArguments.contains("-uiTestingListState=empty")

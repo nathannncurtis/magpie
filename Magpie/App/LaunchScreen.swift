@@ -16,6 +16,8 @@ struct LaunchScreen: View {
     var isPrivate: Bool = false
     let suggestions: any SuggestionProviding
     let recents: any RecentSearchStoring
+    /// The user's hosts and the pasteboard, for the field.
+    var addressAssist = AddressAssist()
     /// Text the field opens with: the Skim query bar's edit.
     var initialText: String = ""
     var onSkim: (String) -> Void = { _ in }
@@ -59,6 +61,7 @@ struct LaunchScreen: View {
                     initialText: initialText,
                     suggestions: suggestions,
                     recents: recents,
+                    addressAssist: addressAssist,
                     onOpen: onOpen,
                     onSkim: onSkim,
                     onDismiss: dismiss
