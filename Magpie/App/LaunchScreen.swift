@@ -47,7 +47,7 @@ struct LaunchScreen: View {
 
     var body: some View {
         ZStack {
-            MistBackground()
+            MistBackground(night: isPrivate)
                 .ignoresSafeArea()
             if folded {
                 foldedContent
@@ -93,6 +93,8 @@ struct LaunchScreen: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("launch.screen")
+        // A private search is night whatever the system is, like the private stack.
+        .preferredColorScheme(isPrivate ? .dark : nil)
     }
 
     /// With tabs, a dismissal goes back to the stack; without, the sheet folds away here.

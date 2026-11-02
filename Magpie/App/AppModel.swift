@@ -115,11 +115,48 @@ final class AppModel {
         searchIsPrivate ? PrivateRecents(base: recents) : recents
     }
 
+    /// Whether the tabs screen shows the private stack instead of the ordinary one. The
+    /// mode follows the page being read, and the + opens the kind of tab it names.
+    private(set) var isPrivateMode = false
+
+    /// The tabs the tabs screen shows: those of the current mode.
+    var modeTabs: [Tab] {
+        store.tabs(inPrivate: isPrivateMode)
+    }
+
+    /// The tab the current mode centres on.
+    var modeCurrentTabID: Tab.ID? {
+        store.currentTabID(inPrivate: isPrivateMode)
+    }
+
+    /// The tabs screen's switch. Flipping swaps the stack and each mode keeps its own
+    /// current tab; private tabs stay open for the session while the other mode shows.
+    /// With no ordinary tab to flip to, the ordinary launch search opens instead.
+    func setPrivateMode(_ isPrivate: Bool) {
+        guard isPrivate != isPrivateMode else { return }
+        isPrivateMode = isPrivate
+        if let id = store.currentTabID(inPrivate: isPrivate) {
+            store.select(id)
+        }
+        if !isPrivate, store.tabs(inPrivate: false).isEmpty {
+            newNormalTab()
+        }
+    }
+
     /// The menu's Private tile, or the +'s long press: the launch search, submitting into a
     /// private tab.
     func newPrivateTab() {
         searchPrefill = nil
+        isPrivateMode = true
         launchIsPrivate = true
+        surface = .launchSearch
+    }
+
+    /// The launch search for an ordinary tab, from any mode.
+    func newNormalTab() {
+        searchPrefill = nil
+        isPrivateMode = false
+        launchIsPrivate = false
         surface = .launchSearch
     }
 
@@ -708,6 +745,7 @@ final class AppModel {
     /// A submitted search or address from the launch sheet: a new tab, opened on the spot.
     func openFromLaunch(_ url: URL, now: Date = .now) {
         let tab = store.newTab(url: url, isPrivate: launchIsPrivate, now: now)
+        isPrivateMode = tab.isPrivate
         launchIsPrivate = false
         _ = ensureSession(for: tab)
         searchPrefill = nil
@@ -744,11 +782,11 @@ final class AppModel {
     }
 
     /// A swipe back off the tabs screen: the current tab's page, when there is one.
-    var canLeaveTabs: Bool { store.currentTabID != nil }
+    var canLeaveTabs: Bool { modeCurrentTabID != nil }
 
     /// The swipe itself: the current card grows back into its page.
     func leaveTabs() {
-        guard let id = store.currentTabID else { return }
+        guard let id = modeCurrentTabID else { return }
         openTab(id)
     }
 
@@ -792,6 +830,7 @@ final class AppModel {
     /// A tapped card: its tab becomes current and opens.
     func openTab(_ id: Tab.ID, now: Date = .now) {
         guard let tab = store.tabs.first(where: { $0.id == id }) else { return }
+        isPrivateMode = tab.isPrivate
         store.activate(id, now: now)
         _ = ensureSession(for: tab)
         cardArrival = tab.snapshot == nil ? nil : id
@@ -809,32 +848,36 @@ final class AppModel {
         return store.tabs.first(where: { $0.id == id })?.snapshot
     }
 
-    /// The + on the tabs screen: the launch search, which submits into a new tab.
+    /// The + on the tabs screen: the launch search, which submits into a new tab of the
+    /// kind the current mode shows.
     func newTabFromTabs() {
-        searchPrefill = nil
-        launchIsPrivate = false
-        surface = .launchSearch
+        if isPrivateMode { newPrivateTab() } else { newNormalTab() }
     }
 
-    /// A swipe down on the launch sheet: back to the stack, when there are tabs to show.
+    /// A swipe down on the launch sheet: back to the stack of the kind it was opened for,
+    /// when there are tabs to show. With no ordinary tab, the private stack is what is left.
     func dismissLaunchSearch() {
         guard !store.tabs.isEmpty else { return }
         searchPrefill = nil
+        isPrivateMode = launchIsPrivate || store.tabs(inPrivate: false).isEmpty
         launchIsPrivate = false
         surface = .tabs
     }
 
     /// A flung card. Closing the last tab leaves the launch search.
     func closeTab(_ id: Tab.ID) {
+        let wasPrivate = store.tabs.first { $0.id == id }?.isPrivate ?? false
         dropSession(id)
         let closed = store.close(id)
         if !store.hasPrivateTabs {
             // The last private tab gone: its cookies and storage go with it.
             privateDataStore = nil
         }
-        if store.tabs.isEmpty {
+        // The last ordinary tab gone leaves the ordinary launch search; the last private
+        // one leaves the private stack's empty card.
+        if !wasPrivate, store.tabs(inPrivate: false).isEmpty {
             closedTabNotice = nil
-            surface = .launchSearch
+            newNormalTab()
         } else {
             // Only a card flung on the stack offers an undo, and only the latest one.
             closedTabNotice = surface == .tabs ? closed.map(ClosedTabNotice.init) : nil
@@ -890,9 +933,13 @@ final class AppModel {
     func closeCurrentTab() {
         guard isReadingPage, let id = store.currentTabID else { return }
         isFindingInPage = false
+        let wasPrivate = currentIsPrivate
         closeTab(id)
-        if let next = store.currentTabID {
+        if let next = store.currentTabID(inPrivate: wasPrivate) {
             openTab(next)
+        } else if wasPrivate {
+            // The last private page closed: the private stack's empty card.
+            showTabs()
         }
     }
 
@@ -1052,12 +1099,24 @@ final class AppModel {
 
     /// The archive's Done: back to the stack, or the launch search with no tabs to show.
     func doneWithArchive() {
-        surface = store.tabs.isEmpty ? .launchSearch : .tabs
+        returnToStack()
+    }
+
+    /// The stack, or the launch search with no tabs to show. With only private tabs open,
+    /// the private stack is the one to land on.
+    private func returnToStack() {
+        guard !store.tabs.isEmpty else {
+            surface = .launchSearch
+            return
+        }
+        if store.tabs(inPrivate: false).isEmpty { isPrivateMode = true }
+        surface = .tabs
     }
 
     /// A tapped archive row: the tab comes back and opens.
     func restoreArchivedTab(_ id: Tab.ID, now: Date = .now) {
         guard store.restore(id, now: now), let tab = store.currentTab else { return }
+        isPrivateMode = false
         _ = ensureSession(for: tab)
         surface = .reading(searchOpen: false)
     }
@@ -1083,7 +1142,7 @@ final class AppModel {
         if let back, back != .bookmarks {
             surface = back
         } else {
-            surface = store.tabs.isEmpty ? .launchSearch : .tabs
+            returnToStack()
         }
     }
 

@@ -276,7 +276,8 @@ struct TabStoreTests {
 
         let index = try #require(await persistence.loadIndex())
         #expect(index.openTabs.map(\.id) == [open.id])
-        #expect(index.currentTabID == nil)
+        // Currency is written as the ordinary mode's own, not the private tab on top.
+        #expect(index.currentTabID == open.id)
         #expect(await persistence.loadSnapshot(for: hidden.id) == nil)
         #expect(store.hasPrivateTabs)
     }
