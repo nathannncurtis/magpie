@@ -171,13 +171,13 @@ struct TabsScreen: View {
         }
     }
 
-    /// The chip, the centred +, then the open count: the same three slots as Launch.
+    /// The chip, the centered +, then the open count: the same three slots as Launch.
     private var bottomRow: some View {
         FloatingBar {
             FloatingBarSlots {
                 ArchivedChip(count: store.archivedTabs.count, action: onShowArchive)
                     .accessibilityIdentifier("tabs.archive")
-            } centre: {
+            } center: {
                 // The + follows the mode; the long press offers the other kind.
                 PlusButton(action: isPrivateMode ? onNewPrivateTab : onNewTab)
                     .contextMenu {

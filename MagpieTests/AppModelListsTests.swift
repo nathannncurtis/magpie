@@ -153,4 +153,47 @@ struct AppModelListsTests {
 
         #expect(model.bookmarks.bookmarks.map(\.title) == ["A"])
     }
+
+    @Test("a deleted archived tab comes back on undo")
+    func reinstateArchived() {
+        let model = makeModel()
+        model.openFromLaunch(url("stale.example"), now: date(0))
+        model.openFromLaunch(url("current.example"), now: date(100))
+        let stale = model.store.tabs[0].id
+        _ = model.store.archiveStale(now: date(100), after: 10)
+
+        let removed = model.store.deleteArchived([stale])
+        #expect(model.store.archivedTabs.isEmpty)
+
+        model.store.reinstateArchived(removed)
+        #expect(model.store.archivedTabs.map(\.id) == [stale])
+    }
+
+    // MARK: Opening a bookmark
+
+    @Test("opening a bookmark whose page is already open switches to that tab")
+    func bookmarkSwitchesToOpenTab() {
+        let model = makeModel()
+        model.openFromLaunch(url("saved.example"), now: date(0))
+        let saved = model.store.tabs[0].id
+        model.openFromLaunch(url("other.example"), now: date(10))
+        model.showBookmarks()
+
+        model.openBookmark(url("saved.example"), now: date(20))
+
+        #expect(model.store.tabs.count == 2)
+        #expect(model.store.currentTabID == saved)
+        #expect(model.surface == .reading(searchOpen: false))
+    }
+
+    @Test("opening a bookmark that isn't open makes a tab")
+    func bookmarkOpensNewTab() {
+        let model = makeModel()
+        model.openFromLaunch(url("other.example"), now: date(0))
+
+        model.openBookmark(url("saved.example"), now: date(10))
+
+        #expect(model.store.tabs.count == 2)
+        #expect(model.store.currentTab?.url == url("saved.example"))
+    }
 }

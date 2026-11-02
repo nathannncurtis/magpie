@@ -4,8 +4,8 @@ Each component is one SwiftUI view in `UI/Components/`. Sizes are in points. "Da
 
 ## Chrome
 
-**FloatingBar**: the one shell every floating bar and bottom row wears (Tabs, Launch, Archive, Bookmarks and History search pills, SkimControlBar, Skim's Cancel, ReadingBar). It is 54 tall at the default size (`Metrics.Bar.height`, growing with Dynamic Type), inset 14 from the sides (`insetFloating`; the reading bar animates its own inset), and sits `max(26, safe-area-bottom − 8)` above the bottom via `floatingBarBottomEdge(safeAreaBottom:)`. Its width is capped at `Metrics.Bar.maxWidth` (560) and centred, so on a wide screen (a foldable open, an iPad) it never runs edge to edge, and nothing in it assumes a phone width. The surface is `clear` (the contents carry their own glass) or a glass capsule, optionally tinted and interactive.
-- **FloatingBarSlots** gives a row fixed leading, centre and trailing slots. The centre holds the middle of the bar whatever the sides measure, so a `PlusButton` there is exactly centred on every row that has one (Tabs and Launch); a flexible centre takes what the wider side leaves.
+**FloatingBar**: the one shell every floating bar and bottom row wears (Tabs, Launch, Archive, Bookmarks and History search pills, SkimControlBar, Skim's Cancel, ReadingBar). It is 54 tall at the default size (`Metrics.Bar.height`, growing with Dynamic Type), inset 14 from the sides (`insetFloating`; the reading bar animates its own inset), and sits `max(26, safe-area-bottom − 8)` above the bottom via `floatingBarBottomEdge(safeAreaBottom:)`. Its width is capped at `Metrics.Bar.maxWidth` (560) and centered, so on a wide screen (a foldable open, an iPad) it never runs edge to edge, and nothing in it assumes a phone width. The surface is `clear` (the contents carry their own glass) or a glass capsule, optionally tinted and interactive.
+- **FloatingBarSlots** gives a row fixed leading, center and trailing slots. The center holds the middle of the bar whatever the sides measure, so a `PlusButton` there is exactly centered on every row that has one (Tabs and Launch); a flexible center takes what the wider side leaves.
 
 **ReadingBar**
 - A `FloatingBar` glass capsule tinted by the page, 54 tall; inset 12 from the screen sides and 26 above the bottom edge (see 01 Spacing). Padding: 4 on the leading side, 5 on the trailing side. The 54/38 heights scale with Dynamic Type, capped at the first accessibility size.
@@ -99,8 +99,8 @@ The sheet **hugs its content**: 14 pt between the last group and the bar, never 
   - fling up to close (see 05)
   - tap to open
 
-**TabStack**: cards sit side by side on the mist, 14 pt apart, with the current card centred and its neighbours peeking in from the screen edges.
-- Bottom row, a `FloatingBar` with three slots: `ArchivedChip` ("Archived · 12") leading, `PlusButton` exactly centred, and the count ("3 open", `small`, `labelOnMist`) trailing; the same slots as Launch's folded row.
+**TabStack**: cards sit side by side on the mist, 14 pt apart, with the current card centered and its neighbors peeking in from the screen edges.
+- Bottom row, a `FloatingBar` with three slots: `ArchivedChip` ("Archived · 12") leading, `PlusButton` exactly centered, and the count ("3 open", `small`, `labelOnMist`) trailing; the same slots as Launch's folded row.
 
 **ArchivedChip**: glass capsule, at least 46 tall (growing with Dynamic Type), padding 0 × 16, with an `archivebox` icon and the label in `row` semibold. The label is one line and fixed-size: on a narrow or folded width it never wraps.
 

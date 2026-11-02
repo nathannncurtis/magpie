@@ -6,6 +6,10 @@ struct DownloadsScreen: View {
     let store: DownloadStore
     var onDone: () -> Void
 
+    /// The delete just made, on offer for an undo.
+    @State private var undo: UndoNotice?
+    @State private var bottomInset: CGFloat = 0
+
     private enum ScreenMetrics {
         /// The nav row at the head of the screen.
         static let navHeight: CGFloat = 36
@@ -47,6 +51,12 @@ struct DownloadsScreen: View {
                 .accessibilityIdentifier("downloads.empty")
             }
         }
+        .onGeometryChange(for: CGFloat.self) {
+            $0.safeAreaInsets.bottom
+        } action: {
+            bottomInset = $0
+        }
+        .undoNotice($undo, bottomInset: bottomInset)
     }
 
     private var navRow: some View {
@@ -80,8 +90,11 @@ struct DownloadsScreen: View {
             }
             .onDelete { offsets in
                 let files = store.files
-                for index in offsets where files.indices.contains(index) {
-                    store.delete(files[index])
+                let trashed = offsets.compactMap { index in
+                    files.indices.contains(index) ? store.trash(files[index]) : nil
+                }
+                if !trashed.isEmpty {
+                    undo = .deleted { trashed.forEach { store.restore($0) } }
                 }
             }
         }

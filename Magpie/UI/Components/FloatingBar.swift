@@ -77,26 +77,26 @@ private struct BarSurface: ViewModifier {
     }
 }
 
-/// Three fixed slots: leading hugs the left, trailing the right, and the centre holds
-/// the middle of the bar whatever the sides measure. A + in the centre slot is
-/// therefore centred on every row that has one, and a flexible centre (a URL) takes
+/// Three fixed slots: leading hugs the left, trailing the right, and the center holds
+/// the middle of the bar whatever the sides measure. A + in the center slot is
+/// therefore centered on every row that has one, and a flexible center (a URL) takes
 /// what the wider side leaves.
-struct FloatingBarSlots<Leading: View, Centre: View, Trailing: View>: View {
+struct FloatingBarSlots<Leading: View, Center: View, Trailing: View>: View {
     @ViewBuilder var leading: Leading
-    @ViewBuilder var centre: Centre
+    @ViewBuilder var center: Center
     @ViewBuilder var trailing: Trailing
 
     var body: some View {
         SlotLayout {
             // Each slot is wrapped so an empty one still counts as a slot.
             ZStack { leading }
-            ZStack { centre }
+            ZStack { center }
             ZStack { trailing }
         }
     }
 
     private struct SlotLayout: Layout {
-        /// The least gap between a side and the centre.
+        /// The least gap between a side and the center.
         private let gap = Metrics.Spacing.unit * 2
 
         func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
@@ -142,7 +142,7 @@ extension View {
         FloatingBar {
             FloatingBarSlots {
                 ArchivedChip(count: 12, action: {})
-            } centre: {
+            } center: {
                 PlusButton(action: {})
             } trailing: {
                 Text("3 open").font(Typography.small)

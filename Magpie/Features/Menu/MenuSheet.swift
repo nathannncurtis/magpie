@@ -200,7 +200,8 @@ struct MenuSheet: View {
         }
     }
 
-    /// The long press on the Bookmark tile: Bookmarks over the page, the menu folded.
+    /// The Bookmarks row, and the long press on the Bookmark tile: Bookmarks over the page,
+    /// the menu folded.
     private func openBookmarks() {
         model.showBookmarks()
         onDismiss()
@@ -270,7 +271,7 @@ struct MenuSheet: View {
     }
 
     /// The second group: where searches go, whether Skim offers, the page's desktop version,
-    /// the history, Downloads, and Settings.
+    /// Bookmarks, the history, Downloads, and Settings.
     private var switchGroup: some View {
         MenuGroup {
             MenuRow(icon: .symbol("globe"), title: String(localized: "Search engine")) {
@@ -297,6 +298,15 @@ struct MenuSheet: View {
                         get: { model.currentSiteIsDesktop },
                         set: { model.setDesktopSite($0) }))
             }
+
+            MenuRow(icon: .symbol("bookmark"), title: String(localized: "Bookmarks")) {
+                SettingsChevron()
+            }
+            .action {
+                openBookmarks()
+            }
+            .divided()
+            .accessibilityIdentifier("menu.bookmarks")
 
             MenuRow(icon: .symbol("clock"), title: String(localized: "History")) {
                 SettingsChevron()

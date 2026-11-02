@@ -93,7 +93,7 @@ enum Metrics {
         /// size; each grows with Dynamic Type from here.
         static let height: CGFloat = 54
         /// The widest a floating bar grows. Past it (a foldable's open inner screen, an
-        /// iPad) the bar stays this wide and sits centred, never edge to edge.
+        /// iPad) the bar stays this wide and sits centered, never edge to edge.
         static let maxWidth: CGFloat = 560
         /// The reading bar in its full state.
         static let readingHeight: CGFloat = height
