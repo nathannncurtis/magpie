@@ -78,6 +78,9 @@ struct ReadingBar: View {
     /// and the menu.
     var glassNamespace: Namespace.ID? = nil
 
+    /// Drags on the bar: sideways steps through the tabs, up opens the stack.
+    var swipe: BarSwipeHandlers? = nil
+
     let onBack: () -> Void
     let onAddressTap: () -> Void
     let onTabsTap: () -> Void
@@ -163,6 +166,8 @@ struct ReadingBar: View {
         .frame(height: height)
         .frame(maxWidth: .infinity)
         .foregroundStyle(ReadableForeground.foreground(for: tint, scheme: colorScheme))
+        .contentShape(.capsule)
+        .modifier(BarSwipeGesture(handlers: swipe))
         .glassEffect(.regular.tint(tint), in: .capsule)
     }
 

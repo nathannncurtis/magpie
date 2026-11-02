@@ -34,6 +34,13 @@ struct ReadingScreen: View {
     var onSearchDismiss: () -> Void
     var onAddressTap: () -> Void = {}
     var onTabsTap: () -> Void = {}
+    /// Whether a tab lies this many places along the stack (1 next, -1 previous): the
+    /// bar's sideways swipe rubber-bands where none does.
+    var hasAdjacentTab: (Int) -> Bool = { _ in false }
+    /// The picture of the tab that far along, slid in beside the page as it moves.
+    var adjacentPicture: (Int) -> Data? = { _ in nil }
+    /// The bar's swipe stepped to the tab this many places along.
+    var onStepTab: (Int) -> Void = { _ in }
     /// The page area's size, kept past this screen: a session made with no reading
     /// screen up still needs a region to capture at.
     var onPageSize: (CGSize) -> Void = { _ in }
@@ -55,6 +62,18 @@ struct ReadingScreen: View {
     @State private var isMenuOpen = false
     @State private var snapTask: Task<Void, Never>?
     @State private var tintRetryTask: Task<Void, Never>?
+    /// How far a sideways bar swipe has carried the page, and how far the bar itself
+    /// follows the finger.
+    @State private var pageShift: CGFloat = 0
+    @State private var barShift: CGFloat = 0
+    /// How far an upward bar swipe has lifted the bar, and whether it has crossed the
+    /// distance that opens the stack.
+    @State private var barRise: CGFloat = 0
+    @State private var upArmed = false
+    /// Counts committed tab steps, for the haptic.
+    @State private var stepCommits = 0
+    /// While a committed step slides the page away.
+    @State private var isStepping = false
 
     /// How far the slim pill drops below the full bar's bottom edge (05 · Chrome on
     /// scroll): the motion board's 16 against its 26.
@@ -70,6 +89,11 @@ struct ReadingScreen: View {
     private static let tintRetryDelay: Duration = .milliseconds(600)
     /// The opacity page tints take through the glass (02 · Glass).
     private static let pageTintOpacity = 0.55
+    /// How much of the page's shift the bar follows, and the most it travels.
+    private static let barFollow: CGFloat = 0.35
+    private static let barFollowLimit: CGFloat = 48
+    /// How long a committed step slides the page out before the next tab takes over.
+    private static let stepSlide: Duration = .milliseconds(180)
 
     var body: some View {
         GeometryReader { geo in
@@ -79,14 +103,17 @@ struct ReadingScreen: View {
             let menuBottomEdge = Metrics.Spacing.barBottomEdge(
                 safeAreaBottom: geo.safeAreaInsets.bottom)
             ZStack(alignment: .bottom) {
+                neighbourPage(width: geo.size.width)
                 pageArea(bottomClearance: menuBottomEdge + Metrics.Bar.readingHeight)
+                    .offset(x: pageShift)
                 GlassEffectContainer {
                     if isSearchOpen {
                         searchSheet
                     } else if isMenuOpen {
                         menuSheet(bottomEdge: menuBottomEdge)
                     } else {
-                        bar
+                        bar(width: geo.size.width)
+                            .offset(x: barShift, y: barRise)
                             .padding(.bottom, bottomEdge)
                             .ignoresSafeArea(edges: .bottom)
                     }
@@ -144,6 +171,8 @@ struct ReadingScreen: View {
         // page's own top colour, so nothing shows through from the surface before.
         .background(topEdgeFill.ignoresSafeArea(edges: .top))
         .onChange(of: colorScheme) { _, _ in rereadPageTint() }
+        .sensoryFeedback(.selection, trigger: stepCommits)
+        .sensoryFeedback(.impact(flexibility: .soft), trigger: upArmed) { _, armed in armed }
         .onDisappear {
             snapTask?.cancel()
             tintRetryTask?.cancel()
@@ -200,7 +229,7 @@ struct ReadingScreen: View {
             onDismiss: onSearchDismiss)
     }
 
-    private var bar: some View {
+    private func bar(width: CGFloat) -> some View {
         ReadingBar(
             host: session?.failure?.host ?? HostFormatter.host(for: session?.committedURL),
             tabCount: tabCount,
@@ -211,6 +240,7 @@ struct ReadingScreen: View {
             isPrivate: isPrivate,
             tint: barTint,
             glassNamespace: chromeNamespace,
+            swipe: barSwipe(width: width),
             onBack: { session?.goBack() },
             onAddressTap: {
                 expandBar()
@@ -221,6 +251,103 @@ struct ReadingScreen: View {
                 expandBar()
                 openMenu()
             })
+    }
+
+    // MARK: Bar swipes
+
+    private func barSwipe(width: CGFloat) -> BarSwipeHandlers {
+        BarSwipeHandlers(
+            changed: { axis, translation in barSwipeChanged(axis, translation) },
+            ended: { axis, translation, predicted in
+                barSwipeEnded(axis, translation, predicted, width: width)
+            },
+            cancelled: { resetBarSwipe() })
+    }
+
+    private func barSwipeChanged(_ axis: BarSwipe.Axis, _ translation: CGSize) {
+        guard !isStepping else { return }
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            switch axis {
+            case .horizontal:
+                pageShift = BarSwipe.offset(
+                    translation: translation.width,
+                    hasPrevious: hasAdjacentTab(-1), hasNext: hasAdjacentTab(1))
+                barShift = min(
+                    max(pageShift * Self.barFollow, -Self.barFollowLimit), Self.barFollowLimit)
+            case .up:
+                barRise = BarSwipe.rise(translationY: translation.height)
+                upArmed = translation.height <= -BarSwipe.upDistance
+            }
+        }
+    }
+
+    private func barSwipeEnded(
+        _ axis: BarSwipe.Axis, _ translation: CGSize, _ predicted: CGSize, width: CGFloat
+    ) {
+        guard !isStepping else { return }
+        switch axis {
+        case .horizontal:
+            let step = BarSwipe.step(
+                translation: translation.width, predicted: predicted.width, width: width,
+                hasPrevious: hasAdjacentTab(-1), hasNext: hasAdjacentTab(1))
+            guard step != 0 else { return resetBarSwipe() }
+            commitStep(step, width: width)
+        case .up:
+            let opens = BarSwipe.opensStack(
+                translationY: translation.height, predictedY: predicted.height)
+            resetBarSwipe()
+            if opens { onTabsTap() }
+        }
+    }
+
+    /// The page slides out the way the finger took it, the next tab's picture in behind,
+    /// then the tab itself takes over in place.
+    private func commitStep(_ step: Int, width: CGFloat) {
+        stepCommits += 1
+        isStepping = true
+        withAnimation(reduceMotion ? nil : Springs.chrome.animation) {
+            pageShift = reduceMotion ? 0 : -CGFloat(step) * width
+            barShift = 0
+        }
+        Task {
+            try? await Task.sleep(for: reduceMotion ? .zero : Self.stepSlide)
+            onStepTab(step)
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) { pageShift = 0 }
+            isStepping = false
+        }
+    }
+
+    private func resetBarSwipe() {
+        withAnimation(reduceMotion ? nil : Springs.settle.animation) {
+            pageShift = 0
+            barShift = 0
+            barRise = 0
+        }
+        upArmed = false
+    }
+
+    /// The tab the page is being slid toward, drawn from its picture beside the page.
+    @ViewBuilder
+    private func neighbourPage(width: CGFloat) -> some View {
+        if pageShift != 0 {
+            let delta = pageShift < 0 ? 1 : -1
+            let edge = pageShift < 0 ? width : -width
+            if let picture = adjacentPicture(delta).flatMap(UIImage.init(data:)) {
+                Image(uiImage: picture)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .clipped()
+                    .ignoresSafeArea(edges: .bottom)
+                    .offset(x: edge + pageShift)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
+        }
     }
 
     /// The page, or Magpie's own page when it can't load — one view with its tab card.
