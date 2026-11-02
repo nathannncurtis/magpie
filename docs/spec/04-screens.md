@@ -38,6 +38,7 @@ Later launches restore the last tab, with no animation.
 - **Scrolling:** collapses the bar to slim (05 · Chrome on scroll).
 - **Dark mode on pages:** never inverted. Send `Sec-CH-Prefers-Color-Scheme: dark` to Google, and inject nothing; sites with a dark theme show it themselves.
 - **Blocking:** ads and trackers, and cookie banners, are blocked with `WKContentRuleList`s compiled from the downloaded lists. They are two separate rule sets on two separate toggles.
+- **Page interactions:** a `target=_blank` link opens a new tab, which becomes current (private if the page's tab is); a window a script opens with no tap behind it is dropped. A page's alert, confirm and prompt show as an alert over the reading screen, titled with the site's host. A long press on a link offers Open in New Tab, Open in Private Tab, Copy Link and Share, over the system link preview. Pulling the page down reloads it, with the system refresh control.
 - **Hardware keyboard:** ⌘T new tab, ⌘L the search sheet, ⌘W close tab, ⌘R reload, ⌘[ / ⌘] back and forward, ⌘F find on page, ⌘⇧\ the tabs screen; Esc folds the search sheet, the menu, or the find bar away. The page's own shortcuts work only while reading; every one shows in the system overlay (hold ⌘).
 
 ## 03 · Tabs

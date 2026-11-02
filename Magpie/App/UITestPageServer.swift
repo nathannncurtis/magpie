@@ -150,6 +150,8 @@ final class UITestPageServer: @unchecked Sendable {
             return shell(title: "magpie test page", path: route, block: "#2B62C2")
         case "/mode":
             return modeProbe
+        case "/links":
+            return linksPage
         case "/mod.user.js":
             return UITestModFixtures.userscript
         case "/mod.list.txt":
@@ -174,6 +176,29 @@ final class UITestPageServer: @unchecked Sendable {
         document.getElementById("mode").textContent =
             /Macintosh/.test(navigator.userAgent) ? "mode: desktop" : "mode: mobile";
         </script>
+        </body>
+        </html>
+        """
+
+    /// A page that asks for new windows and dialogs: a `target=_blank` link, a button
+    /// that calls `window.open` on a tap, one script call to `window.open` with no tap
+    /// behind it, and buttons for alert and confirm.
+    private static let linksPage = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>magpie links</title>
+        <style>
+        body { margin: 0; padding: 24px; font: 22px -apple-system; }
+        a, button { display: block; margin: 0 0 28px; font-size: 26px; padding: 14px; }
+        </style>
+        </head>
+        <body>
+        <a id="blank" href="/page" target="_blank">open blank</a>
+        <button id="alert" onclick="alert('hello from the page')">say hello</button>
+        <button id="confirm" onclick="document.title = confirm('sure?') ? 'yes' : 'no'">ask</button>
+        <script>window.open('/mod.list.txt');</script>
         </body>
         </html>
         """

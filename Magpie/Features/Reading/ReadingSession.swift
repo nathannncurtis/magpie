@@ -121,6 +121,16 @@ final class ReadingSession {
     /// page runs the mods' scripts under the same rules.
     let page: WebPage
 
+    /// The page's alerts, confirms and prompts, shown over the reading screen.
+    let dialogs = PageDialogs()
+
+    /// Called with the address of a window the page opened on a tap: the owner makes it
+    /// a tab.
+    var onOpenInNewTab: (@MainActor (URL) -> Void)? {
+        get { newWindowRelay.handler }
+        set { newWindowRelay.handler = newValue }
+    }
+
     /// Called whenever the page settles or moves, so the tab can take what it now shows.
     var onPageSettled: (@MainActor () -> Void)?
 
@@ -344,17 +354,22 @@ final class ReadingSession {
         return "";
         """#
 
+    private let newWindowRelay = NewWindowRelay()
+
     init(
         url: URL, pageConfiguration: WebPage.Configuration? = nil,
         prefersDesktop: @escaping @MainActor (URL?) -> Bool = { _ in false }
     ) {
         initialURL = url
         requestedURL = url
+        // The decider is made before the session exists; it reaches the owner through this.
+        let relay = newWindowRelay
         var decider = PageNavigationDecider()
         decider.prefersDesktop = prefersDesktop
+        decider.onNewWindow = { url in relay.send(url) }
         page = WebPage(
             configuration: pageConfiguration ?? .browser(),
-            navigationDecider: decider)
+            navigationDecider: decider, dialogPresenter: dialogs)
         monitor.pathUpdateHandler = { [weak self] path in
             let online = path.status == .satisfied
             Task { @MainActor in
@@ -520,6 +535,8 @@ final class ReadingSession {
         onPageSettled = nil
         onPageTitled = nil
         onPageCommitted = nil
+        onOpenInNewTab = nil
+        dialogs.cancelAll()
         monitor.cancel()
         page.stopLoading()
     }
@@ -1048,4 +1065,12 @@ private final class ResumeGate<Value: Sendable> {
         continuation?.resume(returning: value)
         continuation = nil
     }
+}
+
+/// Carries a new window's address from the page's decider to whoever owns the session.
+@MainActor
+final class NewWindowRelay {
+    var handler: (@MainActor (URL) -> Void)?
+
+    func send(_ url: URL) { handler?(url) }
 }
