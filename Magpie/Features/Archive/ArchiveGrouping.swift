@@ -15,40 +15,48 @@ enum ArchiveGrouping {
     /// The tabs grouped for the list: the special day bands first, then months newest
     /// first, with each band's rows newest first.
     static func groups(of tabs: [Tab], now: Date, calendar: Calendar) -> [Group] {
-        let ordered = tabs.sorted { $0.lastActive > $1.lastActive }
-        var today: [Tab] = []
-        var yesterday: [Tab] = []
-        var earlierThisWeek: [Tab] = []
-        var byMonth: [Date: [Tab]] = [:]
+        bands(of: tabs, date: \.lastActive, now: now, calendar: calendar)
+            .map { Group(title: $0.title, tabs: $0.items) }
+    }
+
+    /// Anything dated, cut into the same day bands: History's rows use them too.
+    static func bands<Item>(
+        of items: [Item], date: (Item) -> Date, now: Date, calendar: Calendar
+    ) -> [(title: String, items: [Item])] {
+        let ordered = items.sorted { date($0) > date($1) }
+        var today: [Item] = []
+        var yesterday: [Item] = []
+        var earlierThisWeek: [Item] = []
+        var byMonth: [Date: [Item]] = [:]
 
         let startOfToday = calendar.startOfDay(for: now)
         let startOfYesterday =
             calendar.date(byAdding: .day, value: -1, to: startOfToday) ?? startOfToday
         let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? startOfToday
 
-        for tab in ordered {
-            let day = calendar.startOfDay(for: tab.lastActive)
+        for item in ordered {
+            let day = calendar.startOfDay(for: date(item))
             if day >= startOfToday {
-                today.append(tab)
+                today.append(item)
             } else if day == startOfYesterday {
-                yesterday.append(tab)
+                yesterday.append(item)
             } else if day >= startOfWeek {
-                earlierThisWeek.append(tab)
+                earlierThisWeek.append(item)
             } else {
-                byMonth[monthStart(of: day, calendar: calendar), default: []].append(tab)
+                byMonth[monthStart(of: day, calendar: calendar), default: []].append(item)
             }
         }
 
-        var groups: [Group] = []
-        if !today.isEmpty { groups.append(Group(title: title(.today, now: now, calendar: calendar), tabs: today)) }
+        var groups: [(title: String, items: [Item])] = []
+        if !today.isEmpty { groups.append((title(.today, now: now, calendar: calendar), today)) }
         if !yesterday.isEmpty {
-            groups.append(Group(title: title(.yesterday, now: now, calendar: calendar), tabs: yesterday))
+            groups.append((title(.yesterday, now: now, calendar: calendar), yesterday))
         }
         if !earlierThisWeek.isEmpty {
-            groups.append(Group(title: title(.earlierThisWeek, now: now, calendar: calendar), tabs: earlierThisWeek))
+            groups.append((title(.earlierThisWeek, now: now, calendar: calendar), earlierThisWeek))
         }
         for month in byMonth.keys.sorted(by: >) {
-            groups.append(Group(title: title(.month(month), now: now, calendar: calendar), tabs: byMonth[month] ?? []))
+            groups.append((title(.month(month), now: now, calendar: calendar), byMonth[month] ?? []))
         }
         return groups
     }
@@ -56,20 +64,25 @@ enum ArchiveGrouping {
     /// The time a row carries: a time for the last two days, a weekday for the rest of
     /// this week, a date for anything older.
     static func rowTime(of tab: Tab, now: Date, calendar: Calendar) -> String {
+        rowTime(of: tab.lastActive, now: now, calendar: calendar)
+    }
+
+    /// The same for any date.
+    static func rowTime(of date: Date, now: Date, calendar: Calendar) -> String {
         let startOfToday = calendar.startOfDay(for: now)
         let startOfYesterday =
             calendar.date(byAdding: .day, value: -1, to: startOfToday) ?? startOfToday
         let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? startOfToday
-        let day = calendar.startOfDay(for: tab.lastActive)
+        let day = calendar.startOfDay(for: date)
 
         if day >= startOfYesterday {
-            return tab.lastActive.formatted(
+            return date.formatted(
                 Date.FormatStyle(date: .omitted, time: .shortened).in(calendar))
         }
         if day >= startOfWeek {
-            return tab.lastActive.formatted(Date.FormatStyle.dateTime.weekday(.abbreviated).in(calendar))
+            return date.formatted(Date.FormatStyle.dateTime.weekday(.abbreviated).in(calendar))
         }
-        return tab.lastActive.formatted(
+        return date.formatted(
             Date.FormatStyle(date: .abbreviated, time: .omitted).in(calendar))
     }
 

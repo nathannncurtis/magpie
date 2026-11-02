@@ -28,6 +28,8 @@ enum NavigationPolicy: Equatable {
 struct PageNavigationDecider: WebPage.NavigationDeciding {
     /// Whether another app's scheme may open at all; off for pages nobody sees.
     var allowsHandOff = true
+    /// Whether a site loads its desktop version; the page's own address in, the choice out.
+    var prefersDesktop: @MainActor (URL?) -> Bool = { _ in false }
 
     mutating func decidePolicy(
         for action: WebPage.NavigationAction, preferences: inout WebPage.NavigationPreferences
@@ -38,6 +40,9 @@ struct PageNavigationDecider: WebPage.NavigationDeciding {
             isLinkActivation: action.navigationType == .linkActivated)
         switch policy {
         case .allow:
+            if action.target?.isMainFrame ?? true {
+                preferences.preferredContentMode = prefersDesktop(url) ? .desktop : .recommended
+            }
             return .allow
         case .cancel:
             return .cancel

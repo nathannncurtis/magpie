@@ -269,7 +269,8 @@ struct MenuSheet: View {
         }
     }
 
-    /// The second group: where searches go, whether Skim offers, and Settings.
+    /// The second group: where searches go, whether Skim offers, the page's desktop version,
+    /// the history, and Settings.
     private var switchGroup: some View {
         MenuGroup {
             MenuRow(icon: .symbol("globe"), title: String(localized: "Search engine")) {
@@ -287,6 +288,25 @@ struct MenuSheet: View {
                 isOn: Binding(
                     get: { model.preferences.skimEnabled },
                     set: { model.preferences.skimEnabled = $0 }))
+
+            if model.canChooseDesktopSite {
+                toggleRow(
+                    icon: .symbol("desktopcomputer"), title: String(localized: "Desktop site"),
+                    id: "menu.toggle.desktop", isDivided: true,
+                    isOn: Binding(
+                        get: { model.currentSiteIsDesktop },
+                        set: { model.setDesktopSite($0) }))
+            }
+
+            MenuRow(icon: .symbol("clock"), title: String(localized: "History")) {
+                SettingsChevron()
+            }
+            .action {
+                model.showHistory()
+                onDismiss()
+            }
+            .divided()
+            .accessibilityIdentifier("menu.history")
 
             MenuRow(icon: .symbol("gearshape"), title: String(localized: "Settings")) {
                 SettingsChevron()
