@@ -238,6 +238,11 @@ struct ReadingScreen: View {
                     ZStack {
                         WebView(session.page)
                             .findNavigator(isPresented: isFinding)
+                            // Edge swipes go back and forward through the page's history.
+                            .backSwipe(isEnabled: session.canGoBack) { session.goBack() }
+                            .forwardSwipe(isEnabled: session.canGoForward) { session.goForward() }
+                            // WebKit's own edge swipe stays off: it would hold the touch.
+                            .webViewBackForwardNavigationGestures(.disabled)
                             .safeAreaPadding(.bottom, bottomClearance)
                             // The page starts below the status bar and runs under the
                             // bar to the bottom edge; the strip it leaves above takes

@@ -6,6 +6,8 @@ import SwiftUI
 struct BookmarksScreen: View {
     let store: BookmarkStore
     var onOpen: (URL) -> Void
+    /// A swipe back off the top level: whatever was up before the bookmarks.
+    var onClose: () -> Void = {}
 
     @State private var searchText = ""
     @State private var editing = false
@@ -90,6 +92,10 @@ struct BookmarksScreen: View {
         }
         .ignoresSafeArea(.container, edges: .bottom)
         .environment(\.editMode, .constant(editing ? .active : .inactive))
+        // Out of a folder first, then off the bookmarks.
+        .backSwipe {
+            if openFolderID != nil { openFolderID = nil } else { onClose() }
+        }
     }
 
     /// No pill when there is nothing to search, and none over a folder's own list.

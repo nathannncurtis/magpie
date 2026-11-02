@@ -62,6 +62,8 @@ struct RootView: View {
                         onShowArchive: { model.showArchive() },
                         onShowSettings: { model.showSettings() }
                     )
+                    // Back to the stack, when there is one to go back to.
+                    .backSwipe(isEnabled: !model.store.tabs.isEmpty) { model.dismissLaunchSearch() }
                 }
             case .reading(let searchOpen):
                 ReadingScreen(
@@ -109,6 +111,8 @@ struct RootView: View {
                     pageBackground: { id in model.sessions[id]?.pageBackground },
                     transitionNamespace: cards
                 )
+                // Back to the page the stack was opened from.
+                .backSwipe(isEnabled: model.canLeaveTabs) { model.leaveTabs() }
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("tabs.screen")
             case .archive:
@@ -117,12 +121,14 @@ struct RootView: View {
                     onRestore: { model.restoreArchivedTab($0) },
                     onDone: { model.doneWithArchive() }
                 )
+                .backSwipe { model.doneWithArchive() }
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("archive.screen")
             case .bookmarks:
                 BookmarksScreen(
                     store: model.bookmarks,
-                    onOpen: { model.openBookmark($0) }
+                    onOpen: { model.openBookmark($0) },
+                    onClose: { model.closeBookmarks() }
                 )
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("bookmarks.screen")
@@ -132,10 +138,12 @@ struct RootView: View {
                     store: model.modStore,
                     onDone: { model.closeMods() }
                 )
+                .backSwipe { model.closeMods() }
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("mods.screen")
             case .skim:
                 SkimFlowScreen()
+                    .backSwipe { model.cancelSkim() }
                     .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("skim.screen")
             case nil:
