@@ -368,6 +368,9 @@ struct ReadingScreen: View {
                 if let failure = session.failure {
                     PageLoadFailureView(failure: failure) { session.retry() }
                         .ignoresSafeArea()
+                } else if session.isDrawnUnseen {
+                    // The root still draws this page for its picture; it lets go this pass.
+                    Color.clear
                 } else {
                     ZStack {
                         WebView(session.page)

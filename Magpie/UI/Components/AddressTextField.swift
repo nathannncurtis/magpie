@@ -138,10 +138,12 @@ struct AddressTextField: UIViewRepresentable {
                 return
             }
             completionSuffix = ""
-            let full = field.text ?? ""
-            Task { @MainActor [weak self] in
-                guard let self, self.parent.text != full else { return }
-                self.parent.text = full
+            // Read when the task runs, not now: keys typed meanwhile must not be undone by
+            // an older copy of the text.
+            Task { @MainActor [weak self, weak field] in
+                guard let self, let field else { return }
+                let typed = self.typedText(in: field)
+                if self.parent.text != typed { self.parent.text = typed }
             }
         }
 

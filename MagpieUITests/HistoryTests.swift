@@ -64,7 +64,8 @@ final class HistoryTests: XCTestCase {
         land("clear-page") { clear.waitForExistence(timeout: 10) }
         shots.snap(app, "clear-page")
         clear.tap()
-        let confirm = app.buttons["settings.clearData.confirm"]
+        // The dialog draws as a popover, which lists its button twice.
+        let confirm = app.buttons["settings.clearData.confirm"].firstMatch
         land("confirm") { confirm.waitForExistence(timeout: 10) }
         shots.snap(app, "clear-confirm")
         confirm.tap()

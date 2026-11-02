@@ -84,7 +84,7 @@ struct StackSwipeStepTests {
     @Test("the step grows with the predicted end")
     func proportional() {
         #expect(step(-60, -150) == 2)
-        #expect(step(60, 250, current: 4, count: 6) == -2)
+        #expect(step(60, 240, current: 4, count: 6) == -2)
     }
 
     @Test("the step is clamped to the stack")

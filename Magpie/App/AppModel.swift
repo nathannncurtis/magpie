@@ -876,7 +876,7 @@ final class AppModel {
                 openFromLaunch(url, now: now)
             }
         case .search(nil):
-            newTabFromTabs()
+            newNormalTab()
         }
     }
 
@@ -885,7 +885,7 @@ final class AppModel {
     func handle(_ action: ShortcutAction) {
         switch action {
         case .newTab, .search:
-            newTabFromTabs()
+            newNormalTab()
         case .newPrivateTab:
             newPrivateTab()
         }

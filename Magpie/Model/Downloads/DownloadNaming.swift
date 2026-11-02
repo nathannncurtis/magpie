@@ -21,7 +21,7 @@ enum DownloadNaming {
     static func name(suggested: String?, url: URL?, mimeType: String?) -> String {
         var name =
             sanitized(suggested)
-            ?? sanitized(url?.lastPathComponent.removingPercentEncoding)
+            ?? sanitized(pathName(of: url))
             ?? fallbackName
         if (name as NSString).pathExtension.isEmpty,
             let mimeType,
@@ -30,6 +30,12 @@ enum DownloadNaming {
             name += "." + ext
         }
         return clamped(name)
+    }
+
+    /// The address's last path part; nil for a bare host, whose path is only "/".
+    private static func pathName(of url: URL?) -> String? {
+        guard let last = url?.lastPathComponent, last != "/" else { return nil }
+        return last.removingPercentEncoding
     }
 
     /// A name safe to write: no path separators, control characters or leading dots. Nil

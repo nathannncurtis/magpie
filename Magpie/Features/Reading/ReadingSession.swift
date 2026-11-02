@@ -192,8 +192,10 @@ final class ReadingSession {
     /// The standing wait for the page's first layout, while a capture is held back.
     @ObservationIgnored private var layoutWatch: Task<Void, Never>?
     /// Whether the root is drawing this page unseen, in the window, for its picture. A
-    /// page with no view anywhere is laid out wrong, and is never captured.
-    @ObservationIgnored var isDrawnUnseen = false {
+    /// page with no view anywhere is laid out wrong, and is never captured. Observed: a
+    /// reading screen waits for the root to let the page go, since a page can only sit
+    /// in one web view at a time.
+    var isDrawnUnseen = false {
         didSet {
             // Back in the window with its load done: a held picture can be taken now.
             guard isDrawnUnseen, !oldValue, hasSettled, !page.isLoading else { return }
