@@ -355,20 +355,29 @@ final class ReadingSession {
         """#
 
     private let newWindowRelay = NewWindowRelay()
+    /// Where this page's downloads go.
+    private let downloads: PageDownloads?
 
     init(
         url: URL, pageConfiguration: WebPage.Configuration? = nil,
-        prefersDesktop: @escaping @MainActor (URL?) -> Bool = { _ in false }
+        prefersDesktop: @escaping @MainActor (URL?) -> Bool = { _ in false },
+        downloads: DownloadStore? = nil
     ) {
         initialURL = url
         requestedURL = url
+        let configuration = pageConfiguration ?? .browser()
+        let pageDownloads = downloads.map {
+            PageDownloads(store: $0, cookieStore: configuration.websiteDataStore.httpCookieStore)
+        }
+        self.downloads = pageDownloads
         // The decider is made before the session exists; it reaches the owner through this.
         let relay = newWindowRelay
         var decider = PageNavigationDecider()
         decider.prefersDesktop = prefersDesktop
         decider.onNewWindow = { url in relay.send(url) }
+        decider.downloads = pageDownloads
         page = WebPage(
-            configuration: pageConfiguration ?? .browser(),
+            configuration: configuration,
             navigationDecider: decider, dialogPresenter: dialogs)
         monitor.pathUpdateHandler = { [weak self] path in
             let online = path.status == .satisfied
@@ -679,6 +688,8 @@ final class ReadingSession {
         // Stopping a stalled load ends its sequence with a cancellation of its own; the
         // stalled page stands.
         if failure?.reason == .stalled { return }
+        // The load a download came out of ends cancelled; the page stays as it was.
+        if downloads?.consumesFailure() == true { return }
         let underlying: Error
         if case WebPage.NavigationError.failedProvisionalNavigation(let inner) = error {
             underlying = inner

@@ -22,6 +22,8 @@ enum Surface: Equatable {
     case mods
     /// A Skim run: working, its finished page, or the failure that stopped it.
     case skim
+    /// The saved downloads.
+    case downloads
 }
 
 /// The app's own state: the tabs, the engine, the recents, and which surface is up.
@@ -66,6 +68,8 @@ final class AppModel {
     /// The sites' own icons: fetched off the main actor, shared by every row that points
     /// at the same address.
     let faviconFetcher: FaviconFetcher
+    /// The files pages have handed over to download.
+    let downloads: DownloadStore
 
     /// The Skim run on screen, when one is going.
     private(set) var skimRun: SkimRun?
@@ -194,7 +198,8 @@ final class AppModel {
         skimPageStore: SkimPageStore = SkimPageStore(),
         skimDependencies: SkimDependencies = .live,
         skimAvailable: Bool = SkimAvailability.resolve().isAvailable,
-        faviconFetcher: FaviconFetcher = FaviconFetcher()
+        faviconFetcher: FaviconFetcher = FaviconFetcher(),
+        downloads: DownloadStore = DownloadStore()
     ) {
         self.store = store
         self.preferences = preferences ?? Preferences(defaults: Self.freshDefaults())
@@ -219,6 +224,7 @@ final class AppModel {
         self.skimDependencies = skimDependencies
         self.skimAvailable = skimAvailable
         self.faviconFetcher = faviconFetcher
+        self.downloads = downloads
     }
 
     /// The app as it runs on a device: the JSON indexes in Application Support.
@@ -430,7 +436,8 @@ final class AppModel {
         let session = ReadingSession(
             url: tab.url ?? Self.blankPage,
             pageConfiguration: configuration,
-            prefersDesktop: { [preferences] url in preferences.usesDesktopSite(for: url) })
+            prefersDesktop: { [preferences] url in preferences.usesDesktopSite(for: url) },
+            downloads: downloads)
         session.logTag = "tab=\(tab.id.uuidString.prefix(4))"
         session.isPrivate = tab.isPrivate
         session.viewportSize = restingPageSize
@@ -817,6 +824,69 @@ final class AppModel {
     func stepTab(_ delta: Int) {
         guard let tab = adjacentTab(delta) else { return }
         openTab(tab.id)
+    }
+
+    // MARK: Downloads
+
+    /// Where Done on the downloads screen returns to.
+    private var surfaceBeforeDownloads: Surface?
+
+    /// The menu's Downloads row.
+    func showDownloads() {
+        guard surface != .downloads else { return }
+        downloads.reload()
+        if case .reading(true) = surface {
+            surfaceBeforeDownloads = .reading(searchOpen: false)
+        } else {
+            surfaceBeforeDownloads = surface
+        }
+        surface = .downloads
+    }
+
+    /// Done or a swipe back: whatever was up before the downloads.
+    func closeDownloads() {
+        let back = surfaceBeforeDownloads
+        surfaceBeforeDownloads = nil
+        if let back, back != .downloads {
+            surface = back
+        } else {
+            surface = store.tabs.isEmpty ? .launchSearch : .tabs
+        }
+    }
+
+    // MARK: Links and quick actions
+
+    /// A link in Magpie's own scheme, from the share sheet or a widget.
+    func handle(_ link: MagpieLink, now: Date = .now) {
+        switch link {
+        case .open(let url):
+            launchIsPrivate = false
+            openFromLaunch(url, now: now)
+        case .search(let query?):
+            guard let resolution = QueryResolver.resolve(query, engine: engine) else { return }
+            switch resolution {
+            case .url(let url):
+                launchIsPrivate = false
+                openFromLaunch(url, now: now)
+            case .search(let text):
+                guard let url = engine.searchURL(for: text) else { return }
+                launchIsPrivate = false
+                openFromLaunch(url, now: now)
+            }
+        case .search(nil):
+            newTabFromTabs()
+        }
+    }
+
+    /// A home-screen quick action: the launch search, for a tab, a private one, or just
+    /// the search with its keyboard up.
+    func handle(_ action: ShortcutAction) {
+        switch action {
+        case .newTab, .search:
+            newTabFromTabs()
+        case .newPrivateTab:
+            newPrivateTab()
+        }
     }
 
     // MARK: Mods

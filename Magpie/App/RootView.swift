@@ -1,3 +1,4 @@
+import QuickLook
 import SwiftUI
 import WebKit
 
@@ -161,6 +162,14 @@ struct RootView: View {
                 .backSwipe { model.closeMods() }
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("mods.screen")
+            case .downloads:
+                DownloadsScreen(
+                    store: model.downloads,
+                    onDone: { model.closeDownloads() }
+                )
+                .backSwipe { model.closeDownloads() }
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("downloads.screen")
             case .skim:
                 SkimFlowScreen()
                     .backSwipe { model.cancelSkim() }
@@ -176,6 +185,22 @@ struct RootView: View {
             }
         }
         .animation(movesWithChrome ? transition : nil, value: model.surface)
+        // A download's progress and result ride above whatever screen is up.
+        .overlay(alignment: .bottom) {
+            if let toast = model.downloads.toast {
+                DownloadToast(
+                    toast: toast,
+                    onOpen: { model.downloads.open($0) },
+                    onDismiss: { model.downloads.dismissToast() }
+                )
+                .padding(.bottom, Self.toastBottom)
+                .transition(
+                    reduceMotion
+                        ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(transition, value: model.downloads.toast)
+        .quickLookPreview(Bindable(model.downloads).preview)
         .onChange(of: model.surface != nil) { _, present in
             guard present else { return }
             movesWithChrome = true
@@ -218,6 +243,9 @@ struct RootView: View {
     /// Drawn, but not seen: WebKit keeps drawing a page that is in the window, which a
     /// hidden or fully transparent view is not taken to be.
     private static let unseen = 0.01
+
+    /// How far the download toast floats above the screen's foot: clear of the bar.
+    private static let toastBottom: CGFloat = 96
 
     private var transition: Animation? {
         reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation
