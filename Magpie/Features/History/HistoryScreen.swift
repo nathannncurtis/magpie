@@ -11,6 +11,8 @@ struct HistoryScreen: View {
     @State private var searchText = ""
     @State private var bottomInset: CGFloat = 0
     @State private var confirmsClear = false
+    /// The delete just made, on offer for an undo.
+    @State private var undo: UndoNotice?
 
     private enum ScreenMetrics {
         static let listBottomClearance: CGFloat = 100
@@ -68,6 +70,10 @@ struct HistoryScreen: View {
         } action: {
             bottomInset = $0
         }
+        .undoNotice(
+            $undo, bottomInset: bottomInset,
+            lift: store.entries.isEmpty ? 0 : UndoNoticeMetrics.abovePill
+        )
         .ignoresSafeArea(.container, edges: .bottom)
         .confirmationDialog(
             String(localized: "Clear all history?"),
@@ -127,7 +133,11 @@ struct HistoryScreen: View {
                 }
                 .onDelete { offsets in
                     let items = group.items
-                    store.remove(offsets.compactMap { items.indices.contains($0) ? items[$0].id : nil })
+                    let removed = store.remove(
+                        offsets.compactMap { items.indices.contains($0) ? items[$0].id : nil })
+                    if !removed.isEmpty {
+                        undo = .deleted { store.reinstate(removed) }
+                    }
                 }
             }
             if !searching {

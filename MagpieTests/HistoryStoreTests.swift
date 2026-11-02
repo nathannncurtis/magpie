@@ -186,4 +186,19 @@ struct HistoryStoreTests {
         #expect(bands.map(\.title).first == "Today")
         #expect(bands.flatMap(\.items).count == 2)
     }
+
+    @Test("removed entries come back where their dates place them")
+    func reinstateEntries() {
+        let store = HistoryStore()
+        store.record(url: url("https://a.example/one"), title: "One", isPrivate: false, now: date(1))
+        store.record(url: url("https://b.example/two"), title: "Two", isPrivate: false, now: date(2))
+        store.record(url: url("https://c.example/three"), title: "Three", isPrivate: false, now: date(3))
+
+        let removed = store.remove(store.entries.filter { $0.title == "Two" }.map(\.id))
+        #expect(store.entries.map(\.title) == ["Three", "One"])
+
+        store.reinstate(removed)
+        store.reinstate(removed)
+        #expect(store.entries.map(\.title) == ["Three", "Two", "One"])
+    }
 }

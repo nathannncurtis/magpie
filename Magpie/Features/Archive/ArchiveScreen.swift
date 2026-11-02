@@ -10,6 +10,8 @@ struct ArchiveScreen: View {
 
     @State private var searchText = ""
     @State private var bottomInset: CGFloat = 0
+    /// The delete just made, on offer for an undo.
+    @State private var undo: UndoNotice?
 
     private enum ScreenMetrics {
         /// How the list's last rows keep clear of the search pill.
@@ -65,6 +67,10 @@ struct ArchiveScreen: View {
         } action: {
             bottomInset = $0
         }
+        .undoNotice(
+            $undo, bottomInset: bottomInset,
+            lift: store.archivedTabs.isEmpty ? 0 : UndoNoticeMetrics.abovePill
+        )
         .ignoresSafeArea(.container, edges: .bottom)
     }
 
@@ -117,8 +123,11 @@ struct ArchiveScreen: View {
                 }
                 .onDelete { offsets in
                     let tabs = group.tabs
-                    store.deleteArchived(
+                    let removed = store.deleteArchived(
                         offsets.compactMap { tabs.indices.contains($0) ? tabs[$0].id : nil })
+                    if !removed.isEmpty {
+                        undo = .deleted { store.reinstateArchived(removed) }
+                    }
                 }
             }
         }

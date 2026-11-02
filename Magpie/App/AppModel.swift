@@ -1296,13 +1296,21 @@ final class AppModel {
         currentSession?.retry()
     }
 
-    /// A tapped bookmark: a new tab, opened on the spot — or, for a Skim page,
-    /// the saved page back on the Skim surface.
+    /// A tapped bookmark: a tab already showing the page, if there is one; otherwise a new
+    /// tab, opened on the spot — or, for a Skim page, the saved page back on the Skim
+    /// surface.
     func openBookmark(_ url: URL, now: Date = .now) {
         if let id = SkimPageStore.pageID(forBookmarkURL: url),
             let page = skimPageStore.load(id: id)
         {
             openSkimPage(page)
+            return
+        }
+        if let id = TabMatch.existingTab(
+            for: url, in: store.tabs, isPrivate: launchIsPrivate, current: store.currentTabID)
+        {
+            surfaceBeforeBookmarks = nil
+            openTab(id, now: now)
             return
         }
         openFromLaunch(url, now: now)

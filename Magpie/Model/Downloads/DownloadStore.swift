@@ -77,6 +77,37 @@ final class DownloadStore {
         reload()
     }
 
+    /// A file just deleted: set aside in the temporary folder, where the system sweeps it
+    /// up in its own time, and put back by an undo.
+    struct Trashed: Equatable, Sendable {
+        let original: URL
+        let held: URL
+    }
+
+    /// Takes a file out of the list and off the folder, keeping it for an undo. Nil when
+    /// the file could not be moved.
+    func trash(_ file: File) -> Trashed? {
+        let holder = FileManager.default.temporaryDirectory
+            .appending(path: "MagpieDownloadsTrash", directoryHint: .isDirectory)
+            .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+        let held = holder.appending(path: file.url.lastPathComponent)
+        do {
+            try FileManager.default.createDirectory(at: holder, withIntermediateDirectories: true)
+            try FileManager.default.moveItem(at: file.url, to: held)
+        } catch {
+            return nil
+        }
+        reload()
+        return Trashed(original: file.url, held: held)
+    }
+
+    /// Brings a trashed file back, under its own name or the next free one.
+    func restore(_ trashed: Trashed) {
+        guard FileManager.default.fileExists(atPath: trashed.held.path) else { return }
+        _ = try? Self.place(trashed.held, named: trashed.original.lastPathComponent, in: directory)
+        reload()
+    }
+
     func dismissToast() {
         toastClear?.cancel()
         toast = nil

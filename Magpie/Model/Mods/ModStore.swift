@@ -338,11 +338,31 @@ final class ModStore {
         changed()
     }
 
-    /// Removes a mod, with its files.
-    func remove(id: String) {
-        guard mods.contains(where: { $0.id == id }) else { return }
+    /// A mod just removed, with its code, for an undo.
+    struct RemovedMod: Equatable {
+        let mod: InstalledMod
+        let body: String?
+    }
+
+    /// Removes a mod, with its files. Returns what an undo needs.
+    @discardableResult
+    func remove(id: String) -> RemovedMod? {
+        guard let mod = mods.first(where: { $0.id == id }) else { return nil }
+        let removed = RemovedMod(mod: mod, body: io.loadBody(for: id))
         mods.removeAll { $0.id == id }
         io.deleteBody(for: id)
+        changed()
+        return removed
+    }
+
+    /// Puts a removed mod back, code and all, in its place by install date.
+    func reinstate(_ removed: RemovedMod) {
+        guard !mods.contains(where: { $0.id == removed.mod.id }) else { return }
+        if let body = removed.body {
+            io.write(body: body, for: removed.mod.id)
+        }
+        mods.append(removed.mod)
+        mods.sort { $0.installedAt > $1.installedAt }
         changed()
     }
 
