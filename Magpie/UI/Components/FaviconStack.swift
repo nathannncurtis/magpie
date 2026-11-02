@@ -4,12 +4,12 @@ import SwiftUI
 /// Skim models carry each source as a host and no further, so every tile stands as the
 /// host's letter tile.
 ///
-/// Each tile carries a 2 pt ring in the colour behind it, so the tiles read as one
-/// stack; on a row the colour behind is the mist.
+/// Each tile carries a 2 pt ring in the color behind it, so the tiles read as one
+/// stack; on a row the color behind is the mist.
 struct FaviconStack: View {
     let hosts: [String]
     var size: CGFloat = 18
-    /// The ring around each tile, in the colour behind the stack; the mist's
+    /// The ring around each tile, in the color behind the stack; the mist's
     /// ring when none is given.
     var ring: Color? = nil
 

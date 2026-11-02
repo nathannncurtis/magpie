@@ -279,7 +279,7 @@ struct SearchSheet: View {
             }
     }
 
-    // MARK: Behaviour
+    // MARK: Behavior
 
     /// Only live suggestions carry the Skim pill; recent searches are the past, not a skim
     /// waiting to happen.
@@ -293,7 +293,7 @@ struct SearchSheet: View {
     private func arrive() {
         guard !fieldArrived else { return }
         if reduceMotion {
-            withAnimation(.easeInOut(duration: 0.2)) {
+            withAnimation(Springs.crossfade) {
                 fieldArrived = true
                 fillSettled = true
             }
@@ -302,7 +302,7 @@ struct SearchSheet: View {
         withAnimation(Springs.chrome.animation) {
             fillSettled = true
         }
-        withAnimation(.easeOut(duration: 0.2).delay(Layout.fieldDelay)) {
+        withAnimation(Springs.fadeIn.delay(Layout.fieldDelay)) {
             fieldArrived = true
         }
     }
@@ -367,7 +367,7 @@ struct SearchSheet: View {
     /// How a change among the rows plays: the chrome spring, or Reduce Motion's 200 ms
     /// crossfade.
     private var rowAnimation: Animation {
-        reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation
+        Springs.chrome.resolved(reduceMotion: reduceMotion)
     }
 
     /// A query goes to the engine; a URL goes to the site. The keyboard drops first:

@@ -5,11 +5,11 @@ import SwiftUI
 /// The artwork is traced exactly from the design asset; `size` is the side it scales into.
 struct Mark: View {
 
-    /// How the mark is coloured.
+    /// How the mark is colored.
     enum Style {
-        /// The brush in the current colour, the bead in the sheen gradient.
+        /// The brush in the current color, the bead in the sheen gradient.
         case sheen
-        /// Brush and bead both in the current colour.
+        /// Brush and bead both in the current color.
         case solid
         /// The brush alone, for small marks in pills and buttons.
         case strokeOnly
@@ -77,9 +77,9 @@ enum MarkGeometry {
         return CGAffineTransform(translationX: offsetX, y: offsetY).scaledBy(x: scale, y: scale)
     }
 
-    /// The draw-on reveal centreline from the foundations spec, mapped from its 600-unit
+    /// The draw-on reveal centerline from the foundations spec, mapped from its 600-unit
     /// space into the artwork's 512-unit space. Unused until the draw-on animation lands.
-    static func centreline() -> Path {
+    static func centerline() -> Path {
         let scale = MarkPath.units / 600
         var path = Path()
         path.move(to: CGPoint(x: 170 * scale, y: 96 * scale))

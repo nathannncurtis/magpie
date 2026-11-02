@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The mark drawing itself, over and over: the stroke reveals along its
-/// centreline, the bead drops into the dry gap, the whole mark clears, and it
+/// centerline, the bead drops into the dry gap, the whole mark clears, and it
 /// starts again (01 · the mark). Stands whole under Reduce Motion.
 struct MarkSpinner: View {
 
@@ -46,7 +46,7 @@ struct MarkSpinner: View {
             trim = 0
             beadDropped = false
             faded = false
-            withAnimation(.easeInOut(duration: Loop.draw)) {
+            withAnimation(Springs.ease(Loop.draw)) {
                 trim = 1
             }
             guard await sleep(Loop.draw) else { return }
@@ -54,7 +54,7 @@ struct MarkSpinner: View {
                 beadDropped = true
             }
             guard await sleep(Loop.hold) else { return }
-            withAnimation(.easeOut(duration: Loop.fade)) {
+            withAnimation(Springs.easeOut(Loop.fade)) {
                 faded = true
             }
             guard await sleep(Loop.fade + Loop.pause) else { return }
@@ -76,11 +76,11 @@ struct MarkSpinner: View {
 enum MarkDraw {
 
     /// The brush stroke's width in the artwork's own units: 170 units of the
-    /// foundations centreline, in the artwork's 512-unit space.
+    /// foundations centerline, in the artwork's 512-unit space.
     static let strokeWidth = 170.0 * MarkPath.units / 600
 
     /// Where the bead sits within the drawn mark, in unit coordinates, so its
-    /// drop scales about its own centre.
+    /// drop scales about its own center.
     static let beadAnchor: UnitPoint = {
         let bounds = MarkGeometry.drawnBounds
         return UnitPoint(
@@ -89,7 +89,7 @@ enum MarkDraw {
     }()
 }
 
-/// The centreline as a round-capped stroke, trimmed to how far the mark has
+/// The centerline as a round-capped stroke, trimmed to how far the mark has
 /// drawn; the mask that reveals the brush.
 struct RevealStroke: Shape {
 
@@ -98,7 +98,7 @@ struct RevealStroke: Shape {
 
     func path(in rect: CGRect) -> Path {
         let transform = MarkGeometry.transform(into: rect)
-        let line = MarkGeometry.centreline()
+        let line = MarkGeometry.centerline()
             .applying(transform)
             .trimmedPath(from: 0, to: min(max(progress, 0.001), 1))
         return line.strokedPath(

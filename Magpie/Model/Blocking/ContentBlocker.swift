@@ -179,7 +179,6 @@ final class ContentBlocker {
     }
 
     /// "Updated 2 h ago" style text for the Settings row.
-    // COPY: review
     nonisolated static func updatedText(from date: Date?, now: Date, locale: Locale? = nil) -> String {
         guard let date else { return String(localized: "Not updated yet") }
         if now.timeIntervalSince(date) < 60 { return String(localized: "Updated just now") }

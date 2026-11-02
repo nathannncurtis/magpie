@@ -11,12 +11,12 @@ Each component is one SwiftUI view in `UI/Components/`. Sizes are in points. "Da
   - `URLPill`, which grows to fill
   - `CircleButton(TabCount)`
   - `CircleButton(ellipsis)`
-- Icon colour: the page tint's readable foreground. The default is #3A2E26 on the warm tint, and the dark default is #F2F2EE.
+- Icon color: the page tint's readable foreground. The default is #3A2E26 on the warm tint, and the dark default is #F2F2EE.
 - **States:** full; **slim** while scrolling (05 · Chrome on scroll); **••• pressed**, which fills that button with `ink` at 8–10% while the menu is open.
 
 **CircleButton**: a 48 × 48 hit area (minimum 44) holding a 20 pt symbol, with no background of its own. A disabled button keeps its place and its hit area, at 45% opacity.
 
-**URLPill**: shows the host only ("quietweb.org"), in `row` medium, centred. It is 48 tall in the full bar and 30 in the slim bar, and its tap target never drops below 44 tall. A warning triangle (`exclamationmark.triangle.fill`) appears only on errors; HTTPS is assumed, so no lock ever shows. Tapping it opens search.
+**URLPill**: shows the host only ("quietweb.org"), in `row` medium, centered. It is 48 tall in the full bar and 30 in the slim bar, and its tap target never drops below 44 tall. A warning triangle (`exclamationmark.triangle.fill`) appears only on errors; HTTPS is assumed, so no lock ever shows. Tapping it opens search.
 
 **TabCount**: see 01 Icons. It shows the open-tab count. Above 99 it shows "∞".
 
@@ -45,7 +45,7 @@ The sheet's top corners are 38. On the mist it is glass; opened from a page, it 
 
 **SkimPill**
 - Capsule; padding 6 × 11; text `small` semibold reading "Skim", with a 13 pt mark.
-- Its tap target is a 44 pt band centred on the capsule, filling the row's height.
+- Its tap target is a 44 pt band centered on the capsule, filling the row's height.
 - **Resting:** white at 45%, a 1 pt `ink` 16% border, and a white inner top highlight. Dark: white at 7% with a white 18% border.
 - **Primed** (the first row, top suggestion only): solid `ink` with `onInk` text.
 - Hidden entirely when Skim is unavailable or turned off.
@@ -74,9 +74,9 @@ The sheet **hugs its content**: 14 pt between the last group and the bar, never 
 - 50 tall, padding 14, gap 12.
 - Contents: an `IconSquare`, then the label in `row`, then at the trailing end either a `Toggle` or a value plus chevron (`textSecondary`).
 - Rows, as on the board:
-  - Block ads & trackers [toggle]
-  - Block cookie banners [toggle]
-  - Archive inactive tabs [After 1 day] — the whole row opens the interval picker
+  - Ads & trackers [toggle]
+  - Cookie banners [toggle]
+  - Archive tabs after [1 day] — the whole row opens the interval picker
   - Search engine [DuckDuckGo ›]
   - Skim for me [toggle]
   - Settings [›], added 2026-10-30; this row isn't on the board yet
@@ -91,12 +91,12 @@ The sheet **hugs its content**: 14 pt between the last group and the bar, never 
 - A live snapshot of the page, radius 26, at 62% of the screen scale.
 - Ring: 5 pt of white at 38%, plus a 0.75 pt outer hairline of white at 75%, plus the soft shadow. Dark: white at 6% and 16%.
 - Above each card: a `TabLabel` (16 pt favicon plus the title in caption semibold, one line, truncated).
-- VoiceOver: the card speaks as one element (title, host, button, with a Close Tab action); the face inside is a single named element — the picture the UI tests wait on — never a bare second stop.
+- VoiceOver: the card speaks as one element (title, host, button, with a Close tab action); the face inside is a single named element — the picture the UI tests wait on — never a bare second stop.
 - Gestures:
   - fling up to close (see 05)
   - tap to open
 
-**TabStack**: cards sit side by side on the mist, 14 pt apart, with the current card centred and its neighbours peeking in from the screen edges.
+**TabStack**: cards sit side by side on the mist, 14 pt apart, with the current card centered and its neighbors peeking in from the screen edges.
 - Bottom row, inset 16 from the sides and 34 above the bottom: `ArchivedChip` ("Archived · 12") on the left, the count ("3 open", `small`, `labelOnMist`) in the middle, and `PlusButton` on the right.
 
 **ArchivedChip**: glass capsule, at least 46 tall (growing with Dynamic Type), padding 0 × 16, with an `archivebox` icon and the label in `row` semibold.
@@ -121,7 +121,7 @@ Photos come only from the source pages' `og:image` or largest article image. The
 - The title in `skimTitle` (padding 18 × 22 × 4).
 - Below it, a `FaviconStack`, then "From 3 pages · read on this phone" in `small` medium `textSecondary`.
 
-**FaviconStack**: 20 pt favicons, radius 6, overlapping by −5, each with a 2 pt ring in the page background colour.
+**FaviconStack**: 20 pt favicons, radius 6, overlapping by −5, each with a 2 pt ring in the page background color.
 
 **SkimSection**: a two-column grid, 30 and the remaining width, with gap 10, padding 0 × 22 and 14 above.
 - **Left column:** an `EmojiTile` (30 × 30, radius 9, `emojiTile` fill, 16 pt emoji).
@@ -167,7 +167,7 @@ Photos come only from the source pages' `og:image` or largest article image. The
 
 **PrimaryButtonStyle**: the one primary action, an `ink` capsule with an `onInk` label (paper in dark), pressed to 0.97. Sizes: `bar` (54 tall, full width, `buttonBar`), `sheet` (50 tall, `buttonPill`) and `compact` (hugs its label, 44 pt target). Disabled, the fill drops to `fill` and the label to `textSecondary`, which keeps 4.5:1; it never fades out. Used by Get, Install, Continue and Show search results.
 
-**FolderRow**: a 28 pt `ink` tile (radius 9) holding a `folder` line icon in `onInk`, then the name, the count and a chevron. The row is at least 44 tall. The tile is the same ink tile the Settings rows and mod icons wear; folders no longer carry their own colours.
+**FolderRow**: a 28 pt `ink` tile (radius 9) holding a `folder` line icon in `onInk`, then the name, the count and a chevron. The row is at least 44 tall. The tile is the same ink tile the Settings rows and mod icons wear; folders no longer carry their own colors.
 
 **SkimPageRow**: like ListRow, but the leading 26 pt tile is the mark on `ink` (radius 7) and the trailing element is a `FaviconStack` of its sources at 18 pt. The subtitle reads "Skim page · Kitchen".
 

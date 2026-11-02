@@ -20,8 +20,6 @@ private enum Timing {
     static let draw: TimeInterval = 0.7
     /// The hold with the mark whole.
     static let hold: TimeInterval = 0.3
-    /// Every moment under Reduce Motion.
-    static let reducedFade: TimeInterval = 0.2
     /// How long the handed-off stage lingers before it is cleared away: the chrome
     /// spring's settle, so the clear lands once nothing of the stage is left to see.
     static let stageLinger: TimeInterval = 0.9
@@ -71,7 +69,7 @@ struct LaunchIntro<Launch: View>: View {
     /// Whether the launch screen is up.
     @State private var sheetUp: Bool
     @State private var mistUp = false
-    /// How far the stroke has revealed along its centreline.
+    /// How far the stroke has revealed along its centerline.
     @State private var trim: CGFloat = 0
     @State private var beadDropped = false
     @State private var markAside = false
@@ -115,7 +113,7 @@ struct LaunchIntro<Launch: View>: View {
         .task { await run() }
         .task(id: sheetUp) {
             guard sheetUp, intro else { return }
-            await sleep(motionReduced ? Timing.reducedFade : Timing.stageLinger)
+            await sleep(motionReduced ? Springs.crossfadeDuration : Timing.stageLinger)
             markGone = true
         }
         .onDisappear { onFinished() }
@@ -141,7 +139,7 @@ struct LaunchIntro<Launch: View>: View {
         .onTapGesture(perform: skip)
     }
 
-    /// The mark drawing itself, once: the stroke revealing along its centreline, the bead
+    /// The mark drawing itself, once: the stroke revealing along its centerline, the bead
     /// dropping into its dry gap at the end, and the whole of it rising away at the
     /// hand-off.
     private var mark: some View {
@@ -183,12 +181,12 @@ struct LaunchIntro<Launch: View>: View {
             await runReduced()
             return
         }
-        withAnimation(.easeInOut(duration: Timing.mistFade)) {
+        withAnimation(Springs.ease(Timing.mistFade)) {
             mistUp = true
         }
         await sleep(Timing.mistFade)
         guard !sheetUp else { return }
-        withAnimation(.easeInOut(duration: Timing.drawBeat)) {
+        withAnimation(Springs.ease(Timing.drawBeat)) {
             trim = 1
         }
         await sleep(Timing.drawBeat)
@@ -204,10 +202,10 @@ struct LaunchIntro<Launch: View>: View {
     /// Reduce Motion: the mark whole, then the sheet crossfading in as the stage fades
     /// out.
     private func runReduced() async {
-        withAnimation(.easeInOut(duration: Timing.reducedFade)) {
+        withAnimation(Springs.crossfade) {
             mistUp = true
         }
-        await sleep(Timing.reducedFade)
+        await sleep(Springs.crossfadeDuration)
         guard !sheetUp else { return }
         trim = 1
         beadDropped = true
@@ -230,7 +228,7 @@ struct LaunchIntro<Launch: View>: View {
     /// The hand-off's own motion: the chrome spring, or Reduce Motion's crossfade — a
     /// skip under Reduce Motion is a crossfade too.
     private var handOffAnimation: Animation {
-        motionReduced ? .easeInOut(duration: Timing.reducedFade) : Springs.chrome.animation
+        Springs.chrome.resolved(reduceMotion: motionReduced)
     }
 
     /// A tap while the intro is up: straight to the hand-off.

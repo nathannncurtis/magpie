@@ -130,7 +130,7 @@ final class FlowTests: XCTestCase {
 
     /// Gives the current card's settle the seconds it may still need to land its picture,
     /// then shoots whether or not it did — a pictureless card is a finding, not a stop.
-    /// The wait is scoped inside the current card, so a neighbour's picture cannot
+    /// The wait is scoped inside the current card, so a neighbor's picture cannot
     /// satisfy it.
     private func waitForCurrentCardPicture() {
         let card = app.descendants(matching: .any)["tabs.card.current"].firstMatch

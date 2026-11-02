@@ -23,7 +23,6 @@ enum ModsCopy {
 
     /// The one line under the popular card when a directory install does not land;
     /// Get is the way to try again.
-    // COPY: review — 06 has this line to write.
     static func installFailedLine(_ name: String) -> String {
         String(localized: "\(name) didn't install. Tap Get to try again.")
     }
@@ -34,7 +33,6 @@ enum ModsCopy {
     }
 
     // The installed list's empty state.
-    // COPY: review — 06 has this line to write.
     static var emptyTitle: String { String(localized: "Nothing installed") }
     static var emptyLine: String {
         String(localized: "Mods from the directory or a link show up here.")
@@ -48,16 +46,14 @@ enum ModsCopy {
     static var pagesPermission: String { String(localized: "Read and change pages on that site") }
 
     /// The extra grants line, when a script asks for what the shim cannot honour.
-    // COPY: review — 06 has this line to write.
     static var alsoGrantsLabel: String { String(localized: "Also grants") }
     static func alsoGrantsValue(_ grants: String) -> String {
         String(localized: "\(grants) — not supported yet")
     }
 
     /// Where a script runs when only @include rules name it.
-    // COPY: review — 06 has this line to write.
     static func sitesItNames(_ patterns: String) -> String {
-        String(localized: "the sites it names: \(patterns)")
+        String(localized: "Sites it names: \(patterns)")
     }
 
     /// "Script · by l.marsh · v1.2", the install sheet's preview line.
@@ -106,7 +102,6 @@ enum ModsCopy {
         String(localized: "Magpie needs a link to a userscript (ending in .user.js) or a filter list.")
     }
 
-    // COPY: review — 06 has these lines to write.
     static var unreachableTitle: String { String(localized: "No answer from that link.") }
     static var unreachableLine: String {
         String(localized: "Check the address, or try again in a moment.")

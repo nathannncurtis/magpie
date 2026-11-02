@@ -2,11 +2,11 @@ import SwiftUI
 
 /// One soft radial blob of mist.
 private struct MistBlob: Sendable {
-    /// The blob's centre, as fractions of the drawing size.
+    /// The blob's center, as fractions of the drawing size.
     let center: CGPoint
     /// The blob's radii, as fractions of the drawing size.
     let radii: CGSize
-    /// Where the colour reaches fully clear, as a fraction of the radii.
+    /// Where the color reaches fully clear, as a fraction of the radii.
     let fade: CGFloat
     let lightHex: UInt32
     let lightOpacity: Double
@@ -107,7 +107,7 @@ private struct DriftLayer: View {
     }
 }
 
-/// Fills the context with each blob's colour, clear at the blob's fade point.
+/// Fills the context with each blob's color, clear at the blob's fade point.
 private func drawMistBlobs(
     _ blobs: [MistBlob], of scheme: ColorScheme, in context: inout GraphicsContext, size: CGSize,
     glow: Double = 1
@@ -201,10 +201,10 @@ struct MistBackground: View {
     /// Eases both drift layers between their end transforms, each on its own period.
     private func startDrift() {
         guard drifting, !reduceMotion else { return }
-        withAnimation(.easeInOut(duration: 14).repeatForever(autoreverses: true)) {
+        withAnimation(Springs.ease(14).repeatForever(autoreverses: true)) {
             fastDriftActive = true
         }
-        withAnimation(.easeInOut(duration: 18).repeatForever(autoreverses: true)) {
+        withAnimation(Springs.ease(18).repeatForever(autoreverses: true)) {
             slowDriftActive = true
         }
     }

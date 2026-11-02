@@ -124,7 +124,7 @@ struct SkimWorkingScreen: View {
 
     private func arrive() {
         guard !titleArrived else { return }
-        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : .easeOut(duration: 0.5).delay(0.4)) {
+        withAnimation(Springs.resolved(Springs.slowFadeIn.delay(0.4), reduceMotion: reduceMotion)) {
             titleArrived = true
         }
     }

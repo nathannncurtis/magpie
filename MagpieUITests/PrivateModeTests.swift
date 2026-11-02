@@ -76,7 +76,7 @@ final class PrivateModeTests: XCTestCase {
         land("private-kept") { self.element("tabs.label.private").waitForExistence(timeout: 10) }
     }
 
-    /// Every card on screen, the centred one and its neighbours.
+    /// Every card on screen, the centered one and its neighbors.
     private var cards: Int {
         element("tabs.card.current").exists
             ? 1 + app.descendants(matching: .any).matching(identifier: "tabs.card.neighbour").count : 0

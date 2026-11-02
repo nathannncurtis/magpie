@@ -14,21 +14,21 @@ enum FlingToClose {
 }
 
 /// Where every card and label sits, as pure arithmetic on the container's size: the
-/// current card centred at 62% of the container, its neighbours a stride away, peeping
+/// current card centered at 62% of the container, its neighbors a stride away, peeping
 /// in past the edges.
 enum StackLayout {
     static func stride(containerWidth: CGFloat) -> CGFloat {
         containerWidth * StackMetrics.cardScale + StackMetrics.cardGap
     }
 
-    /// The card's frame for a tab this many strides from the centred one; `drag`
+    /// The card's frame for a tab this many strides from the centered one; `drag`
     /// shifts the whole row sideways.
     static func cardFrame(offset: Int, container: CGSize, drag: CGFloat = 0) -> CGRect {
         let cardWidth = container.width * StackMetrics.cardScale
         let cardHeight = container.height * StackMetrics.cardScale
-        let centreX = container.width / 2 + CGFloat(offset) * stride(containerWidth: container.width) + drag
+        let centerX = container.width / 2 + CGFloat(offset) * stride(containerWidth: container.width) + drag
         return CGRect(
-            x: centreX - cardWidth / 2,
+            x: centerX - cardWidth / 2,
             y: container.height / 2 - cardHeight / 2,
             width: cardWidth,
             height: cardHeight)
@@ -98,21 +98,18 @@ private enum StackMetrics {
     /// The share of a stride a sideways drag must cover to move the stack by one tab.
     static let swipeFraction: CGFloat = 0.25
     /// Cards up to this far from the current one are drawn.
-    static let visibleNeighbours = 2
-    /// Neighbours slide in this long behind the current card's arrival.
-    static let neighbourDelay: TimeInterval = 0.04
-    /// How far out neighbours start when they slide in.
-    static let neighbourSlide: CGFloat = 0.5
-    /// How long a closed card takes to leave, and the crossfade under Reduce Motion.
+    static let visibleNeighbors = 2
+    /// Neighbors slide in this long behind the current card's arrival.
+    static let neighborDelay: TimeInterval = 0.04
+    /// How far out neighbors start when they slide in.
+    static let neighborSlide: CGFloat = 0.5
+    /// How long a closed card takes to leave.
     static let flightDuration: TimeInterval = 0.35
-    static let crossfadeDuration: TimeInterval = 0.2
-
-    static var crossfade: Animation { .easeInOut(duration: crossfadeDuration) }
 }
 
-/// The tab cards side by side: the current one centred, its neighbours peeking in from
+/// The tab cards side by side: the current one centered, its neighbors peeking in from
 /// the edges, labels riding above. Swipe sideways to move through the stack, fling the
-/// centred card up to close it, tap a peeking neighbour to centre it, tap the centred
+/// centered card up to close it, tap a peeking neighbor to center it, tap the centered
 /// card to open it.
 struct TabStack: View {
     let tabs: [Tab]
@@ -121,7 +118,7 @@ struct TabStack: View {
     var onOpen: (Tab.ID) -> Void
     var onClose: (Tab.ID) -> Void
     var snapshotLoader: (Tab.ID) async -> Data?
-    /// The page's own sampled colour, for the space below a short page's picture.
+    /// The page's own sampled color, for the space below a short page's picture.
     var pageBackground: (Tab.ID) -> Color? = { _ in nil }
     var namespace: Namespace.ID? = nil
 
@@ -134,8 +131,8 @@ struct TabStack: View {
     /// Counts cards flung closed, for the haptic.
     @State private var closes = 0
     @State private var snapshots: [Tab.ID: Data] = [:]
-    /// Whether the neighbours have slid in beside the current card.
-    @State private var neighboursArrived = false
+    /// Whether the neighbors have slid in beside the current card.
+    @State private var neighborsArrived = false
 
     /// The label's slot, growing with Dynamic Type the way its caption title does.
     @ScaledMetric(relativeTo: .caption) private var labelSlot: CGFloat = StackMetrics.labelSlotHeight
@@ -150,7 +147,7 @@ struct TabStack: View {
             let stack = ZStack {
                 ForEach(tabs) { tab in
                     if let index = tabs.firstIndex(where: { $0.id == tab.id }),
-                        abs(index - current) <= StackMetrics.visibleNeighbours
+                        abs(index - current) <= StackMetrics.visibleNeighbors
                     {
                         card(tab, index: index, current: current, size: size, stride: stride)
                             .transition(.opacity)
@@ -161,7 +158,7 @@ struct TabStack: View {
             }
             .contentShape(Rectangle())
             .gesture(dragGesture(size: size, stride: stride))
-            .onAppear { arriveNeighbours() }
+            .onAppear { arriveNeighbors() }
             .sensoryFeedback(.impact(weight: .light), trigger: closes)
 
             // Reduce Motion: the stack crossfades between its states instead of sliding.
@@ -173,11 +170,11 @@ struct TabStack: View {
         }
     }
 
-    /// The neighbours slide in from the sides just behind the current card's arrival.
-    private func arriveNeighbours() {
-        guard !reduceMotion, !neighboursArrived else { return }
-        withAnimation(Springs.chrome.animation.delay(StackMetrics.neighbourDelay)) {
-            neighboursArrived = true
+    /// The neighbors slide in from the sides just behind the current card's arrival.
+    private func arriveNeighbors() {
+        guard !reduceMotion, !neighborsArrived else { return }
+        withAnimation(Springs.chrome.animation.delay(StackMetrics.neighborDelay)) {
+            neighborsArrived = true
         }
     }
 
@@ -202,7 +199,7 @@ struct TabStack: View {
         }
         .accessibilityIdentifier(tab.id == currentID ? "tabs.card.current" : "tabs.card.neighbour")
         .position(
-            x: frame.midX + neighbourOffset(from: index - current, stride: stride),
+            x: frame.midX + neighborOffset(from: index - current, stride: stride),
             y: frame.midY + lift(for: tab.id)
         )
         .zIndex(Double(100 - abs(index - current)))
@@ -211,7 +208,7 @@ struct TabStack: View {
             if tab.id == currentID {
                 onOpen(tab.id)
             } else {
-                withAnimation(reduceMotion ? StackMetrics.crossfade : Springs.settle.animation) {
+                withAnimation(Springs.settle.resolved(reduceMotion: reduceMotion)) {
                     onSelect(tab.id)
                 }
             }
@@ -223,10 +220,10 @@ struct TabStack: View {
             for: id, flying: flyingID, flyOffset: flyOffset, dragging: dragCardID, drag: verticalDrag)
     }
 
-    /// How far out a card sits while the neighbours have yet to slide in.
-    private func neighbourOffset(from current: Int, stride: CGFloat) -> CGFloat {
-        guard !neighboursArrived, current != 0 else { return 0 }
-        return CGFloat(current > 0 ? 1 : -1) * stride * StackMetrics.neighbourSlide
+    /// How far out a card sits while the neighbors have yet to slide in.
+    private func neighborOffset(from current: Int, stride: CGFloat) -> CGFloat {
+        guard !neighborsArrived, current != 0 else { return 0 }
+        return CGFloat(current > 0 ? 1 : -1) * stride * StackMetrics.neighborSlide
     }
 
     /// The card as one line for VoiceOver: its title, then the site it is on. The title
@@ -312,7 +309,7 @@ struct TabStack: View {
                 predicted: value.predictedEndTranslation.width,
                 stride: stride, current: currentIndex, count: tabs.count)
             let target = currentIndex + step
-            withAnimation(reduceMotion ? StackMetrics.crossfade : Springs.settle.animation) {
+            withAnimation(Springs.settle.resolved(reduceMotion: reduceMotion)) {
                 if step != 0, tabs.indices.contains(target) {
                     let id = tabs[target].id
                     if id != currentID { onSelect(id) }
@@ -336,7 +333,7 @@ struct TabStack: View {
         {
             close(id, cardHeight: cardHeight)
         } else {
-            withAnimation(reduceMotion ? nil : Springs.settle.animation) {
+            withAnimation(Springs.settle.unlessReduced(reduceMotion: reduceMotion)) {
                 verticalDrag = 0
             }
         }
@@ -346,7 +343,7 @@ struct TabStack: View {
     private func close(_ id: Tab.ID, cardHeight: CGFloat) {
         closes += 1
         if reduceMotion {
-            withAnimation(StackMetrics.crossfade) { onClose(id) }
+            withAnimation(Springs.crossfade) { onClose(id) }
             verticalDrag = 0
             return
         }

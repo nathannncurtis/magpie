@@ -7,23 +7,23 @@ struct KeyCommands: Commands {
 
     var body: some Commands {
         CommandGroup(replacing: .newItem) {
-            Button(String(localized: "New Tab")) { model.newTabFromTabs() }
+            Button(String(localized: "New tab")) { model.newTabFromTabs() }
                 .keyboardShortcut("t")
                 .disabled(!model.canOpenNewTab)
-            Button(String(localized: "Open Location")) { model.openSearchOverPage() }
+            Button(String(localized: "Open location")) { model.openSearchOverPage() }
                 .keyboardShortcut("l")
                 .disabled(!model.isReadingPage)
-            Button(String(localized: "Close Tab")) { model.closeCurrentTab() }
+            Button(String(localized: "Close tab")) { model.closeCurrentTab() }
                 .keyboardShortcut("w")
                 .disabled(!model.isReadingPage)
         }
         CommandGroup(after: .sidebar) {
-            Button(String(localized: "Show All Tabs")) { model.showTabs() }
+            Button(String(localized: "Show all tabs")) { model.showTabs() }
                 .keyboardShortcut("\\", modifiers: [.command, .shift])
                 .disabled(!model.canShowTabsFromKeyboard)
         }
         CommandMenu(String(localized: "Page")) {
-            Button(String(localized: "Reload Page")) { model.currentSession?.retry() }
+            Button(String(localized: "Reload page")) { model.currentSession?.retry() }
                 .keyboardShortcut("r")
                 .disabled(!model.isReadingPage || model.currentSession == nil)
             Button(String(localized: "Back")) { model.currentSession?.goBack() }
@@ -32,10 +32,10 @@ struct KeyCommands: Commands {
             Button(String(localized: "Forward")) { model.currentSession?.goForward() }
                 .keyboardShortcut("]")
                 .disabled(!model.canGoForward)
-            Button(String(localized: "Find on Page")) { model.isFindingInPage = true }
+            Button(String(localized: "Find on page")) { model.isFindingInPage = true }
                 .keyboardShortcut("f")
                 .disabled(!model.isReadingPage || model.currentSession == nil)
-            Button(String(localized: "Close Search")) { model.dismissWithEscape() }
+            Button(String(localized: "Close search")) { model.dismissWithEscape() }
                 .keyboardShortcut(.escape, modifiers: [])
                 .disabled(!model.canDismissWithEscape)
         }

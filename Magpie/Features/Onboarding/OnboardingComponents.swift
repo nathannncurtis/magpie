@@ -15,7 +15,6 @@ struct PrimaryCTA: View {
 }
 
 /// The uppercase step label above the picker's question.
-// COPY: review — the boards show no step-label wording.
 struct OnboardingStepLabel: View {
     let title: String
 
