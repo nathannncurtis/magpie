@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The search field: a 1.5 pt sheen ring around an inner field that carries the text and
-/// the engine tag.
+/// the engine tag. The text finishes a typed host inline (`AddressTextField`).
 struct SearchField: View {
 
     /// Layout numbers from the search-field spec.
@@ -17,21 +17,21 @@ struct SearchField: View {
 
     @Binding var text: String
     let engineName: String
-    let focus: FocusState<Bool>.Binding
-    let onSubmit: () -> Void
+    @Binding var isFocused: Bool
+    var completion = DomainCompletion()
+    /// Whether the text the field opens with arrives selected.
+    var selectsCarriedText = false
+    /// Return, with the field's full text: a completion in progress is part of it.
+    let onSubmit: (String) -> Void
 
     var body: some View {
         HStack(spacing: Layout.contentGap) {
-            TextField("", text: $text)
-                .font(Typography.field)
-                .foregroundStyle(Palette.textPrimary)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled(false)
-                .submitLabel(.search)
-                .focused(focus)
-                .onSubmit(onSubmit)
-                .accessibilityLabel(Text(String(localized: "Search")))
-                .accessibilityIdentifier("search.field")
+            AddressTextField(
+                text: $text,
+                isFocused: $isFocused,
+                completion: completion,
+                selectsCarriedText: selectsCarriedText,
+                onSubmit: onSubmit)
             EngineTag(name: engineName)
         }
         .padding(
@@ -56,10 +56,10 @@ struct SearchField: View {
 #Preview {
     struct FieldHost: View {
         @State private var text = "seasoning car"
-        @FocusState private var focused: Bool
+        @State private var focused = false
 
         var body: some View {
-            SearchField(text: $text, engineName: "DuckDuckGo", focus: $focused, onSubmit: {})
+            SearchField(text: $text, engineName: "DuckDuckGo", isFocused: $focused, onSubmit: { _ in })
                 .padding(20)
         }
     }

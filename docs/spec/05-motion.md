@@ -42,6 +42,7 @@ Stagger lists 25–30 ms per item. Content inside a sheet starts 50 ms after the
 - **Page → card:** the page scales to 0.62 and its corner radius grows to 26 (screen) as it lands. Spring: `chrome`.
 - **Neighbours:** slide in from the sides 40 ms behind. Labels and the bottom row fade in.
 - **Close:** fling up past 30% of the height or faster than 500 pt/s. The card follows the finger, then flies off. The next card re-flows over with `settle`.
+- **Undo:** the "Closed · Undo" capsule fades in with a 12 pt rise on `chrome` and goes the same way after 4 s; the tab returns on `settle`. Under Reduce Motion both are 200 ms crossfades.
 - **Open:** the tapped card grows back to full screen with `chrome`.
 
 ### 04 · Skim finishes
