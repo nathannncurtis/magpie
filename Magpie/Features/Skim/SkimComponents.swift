@@ -89,7 +89,6 @@ struct SkimControlBar: View {
     let shareURL: URL?
 
     private enum Layout {
-        static let height = Metrics.Bar.skimControlHeight
         static let markSize: CGFloat = 18
         static let digGap: CGFloat = 9
         static let leadingPadding: CGFloat = 18
@@ -97,6 +96,14 @@ struct SkimControlBar: View {
     }
 
     var body: some View {
+        FloatingBar(surface: .glass(interactive: true)) {
+            row
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("skim.controlBar")
+    }
+
+    private var row: some View {
         HStack(spacing: 0) {
             if canDigDeeper {
                 Button(action: onDigDeeper) {
@@ -119,11 +126,6 @@ struct SkimControlBar: View {
         }
         .padding(.leading, canDigDeeper ? Layout.leadingPadding : Layout.trailingPadding)
         .padding(.trailing, Layout.trailingPadding)
-        .frame(minHeight: Layout.height)  // grows with Dynamic Type
-        .frame(maxWidth: .infinity)
-        .glassEffect(.regular.interactive(), in: .capsule)
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("skim.controlBar")
     }
 
     @ViewBuilder

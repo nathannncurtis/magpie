@@ -46,7 +46,7 @@ struct MenuSheet: View {
     var skimOffered: Bool = true
     /// Where the pinned row's bottom edge sits above the screen bottom: the floating
     /// bar's own, so the row never moves as the glass grows around it.
-    var barBottomEdge: CGFloat = 26
+    var barBottomEdge: CGFloat = Metrics.Spacing.barBottomEdgeMin
     /// Names the sheet's glass shape so it and the bar's are one piece of glass.
     var morphNamespace: Namespace.ID? = nil
 
@@ -362,6 +362,9 @@ struct MenuSheet: View {
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .padding(.leading, 4)
         .padding(.trailing, 5)
+        // The same width cap as the bar, so the row never moves as the glass grows.
+        .frame(maxWidth: Metrics.Bar.maxWidth)
+        .frame(maxWidth: .infinity)
         .padding(.horizontal, Metrics.Menu.barRowSideInset - 4)
         .padding(.top, Metrics.Menu.barRowTopPadding)
         .padding(.bottom, barBottomEdge)

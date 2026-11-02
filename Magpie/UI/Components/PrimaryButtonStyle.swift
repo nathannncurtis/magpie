@@ -4,7 +4,7 @@ import SwiftUI
 /// sheet's Install, onboarding's Continue and Skim failed's "Show search results" all
 /// wear it, in the size that fits their place.
 ///
-/// Disabled, it drops to the quiet fill with secondary text, which holds 4.5:1 in both
+/// Disabled, it drops to `fillDisabled` with secondary text, which holds 4.5:1 in both
 /// appearances; fading the ink out would leave the label unreadable.
 struct PrimaryButtonStyle: ButtonStyle {
 
@@ -31,7 +31,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             .padding(.vertical, size == .compact ? 6 : 0)
             .frame(maxWidth: size == .compact ? nil : .infinity)
             .frame(minHeight: minHeight)
-            .background(isEnabled ? AnyShapeStyle(Palette.ink) : AnyShapeStyle(Palette.fill), in: .capsule)
+            .background(isEnabled ? AnyShapeStyle(Palette.ink) : AnyShapeStyle(Palette.fillDisabled), in: .capsule)
             // The capsule keeps its size; a compact one's target meets the 44 pt least.
             .frame(
                 minWidth: size == .compact ? Metrics.tapTarget : nil,

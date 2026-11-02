@@ -119,25 +119,18 @@ struct ReadingBar: View {
     }
 
     var body: some View {
-        namedGlass
-            .padding(.horizontal, sideInset)
-            .frame(maxWidth: .infinity)
-            // The bar grows with the type size to a deliberate stop: past the first
-            // accessibility size it would stop being a bar.
-            .dynamicTypeSize(...DynamicTypeSize.accessibility1)
-    }
-
-    /// The capsule, named for morphing when a namespace is given.
-    @ViewBuilder
-    private var namedGlass: some View {
-        if let glassNamespace {
-            capsule.glassEffectID(ChromeGlassID.chrome, in: glassNamespace)
-        } else {
-            capsule
+        FloatingBar(
+            surface: .glass(tint: tint), height: height, sideInset: sideInset,
+            glassNamespace: glassNamespace
+        ) {
+            content
         }
+        // The bar grows with the type size to a deliberate stop: past the first
+        // accessibility size it would stop being a bar.
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
     }
 
-    private var capsule: some View {
+    private var content: some View {
         HStack(spacing: 0) {
             side {
                 CircleButton(systemName: "chevron.backward", action: onBack)
@@ -163,12 +156,10 @@ struct ReadingBar: View {
         }
         .padding(.leading, 4)
         .padding(.trailing, 5)
-        .frame(height: height)
         .frame(maxWidth: .infinity)
         .foregroundStyle(ReadableForeground.foreground(for: tint, scheme: colorScheme))
         .contentShape(.capsule)
         .modifier(BarSwipeGesture(handlers: swipe))
-        .glassEffect(.regular.tint(tint), in: .capsule)
     }
 
     /// Wraps a side button: it fades as the bar slims, and its slot folds away only

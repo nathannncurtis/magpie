@@ -35,12 +35,10 @@ struct TabsScreen: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private enum ScreenMetrics {
-        /// The bottom row's inset from the sides.
-        static let rowInset: CGFloat = 16
         /// How long the undo stays up.
         static let undoDuration: Duration = .seconds(4)
         /// The undo capsule's gap above the bottom row.
-        static let undoLift: CGFloat = 46 + 14
+        static let undoLift: CGFloat = Metrics.Bar.height + Metrics.Spacing.insetFloating
         /// The switch's width and its gap under the status bar.
         static let switchWidth: CGFloat = 220
         static let switchTop: CGFloat = 8
@@ -68,7 +66,7 @@ struct TabsScreen: View {
                 .padding(.top, ScreenMetrics.switchTop)
                 .frame(maxHeight: .infinity, alignment: .top)
             bottomRow
-                .padding(.bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset))
+                .floatingBarBottomEdge(safeAreaBottom: bottomInset)
             if let closedNotice {
                 UndoCapsule {
                     withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.settle.animation) {
@@ -173,35 +171,38 @@ struct TabsScreen: View {
         }
     }
 
+    /// The chip, the centred +, then the open count: the same three slots as Launch.
     private var bottomRow: some View {
-        HStack {
-            ArchivedChip(count: store.archivedTabs.count, action: onShowArchive)
-                .accessibilityIdentifier("tabs.archive")
-            Spacer()
-            Text(TabsCopy.openCount(tabs.count))
-                .font(Typography.small)
-                .foregroundStyle(Palette.labelOnMist)
-                .accessibilityIdentifier("tabs.openCount")
-            Spacer()
-            // The + follows the mode; the long press offers the other kind.
-            PlusButton(action: isPrivateMode ? onNewPrivateTab : onNewTab)
-                .contextMenu {
-                    Button(action: isPrivateMode ? onNewTab : onNewPrivateTab) {
-                        if isPrivateMode {
-                            Label(String(localized: "New tab"), systemImage: "plus")
-                        } else {
-                            Label(String(localized: "New private tab"), systemImage: "eye.slash")
+        FloatingBar {
+            FloatingBarSlots {
+                ArchivedChip(count: store.archivedTabs.count, action: onShowArchive)
+                    .accessibilityIdentifier("tabs.archive")
+            } centre: {
+                // The + follows the mode; the long press offers the other kind.
+                PlusButton(action: isPrivateMode ? onNewPrivateTab : onNewTab)
+                    .contextMenu {
+                        Button(action: isPrivateMode ? onNewTab : onNewPrivateTab) {
+                            if isPrivateMode {
+                                Label(String(localized: "New tab"), systemImage: "plus")
+                            } else {
+                                Label(String(localized: "New private tab"), systemImage: "eye.slash")
+                            }
                         }
                     }
-                }
-                .accessibilityAction(
-                    named: Text(
-                        isPrivateMode
-                            ? String(localized: "New tab") : String(localized: "New private tab")),
-                    isPrivateMode ? onNewTab : onNewPrivateTab
-                )
-                .accessibilityIdentifier("tabs.plus")
+                    .accessibilityAction(
+                        named: Text(
+                            isPrivateMode
+                                ? String(localized: "New tab") : String(localized: "New private tab")),
+                        isPrivateMode ? onNewTab : onNewPrivateTab
+                    )
+                    .accessibilityIdentifier("tabs.plus")
+            } trailing: {
+                Text(TabsCopy.openCount(tabs.count))
+                    .font(Typography.small)
+                    .foregroundStyle(Palette.labelOnMist)
+                    .lineLimit(1)
+                    .accessibilityIdentifier("tabs.openCount")
+            }
         }
-        .padding(.horizontal, ScreenMetrics.rowInset)
     }
 }

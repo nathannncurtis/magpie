@@ -26,6 +26,10 @@ struct ArchivedChip: View {
                     .imageScale(.medium)
                 Text(TabsCopy.archived(count))
                     .font(Typography.rowTitle)
+                    // Never wraps: on a narrow or folded width the row gives way, the
+                    // chip doesn't.
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
             }
             .foregroundStyle(Palette.textPrimary)
             .padding(.horizontal, ChipMetrics.horizontalPadding)

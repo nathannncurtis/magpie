@@ -42,7 +42,6 @@ struct LaunchScreen: View {
 
     private enum Layout {
         static let markSize: CGFloat = 96
-        static let rowInset: CGFloat = 16
     }
 
     var body: some View {
@@ -122,30 +121,29 @@ struct LaunchScreen: View {
                 .foregroundStyle(Palette.textPrimary)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .accessibilityHidden(true)
-            // Three equal columns, so the + holds the centre whatever the chip's width.
-            HStack(spacing: 0) {
-                ArchivedChip(count: archivedCount, action: onShowArchive)
-                    .accessibilityIdentifier("launch.archive")
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                PlusButton(action: { unfold(onNewTab) })
-                    .contextMenu {
-                        Button(action: { unfold(onNewPrivateTab) }) {
-                            Label(String(localized: "New private tab"), systemImage: "eye.slash")
+            FloatingBar {
+                FloatingBarSlots {
+                    ArchivedChip(count: archivedCount, action: onShowArchive)
+                        .accessibilityIdentifier("launch.archive")
+                } centre: {
+                    PlusButton(action: { unfold(onNewTab) })
+                        .contextMenu {
+                            Button(action: { unfold(onNewPrivateTab) }) {
+                                Label(String(localized: "New private tab"), systemImage: "eye.slash")
+                            }
                         }
-                    }
-                    .accessibilityAction(named: Text(String(localized: "New private tab"))) {
-                        unfold(onNewPrivateTab)
-                    }
-                    .accessibilityIdentifier("launch.plus")
-                    .frame(maxWidth: .infinity)
-                CircleButton(systemName: "gearshape", action: onShowSettings)
-                    .foregroundStyle(Palette.textPrimary)
-                    .accessibilityLabel(Text(String(localized: "Settings")))
-                    .accessibilityIdentifier("launch.settings")
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                        .accessibilityAction(named: Text(String(localized: "New private tab"))) {
+                            unfold(onNewPrivateTab)
+                        }
+                        .accessibilityIdentifier("launch.plus")
+                } trailing: {
+                    CircleButton(systemName: "gearshape", action: onShowSettings)
+                        .foregroundStyle(Palette.textPrimary)
+                        .accessibilityLabel(Text(String(localized: "Settings")))
+                        .accessibilityIdentifier("launch.settings")
+                }
             }
-            .padding(.horizontal, Layout.rowInset)
-            .padding(.bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset))
+            .floatingBarBottomEdge(safeAreaBottom: bottomInset)
         }
         .ignoresSafeArea(edges: .bottom)
     }

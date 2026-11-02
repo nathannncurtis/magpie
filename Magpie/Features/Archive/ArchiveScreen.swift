@@ -48,11 +48,7 @@ struct ArchiveScreen: View {
                     placeholder: String(localized: "Search archived tabs"),
                     text: $searchText
                 )
-                .padding(.horizontal, Metrics.Spacing.insetFloating)
-                .readableWidth()
-                .padding(
-                    .bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset)
-                )
+                .floatingBarBottomEdge(safeAreaBottom: bottomInset)
                 // The pill runs on behind the keys; the padding above, read off the safe
                 // area, is what lifts it onto them.
                 .ignoresSafeArea(.keyboard, edges: .bottom)
