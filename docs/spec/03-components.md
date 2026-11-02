@@ -152,12 +152,22 @@ Photos come only from the source pages' `og:image` or largest article image. The
 - Contents: a 26 pt favicon (radius 7), then a two-line block (the title in `row` semibold, one line; the subtitle in `small` `textOnMistSecondary`), then a trailing time in `small`.
 - Rows sit directly on the mist. Separators are `separatorOnMist`, inset to the text.
 
-**DayHeader**: the `label` style in `labelOnMist`: "YESTERDAY", "EARLIER THIS WEEK".
+**ScreenHeader**: the head of every secondary screen (Archive, Bookmarks, Mods, Settings and its pages, the Skim page and Skim failed).
+- A 36 pt control row, sides `insetList`: a leading slot (Back chevron, Edit/Save, or empty) and a trailing slot (Done, or empty). Every control is a 44 pt target (`Metrics.tapTarget`) that spills 4 pt past the row, and every Done, Edit, Save and Back label is `buttonPill`.
+- Under the row, the title in `screenTitle`, 2 pt below it, 10 pt above what follows, `insetList` at the sides, inside `readableWidth()`. It sits at the same height on every screen. The Skim screens carry the row alone, with Done on a glass capsule over the page.
+- Done leaves the screen, as the back swipe does.
 
-**FolderRow**: a 28 × 24 folder glyph tinted per folder, then the name, the count and a chevron. The row is at least 44 tall. Each folder glyph is a two-tone tinted folder (back panel dark, front panel light). The user picks a tint from 6 presets. Defaults, as on the board (dark / light):
-- Kitchen: orange #F08A2A / #FFC27A
-- Reading: blue #2F6BDF / #7FB0FA
-- Work: sage #5E7550 / #9FB38E
+**SectionLabel**: the `label` style in `labelOnMist`, at the `insetList` inset: "YESTERDAY", "EARLIER THIS WEEK", "SEARCH". The one section label on every list screen.
+
+**GroupedBox**: inset 16 from the sides, radius 20, `.regularMaterial` with a 0.75 pt hairline (`groupedSurface()`). Settings groups, the default-browser card, the featured mod card and the mod cards wear it. Archive and Bookmarks stay as flat rows on the mist. A flat row's divider is inset by the same amount at both ends.
+
+**RowSeparator**: the 0.5 pt `separatorOnMist` hairline between flat rows.
+
+**Icons**: inline symbols take `Typography.icon(.small | .regular | .large)`: 15, 18 and 22 pt, medium weight, scaling with Dynamic Type.
+
+**PrimaryButtonStyle**: the one primary action, an `ink` capsule with an `onInk` label (paper in dark), pressed to 0.97. Sizes: `bar` (54 tall, full width, `buttonBar`), `sheet` (50 tall, `buttonPill`) and `compact` (hugs its label, 44 pt target). Disabled, the fill drops to `fill` and the label to `textSecondary`, which keeps 4.5:1; it never fades out. Used by Get, Install, Continue and Show search results.
+
+**FolderRow**: a 28 pt `ink` tile (radius 9) holding a `folder` line icon in `onInk`, then the name, the count and a chevron. The row is at least 44 tall. The tile is the same ink tile the Settings rows and mod icons wear; folders no longer carry their own colours.
 
 **SkimPageRow**: like ListRow, but the leading 26 pt tile is the mark on `ink` (radius 7) and the trailing element is a `FaviconStack` of its sources at 18 pt. The subtitle reads "Skim page · Kitchen".
 
@@ -171,20 +181,20 @@ Photos come only from the source pages' `og:image` or largest article image. The
 
 **SegmentedControl**: glass capsule, 38 tall, inset 3 inside the capsule. Segments: "Directory" and "Installed · N". The selected segment is solid `card` with a small shadow (dark: white at 16%). Each segment's tap target is at least 44 tall, standing taller than the track itself.
 
-**FeaturedModCard**: solid card, radius 24.
+**FeaturedModCard**: a `GroupedBox`-surface card, radius 20.
 - On top, a 150 pt preview showing what the mod does. For Google Answer Box, this is the drawn mini Google result with the answer card ringed.
 - Below the preview, a `ModMeta` row.
 
 **ModRow**: a grid of 44, the remaining width and an auto column, with gap 12 and padding 11 × 0.
 - Contents:
-  - a `ModIcon` (44, radius 12, a drawn glyph on a gradient)
+  - a `ModIcon` (44, radius 12, an `onInk` glyph on an `ink` tile)
   - the name in `row` semibold
   - the description in `meta` `textSecondary`
   - the author line in `tag` `textTertiary` ("script · s.okafor")
   - a trailing `GetButton` or `InstalledCheck`
-- Rows are grouped in a solid card with radius 24.
+- Rows are grouped in a `GroupedBox` (radius 20), hairlines between them.
 
-**GetButton**: a capsule with padding 6 × 16, reading "Get" in `meta` bold `teal` on a #EEF0EE fill (dark: white at 10% fill, #5EEAD4 text). The capsule carries an invisible 44 pt target.
+**GetButton**: the compact primary button, reading "Get" in `buttonPill` `onInk` on `ink`, padding 6 × 16. The capsule carries an invisible 44 pt target.
 
 **InstalledCheck**: a 30 pt `sheen` circle with an `onSheen` checkmark. It pops with the snap spring (05) when an install lands — on a directory row or the featured card — and stays still on a revisit.
 
@@ -200,12 +210,12 @@ Photos come only from the source pages' `og:image` or largest article image. The
 - **Selected:** a 2 pt `ink` ring, a 22 pt `ink` check badge at top right, and a more opaque fill.
 - **Other tile:** no glass, just a 1 pt `ink` 14% outline and a generic icon on a `fill` square.
 
-**PrimaryCTA**: an ink glass capsule, 54 tall, full width minus 32, with semibold text that scales with Dynamic Type. In dark it is paper.
+**PrimaryCTA**: the primary button in its `bar` size: 54 tall, full width minus 32, with semibold text that scales with Dynamic Type. In dark it is paper. Disabled, it reads in the quiet fill, not faded.
 
 ## Settings
 
-**SettingsGroup**: inset 16 from the sides, radius 20, `.regularMaterial` with a 0.75 pt white inner hairline. Its rows are `MenuRow`s at 46 tall.
+**Settings groups**: a `GroupedBox`. Its rows are `MenuRow`s at 46 tall.
 
-**DefaultBrowserCard**: a SettingsGroup-styled card that reads "Make Magpie your default browser" / "Links from other apps open here. Set in iOS Settings." with a trailing ink "Open" capsule.
+**DefaultBrowserCard**: a card in the `GroupedBox` surface that reads "Make Magpie your default browser" / "Links from other apps open here. Set in iOS Settings." with a trailing ink "Open" capsule.
 - The "Open" button calls `UIApplication.openDefaultApplicationsSettingsURLString`.
 - The card is shown only until Magpie is the default browser; check with `UIApplication.shared.isDefault(.webBrowser)`, again whenever the app returns to the foreground.

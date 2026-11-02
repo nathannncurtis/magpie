@@ -18,25 +18,21 @@ struct EmptyListState: View {
         /// 96 pt) with room to spare, for when the keys leave only a short height and
         /// the share alone would tuck the block against the title.
         static let minTop: CGFloat = 124
-        static let icon: CGFloat = 34
         static let titleGap: CGFloat = 8
         static let messageGap: CGFloat = 6
         static let sideInset: CGFloat = 40
     }
 
-    /// The title's size, scaling with Dynamic Type.
-    @ScaledMetric(relativeTo: .headline) private var titleSize: CGFloat = 16
-
     var body: some View {
         GeometryReader { geo in
             VStack(spacing: EmptyMetrics.messageGap) {
                 Image(systemName: icon)
-                    .font(.system(size: EmptyMetrics.icon, weight: .medium))
+                    .font(.largeTitle.weight(.regular))
                     .foregroundStyle(Palette.labelOnMist)
                     .padding(.bottom, EmptyMetrics.titleGap - EmptyMetrics.messageGap)
                     .accessibilityHidden(true)
                 Text(title)
-                    .font(.system(size: titleSize, weight: .semibold))
+                    .font(Typography.emptyTitle)
                     .foregroundStyle(Palette.textPrimary)
                     .multilineTextAlignment(.center)
                 Text(message)

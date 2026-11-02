@@ -31,20 +31,13 @@ struct DefaultBrowserCard: View {
                     )
                     // The capsule keeps its size; the target around it meets the 44 pt
                     // least.
-                    .frame(minWidth: 44, minHeight: 44)
+                    .frame(minWidth: Metrics.tapTarget, minHeight: Metrics.tapTarget)
                     .contentShape(.rect)
                     .accessibilityIdentifier("settings.defaultBrowser.open")
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            .background(
-                .regularMaterial,
-                in: RoundedRectangle(cornerRadius: Metrics.Radius.boxGrouped, style: .continuous)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: Metrics.Radius.boxGrouped, style: .continuous)
-                    .strokeBorder(Palette.groupHairline, lineWidth: 0.75)
-            )
+            .groupedSurface()
             .padding(.horizontal, Metrics.Spacing.insetList)
             .accessibilityIdentifier("settings.defaultBrowser")
             .task { refresh() }

@@ -3,7 +3,8 @@ import Foundation
 /// Groups archived tabs into the list's day bands: Today, Yesterday, Earlier this week,
 /// then one band per month, newest first; a month outside the current year carries its
 /// year ("October 2025"), one inside it doesn't ("October"). Rows are grouped and timed
-/// by when the tab was last read, so the archive reads like a history of being there.
+/// by when the tab was last read, so the archive reads like a history of being there. A row's
+/// date follows the same rule as a month band: the current year is never named.
 enum ArchiveGrouping {
 
     /// One band of the list, holding its rows.
@@ -81,6 +82,11 @@ enum ArchiveGrouping {
         }
         if day >= startOfWeek {
             return date.formatted(Date.FormatStyle.dateTime.weekday(.abbreviated).in(calendar))
+        }
+        // The current year is understood: "Sep 30", never "Sep 30, 2026".
+        if calendar.isDate(date, equalTo: now, toGranularity: .year) {
+            return date.formatted(
+                Date.FormatStyle.dateTime.month(.abbreviated).day().in(calendar))
         }
         return date.formatted(
             Date.FormatStyle(date: .abbreviated, time: .omitted).in(calendar))

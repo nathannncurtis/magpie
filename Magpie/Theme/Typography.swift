@@ -72,10 +72,8 @@ enum Typography {
 
     /// The lowercase wordmark.
     static var wordmark: Font { FrauncesFace.font(46, relativeTo: .largeTitle) }
-    /// Screen headers: Archive, Bookmarks, Settings, the onboarding question.
+    /// Screen headers: Archive, Bookmarks, Mods, Settings, the onboarding question.
     static var screenTitle: Font { FrauncesFace.font(30, relativeTo: .largeTitle) }
-    /// Screen headers set at the lower end of the 28-30 band, such as Mods.
-    static var screenTitleSmall: Font { FrauncesFace.font(28, relativeTo: .largeTitle) }
     /// The Skim page title.
     static var skimTitle: Font { FrauncesFace.font(32, relativeTo: .largeTitle) }
     /// The Skim page title on the no-photo tier, at 40 pt.
@@ -109,6 +107,23 @@ enum Typography {
     static let buttonPill = Font.subheadline.weight(.semibold)
     /// A menu tile's label.
     static let tileLabel = Font.caption.weight(.semibold)
+    /// The title of an empty list's quiet block. Scales with Dynamic Type.
+    static let emptyTitle = Font.callout.weight(.semibold)
+
+    // MARK: Icons
+
+    /// The three sizes an inline symbol takes.
+    enum IconSize: CGFloat {
+        case small = 15
+        case regular = 18
+        case large = 22
+    }
+
+    /// An inline symbol's font: medium weight, scaling with Dynamic Type.
+    static func icon(_ size: IconSize) -> Font {
+        let scaled = UIFontMetrics(forTextStyle: .body).scaledValue(for: size.rawValue)
+        return .system(size: scaled, weight: .medium)
+    }
 
     // MARK: Tracking and line spacing
 

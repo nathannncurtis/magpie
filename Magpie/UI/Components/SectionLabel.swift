@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// An uppercase section label over a group of list rows: "YESTERDAY", "EARLIER THIS WEEK".
-struct DayHeader: View {
+/// An uppercase section label over a group of rows or a box: "YESTERDAY", "SEARCH",
+/// "RECENTLY ADDED". Every list screen uses this one, at the list inset.
+struct SectionLabel: View {
     let title: String
 
     var body: some View {
@@ -11,7 +12,7 @@ struct DayHeader: View {
             .textCase(.uppercase)
             .foregroundStyle(Palette.labelOnMist)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.leading, Metrics.Spacing.insetList)
+            .padding(.horizontal, Metrics.Spacing.insetList)
             .padding(.top, Metrics.Spacing.gapSectionTop)
             .padding(.bottom, Metrics.Spacing.gapSectionBottom)
             .accessibilityAddTraits(.isHeader)
@@ -19,6 +20,5 @@ struct DayHeader: View {
 }
 
 #Preview {
-    DayHeader(title: "Yesterday")
-        .padding(.horizontal, 16)
+    SectionLabel(title: "Yesterday")
 }

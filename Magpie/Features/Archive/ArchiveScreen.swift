@@ -12,16 +12,8 @@ struct ArchiveScreen: View {
     @State private var bottomInset: CGFloat = 0
 
     private enum ScreenMetrics {
-        /// The nav row at the head of the screen.
-        static let navHeight: CGFloat = 36
-        static let navLeading: CGFloat = 16
-        static let navTrailing: CGFloat = 18
-        static let titleTop: CGFloat = 2
-        static let titleBottom: CGFloat = 10
         /// How the list's last rows keep clear of the search pill.
         static let listBottomClearance: CGFloat = 100
-        /// The least a control measures, so a tap never lands on less.
-        static let tapTarget: CGFloat = 44
     }
 
     private var now: Date { Date() }
@@ -40,15 +32,9 @@ struct ArchiveScreen: View {
             MistBackground()
                 .ignoresSafeArea()
             VStack(spacing: 0) {
-                navRow
-                Text(String(localized: "Archive"))
-                    .font(Typography.screenTitle)
-                    .foregroundStyle(Palette.textPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, Metrics.Spacing.insetList)
-                    .padding(.top, ScreenMetrics.titleTop)
-                    .padding(.bottom, ScreenMetrics.titleBottom)
-                    .accessibilityIdentifier("archive.title")
+                ScreenHeader(
+                    title: String(localized: "Archive"), titleID: "archive.title",
+                    trailing: { HeaderDoneButton(id: "archive.done", action: onDone) })
                 if !store.archivedTabs.isEmpty && !archived.isEmpty {
                     list
                 }
@@ -111,31 +97,10 @@ struct ArchiveScreen: View {
         .accessibilityIdentifier("archive.results.empty")
     }
 
-    private var navRow: some View {
-        HStack {
-            Spacer()
-            Button(action: onDone) {
-                Text(String(localized: "Done"))
-                    .frame(
-                        minWidth: ScreenMetrics.tapTarget,
-                        minHeight: ScreenMetrics.tapTarget,
-                        alignment: .trailing
-                    )
-                    .contentShape(.rect)
-            }
-            .font(Typography.buttonPill)
-            .foregroundStyle(Palette.textPrimary)
-            .accessibilityIdentifier("archive.done")
-        }
-        .padding(.leading, ScreenMetrics.navLeading)
-        .padding(.trailing, ScreenMetrics.navTrailing)
-        .frame(minHeight: ScreenMetrics.navHeight)
-    }
-
     private var list: some View {
         List {
             ForEach(groups, id: \.title) { group in
-                DayHeader(title: group.title)
+                SectionLabel(title: group.title)
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
@@ -184,10 +149,7 @@ private struct ArchiveRow: View {
         .padding(.horizontal, Metrics.Spacing.insetList)
         .overlay(alignment: .top) {
             if showsSeparator {
-                Rectangle()
-                    .fill(Palette.separatorOnMist)
-                    .frame(height: 0.5)
-                    .padding(.leading, SeparatorMetrics.inset)
+                RowSeparator(inset: SeparatorMetrics.inset)
             }
         }
         .rowPress(perform: onRestore)

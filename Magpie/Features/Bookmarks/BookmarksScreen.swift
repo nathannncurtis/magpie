@@ -6,7 +6,7 @@ import SwiftUI
 struct BookmarksScreen: View {
     let store: BookmarkStore
     var onOpen: (URL) -> Void
-    /// A swipe back off the top level: whatever was up before the bookmarks.
+    /// Done, or a swipe back off the top level: whatever was up before the bookmarks.
     var onClose: () -> Void = {}
 
     @State private var searchText = ""
@@ -19,15 +19,7 @@ struct BookmarksScreen: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private enum ScreenMetrics {
-        static let navHeight: CGFloat = 36
-        static let navLeading: CGFloat = 16
-        static let navTrailing: CGFloat = 18
-        static let titleTop: CGFloat = 2
-        static let titleBottom: CGFloat = 10
         static let listBottomClearance: CGFloat = 100
-        static let backIcon: CGFloat = 20
-        /// The least a control measures, so a tap never lands on less.
-        static let tapTarget: CGFloat = 44
         /// A folder row's text leading edge: the glyph and the gap after it.
         static let folderSeparatorInset: CGFloat = 28 + 12
     }
@@ -158,7 +150,10 @@ struct BookmarksScreen: View {
 
     private var mainContent: some View {
         VStack(spacing: 0) {
-            navRow(leading: editButton, title: String(localized: "Bookmarks"))
+            ScreenHeader(
+                title: String(localized: "Bookmarks"), titleID: "bookmarks.title",
+                leading: { editButton },
+                trailing: { HeaderDoneButton(id: "bookmarks.done", action: onClose) })
             if listShown {
                 list
             }
@@ -204,7 +199,7 @@ struct BookmarksScreen: View {
     @ViewBuilder
     private var folderRows: some View {
         if !store.folders.isEmpty || editing {
-            DayHeader(title: String(localized: "Folders"))
+            SectionLabel(title: String(localized: "Folders"))
                 .listRow()
         }
         if editing {
@@ -213,7 +208,7 @@ struct BookmarksScreen: View {
         }
         ForEach(Array(store.folders.enumerated()), id: \.element.id) { index, folder in
             FolderRow(
-                name: folder.name, tint: folder.tint,
+                name: folder.name,
                 count: store.count(inFolder: folder.id)
             )
             .padding(.horizontal, Metrics.Spacing.insetList)
@@ -239,7 +234,7 @@ struct BookmarksScreen: View {
 
     @ViewBuilder
     private var bookmarkRows: some View {
-        DayHeader(
+        SectionLabel(
             title: searching ? String(localized: "Results") : String(localized: "Recently added")
         )
         .listRow()
@@ -266,7 +261,7 @@ struct BookmarksScreen: View {
     private var newFolderRow: some View {
         HStack(spacing: 12) {
             Image(systemName: "plus")
-                .font(.system(size: 16, weight: .medium))
+                .font(Typography.icon(.small))
                 .foregroundStyle(Palette.teal)
             Text(String(localized: "New folder"))
                 .font(Typography.rowTitle)
@@ -275,7 +270,7 @@ struct BookmarksScreen: View {
         }
         .padding(.vertical, 8)
         .padding(.horizontal, Metrics.Spacing.insetList)
-        .frame(minHeight: ScreenMetrics.tapTarget)
+        .frame(minHeight: Metrics.tapTarget)
         .rowPress { store.addDefaultFolder() }
         .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("bookmarks.newFolder")
@@ -294,7 +289,10 @@ struct BookmarksScreen: View {
 
     private func folderDetail(_ folder: BookmarkFolder) -> some View {
         VStack(spacing: 0) {
-            navRow(leading: backButton, title: folder.name)
+            ScreenHeader(
+                title: folder.name, titleID: "bookmarks.folder.title",
+                leading: { HeaderBackButton(id: "bookmarks.folder.back") { openFolderID = nil } },
+                trailing: { HeaderDoneButton(id: "bookmarks.done", action: onClose) })
             let bookmarks = store.bookmarks(inFolder: folder.id)
             if !bookmarks.isEmpty {
                 List {
@@ -327,59 +325,17 @@ struct BookmarksScreen: View {
 
     // MARK: Chrome
 
-    /// The nav row: a button at the top left and the screen title under it.
-    private func navRow(leading: some View, title: String) -> some View {
-        VStack(spacing: 0) {
-            HStack {
-                leading
-                Spacer()
-            }
-            .frame(minHeight: ScreenMetrics.navHeight)
-            .padding(.leading, ScreenMetrics.navLeading)
-            .padding(.trailing, ScreenMetrics.navTrailing)
-            Text(title)
-                .font(Typography.screenTitle)
-                .foregroundStyle(Palette.textPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, Metrics.Spacing.insetList)
-                .padding(.top, ScreenMetrics.titleTop)
-                .padding(.bottom, ScreenMetrics.titleBottom)
-                .lineLimit(1)
-        }
-    }
-
+    /// Edit at the top left; while editing it reads Save, so it never shares a name with
+    /// the Done that leaves the screen.
     private var editButton: some View {
-        Button(
-            action: {
-                withAnimation(reduceMotion ? Springs.smooth : Springs.settle.animation) {
-                    editing.toggle()
-                }
-            }
+        HeaderTextButton(
+            title: editing ? String(localized: "Save") : String(localized: "Edit"),
+            edge: .leading, id: "bookmarks.edit"
         ) {
-            Text(editing ? String(localized: "Done") : String(localized: "Edit"))
-                .frame(
-                    minWidth: ScreenMetrics.tapTarget,
-                    minHeight: ScreenMetrics.tapTarget,
-                    alignment: .leading
-                )
-                .contentShape(.rect)
+            withAnimation(reduceMotion ? Springs.smooth : Springs.settle.animation) {
+                editing.toggle()
+            }
         }
-        .font(Typography.buttonPill)
-        .foregroundStyle(Palette.textPrimary)
-        .accessibilityIdentifier("bookmarks.edit")
-    }
-
-    private var backButton: some View {
-        Button(action: { openFolderID = nil }) {
-            Image(systemName: "chevron.backward")
-                .font(.system(size: ScreenMetrics.backIcon, weight: .medium))
-                .foregroundStyle(Palette.textPrimary)
-                .frame(width: ScreenMetrics.tapTarget, height: ScreenMetrics.tapTarget)
-                .contentShape(.rect)
-                .accessibilityLabel(Text("Back"))
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("bookmarks.folder.back")
     }
 
     private func folderName(of bookmark: Bookmark) -> String? {
@@ -389,10 +345,7 @@ struct BookmarksScreen: View {
     private func separator(visible: Bool) -> some View {
         Group {
             if visible {
-                Rectangle()
-                    .fill(Palette.separatorOnMist)
-                    .frame(height: 0.5)
-                    .padding(.leading, ScreenMetrics.folderSeparatorInset)
+                RowSeparator(inset: ScreenMetrics.folderSeparatorInset)
             }
         }
     }
@@ -436,10 +389,7 @@ private struct BookmarkRow: View {
         .padding(.horizontal, Metrics.Spacing.insetList)
         .overlay(alignment: .top) {
             if showsSeparator {
-                Rectangle()
-                    .fill(Palette.separatorOnMist)
-                    .frame(height: 0.5)
-                    .padding(.leading, SeparatorMetrics.inset)
+                RowSeparator(inset: SeparatorMetrics.inset)
             }
         }
         .rowPress(perform: onOpen)

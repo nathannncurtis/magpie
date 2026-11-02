@@ -9,9 +9,9 @@ struct FilterListsPage: View {
 
     var body: some View {
         SettingsScaffold(title: String(localized: "Filter lists"), showsBack: true) {
-            SettingsGroup {
+            GroupedBox {
                 ForEach(Array(updates.enumerated()), id: \.element.id) { index, update in
-                    SettingsRow(icon: .symbol("cellularbars"), title: update.list.title) {
+                    SettingsRow(icon: .symbol("list.bullet.rectangle"), title: update.list.title) {
                         Text(ContentBlocker.updatedText(from: update.updated, now: .now))
                             .font(Typography.row)
                             .foregroundStyle(Palette.textOnMistSecondaryMeta)

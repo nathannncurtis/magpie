@@ -39,7 +39,6 @@ struct SkimQueryBar: View {
         static let inset = Metrics.Spacing.insetFloating
         static let gap: CGFloat = 9
         static let sidePadding: CGFloat = 14
-        static let iconSize: CGFloat = 15
         static let markSize: CGFloat = 12
         static let tagGap: CGFloat = 5
         /// The touch target the bar carries: the 44 pt minimum, invisible. The glass
@@ -51,7 +50,7 @@ struct SkimQueryBar: View {
         Button(action: onEdit) {
             HStack(spacing: Layout.gap) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: Layout.iconSize, weight: .medium))
+                    .font(Typography.icon(.small))
                 Text(query)
                     .font(Typography.row)
                     .foregroundStyle(Palette.skimQueryText)
