@@ -101,7 +101,7 @@ final class TabStore {
         return tab
     }
 
-    /// Centres a tab in the stack. Browsing the stack is not use: only opening a
+    /// Centers a tab in the stack. Browsing the stack is not use: only opening a
     /// tab or navigating in it marks it active.
     func select(_ id: Tab.ID) {
         guard tabs.contains(where: { $0.id == id }) else { return }

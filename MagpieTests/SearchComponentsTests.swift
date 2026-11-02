@@ -45,7 +45,7 @@ struct SearchComponentsTests {
     }
 
     @Test("the reveal centerline lives in the artwork's space")
-    func markCentreline() {
+    func markCenterline() {
         let bounds = MarkGeometry.centerline().boundingRect
         #expect(bounds.minX >= 0 && bounds.maxX <= MarkPath.units)
         #expect(bounds.minY >= 0 && bounds.maxY <= MarkPath.units)

@@ -11,7 +11,7 @@ enum FloatingBarSurface {
 /// The one shell every floating bar and bottom row wears: the Tabs and Launch rows, the
 /// Archive, Bookmarks and History search pills, the Skim control bar and the reading bar.
 /// It fixes what they share — the height, the side inset, the glass, a width cap that
-/// centres the bar on wide screens — and leaves the contents to the caller. The bottom
+/// centers the bar on wide screens — and leaves the contents to the caller. The bottom
 /// edge is `floatingBarBottomEdge(safeAreaBottom:)`, applied outside.
 struct FloatingBar<Content: View>: View {
 
@@ -114,13 +114,13 @@ struct FloatingBarSlots<Leading: View, Center: View, Trailing: View>: View {
             guard subviews.count == 3 else { return }
             let sizes = subviews.map { $0.sizeThatFits(.unspecified) }
             let side = max(sizes[0].width, sizes[2].width)
-            let centreWidth = max(0, bounds.width - 2 * (side + gap))
+            let centerWidth = max(0, bounds.width - 2 * (side + gap))
             subviews[0].place(
                 at: CGPoint(x: bounds.minX, y: bounds.midY), anchor: .leading,
                 proposal: ProposedViewSize(width: side, height: bounds.height))
             subviews[1].place(
                 at: CGPoint(x: bounds.midX, y: bounds.midY), anchor: .center,
-                proposal: ProposedViewSize(width: centreWidth, height: bounds.height))
+                proposal: ProposedViewSize(width: centerWidth, height: bounds.height))
             subviews[2].place(
                 at: CGPoint(x: bounds.maxX, y: bounds.midY), anchor: .trailing,
                 proposal: ProposedViewSize(width: side, height: bounds.height))

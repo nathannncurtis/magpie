@@ -44,7 +44,7 @@ struct StackLayoutTests {
     }
 
     @Test("the current card is centered at 62% of the container")
-    func currentCardCentred() {
+    func currentCardCentered() {
         let frame = StackLayout.cardFrame(offset: 0, container: container)
 
         #expect(approximately(frame.width, cardWidth))

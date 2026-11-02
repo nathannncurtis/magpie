@@ -125,7 +125,7 @@ struct LaunchScreen: View {
                 FloatingBarSlots {
                     ArchivedChip(count: archivedCount, action: onShowArchive)
                         .accessibilityIdentifier("launch.archive")
-                } centre: {
+                } center: {
                     PlusButton(action: { unfold(onNewTab) })
                         .contextMenu {
                             Button(action: { unfold(onNewPrivateTab) }) {
