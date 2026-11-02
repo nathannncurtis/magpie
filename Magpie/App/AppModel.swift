@@ -736,6 +736,21 @@ final class AppModel {
         openTab(id)
     }
 
+    /// The tab this many places from the current one in stack order, if there is one.
+    func adjacentTab(_ delta: Int) -> Tab? {
+        guard let id = store.currentTabID,
+            let index = store.tabs.firstIndex(where: { $0.id == id })
+        else { return nil }
+        let target = index + delta
+        return store.tabs.indices.contains(target) ? store.tabs[target] : nil
+    }
+
+    /// A sideways swipe on the bar: the page moves to the neighbouring tab.
+    func stepTab(_ delta: Int) {
+        guard let tab = adjacentTab(delta) else { return }
+        openTab(tab.id)
+    }
+
     // MARK: Mods
 
     /// Where Done on the mods screen returns to.

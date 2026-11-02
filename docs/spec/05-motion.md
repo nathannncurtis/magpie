@@ -41,8 +41,18 @@ Stagger lists 25–30 ms per item. Content inside a sheet starts 50 ms after the
 - **Trigger:** tap the tab count.
 - **Page → card:** the page scales to 0.62 and its corner radius grows to 26 (screen) as it lands. Spring: `chrome`.
 - **Neighbours:** slide in from the sides 40 ms behind. Labels and the bottom row fade in.
-- **Close:** fling up past 30% of the height or faster than 500 pt/s. The card follows the finger, then flies off. The next card re-flows over with `settle`.
+- **Swipe up on the bar:** the same as the tab count. The bar rises with the finger (up to 28 pt, tightening); past 56 pt, or a flick that would end 140 pt up, it opens the stack into the page → card transition above. `.impact(flexibility: .soft)` fires as the drag crosses the distance.
+- **Sideways:** the stack moves in proportion to where the drag would come to rest (its predicted end): a quarter of a stride moves one tab, a harder flick several, never past either end.
+- **Close:** fling up past 30% of the height or faster than 500 pt/s. The card follows the finger, then flies off, with `.impact(weight: .light)`. The next card re-flows over with `settle`.
 - **Open:** the tapped card grows back to full screen with `chrome`.
+
+### 03b · Swipe the bar through tabs
+- **Trigger:** drag sideways on the bar.
+- **Axis:** locks after 24 pt of travel, so a tap on a bar button is still a tap and a drag that starts upward never turns sideways. Down is not answered.
+- **Follow:** the page moves with the finger, the next (or previous) tab's picture sliding in beside it, and the bar follows at about a third of the distance, up to 48 pt.
+- **Commit:** a drag past a quarter of the screen's width, or a flick that would end there, steps one tab (left is next, right is previous). The page slides out on `chrome` and the tab takes over in place; `.selection` fires on commit. Short of that, everything returns on `settle`.
+- **Ends:** with no tab beyond, the page rubber-bands to at most 36 pt and returns; nothing steps.
+- **Reduce Motion:** the page does not slide out; the tab changes at once.
 
 ### 04 · Skim finishes
 - **Trigger:** the last source is read.
@@ -80,6 +90,12 @@ Stagger lists 25–30 ms per item. Content inside a sheet starts 50 ms after the
   3. The whole stage — paper, mist and mark — fades as the search sheet rises from the bottom (`chrome`), the mark rising 40 pt within it. Under Reduce Motion it is one 200 ms crossfade.
 - **Total:** about 1.9 s. Tapping skips it.
 - **Reduce Motion:** the mark appears whole and the sheet fades in.
+
+## Haptics
+Only three, all through `.sensoryFeedback`, and nothing else in the app taps back except the install confirmation (06):
+- `.selection` when a bar swipe commits a tab step.
+- `.impact(weight: .light)` when a card is flung closed on the tab stack.
+- `.impact(flexibility: .soft)` when the bar's swipe up crosses its threshold.
 
 ## Ambient
 - **Skim working mist drift:** see 01 Mist. Stops under Reduce Motion.
