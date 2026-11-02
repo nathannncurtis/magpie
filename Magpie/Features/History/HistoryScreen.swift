@@ -109,7 +109,7 @@ struct HistoryScreen: View {
     private var list: some View {
         List {
             ForEach(groups, id: \.title) { group in
-                DayHeader(title: group.title)
+                SectionLabel(title: group.title)
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)

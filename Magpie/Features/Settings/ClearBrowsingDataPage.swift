@@ -11,7 +11,7 @@ struct ClearBrowsingDataPage: View {
 
     var body: some View {
         SettingsScaffold(title: String(localized: "Clear browsing data"), showsBack: true) {
-            SettingsGroup {
+            GroupedBox {
                 SettingsToggleRow(
                     icon: .symbol("clock"), title: String(localized: "History"),
                     isOn: binding(\.history)
