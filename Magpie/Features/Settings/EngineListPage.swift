@@ -49,7 +49,7 @@ struct EngineListPage: View {
             if preferences.searchEngine.id == "other" {
                 dismiss()
             } else {
-                withAnimation(.easeInOut(duration: 0.2)) { showsOtherField = true }
+                withAnimation(Springs.crossfade) { showsOtherField = true }
             }
         }
         .accessibilityAddTraits(preferences.searchEngine.id == "other" ? .isSelected : [])
@@ -67,7 +67,6 @@ struct EngineListPage: View {
     private var otherField: some View {
         VStack(alignment: .leading, spacing: 8) {
             TextField(
-                // COPY: review — 06 has this line to write.
                 "Search URL, with %s for the query",
                 text: $otherURL
             )

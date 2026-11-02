@@ -145,7 +145,7 @@ final class UITestPageServer: @unchecked Sendable {
         return path.split(separator: "?").first.map(String.init) ?? "/"
     }
 
-    /// The page a route serves; the block's colour tells the routes apart.
+    /// The page a route serves; the block's color tells the routes apart.
     private static func page(for route: String) -> String {
         switch route {
         case "/search":
@@ -222,7 +222,7 @@ final class UITestPageServer: @unchecked Sendable {
     }
 
     /// A page that follows the appearance, so the flow's shots read under both. Its
-    /// content is loud — the route as a banner over a colour block — so a capture is
+    /// content is loud — the route as a banner over a color block — so a capture is
     /// unmistakable in the shots and a blank one cannot hide.
     private static func shell(title: String, path: String, block: String) -> String {
         """

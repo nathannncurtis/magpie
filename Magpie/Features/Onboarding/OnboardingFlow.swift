@@ -16,11 +16,11 @@ struct OnboardingFlow: View {
                 }
                 .transition(.opacity)
                 .backSwipe {
-                    withAnimation(.easeInOut(duration: 0.25)) { showsPicker = false }
+                    withAnimation(Springs.crossfade) { showsPicker = false }
                 }
             } else {
                 WelcomeScreen {
-                    withAnimation(.easeInOut(duration: 0.25)) { showsPicker = true }
+                    withAnimation(Springs.crossfade) { showsPicker = true }
                 }
                 .transition(.opacity)
             }

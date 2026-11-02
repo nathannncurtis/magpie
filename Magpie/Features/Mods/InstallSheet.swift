@@ -344,7 +344,7 @@ struct InstallSheet: View {
             let result = await ModLinkInstaller.inspect(url)
             guard inspectedURL == url else { return }
             readyResult = result
-            withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.settle.animation) {
+            withAnimation(Springs.settle.resolved(reduceMotion: reduceMotion)) {
                 phase = .ready(result)
             }
         }
@@ -376,7 +376,7 @@ struct InstallSheet: View {
                 try? await Task.sleep(
                     for: .milliseconds(Double(Layout.minimumInstallMs) - spentMs))
             }
-            withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.snap.animation) {
+            withAnimation(Springs.snap.resolved(reduceMotion: reduceMotion)) {
                 phase = .ticked
             }
             Self.successHaptic()

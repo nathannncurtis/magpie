@@ -25,7 +25,7 @@ struct TabStoreTests {
         #expect(store.tabs.last?.url == URL(string: "https://b.example"))
     }
 
-    @Test("select centres a tab without marking it active")
+    @Test("select centers a tab without marking it active")
     func selectCentresWithoutTouching() {
         let store = TabStore()
         let first = store.newTab(title: "A", now: date(0))
@@ -63,7 +63,7 @@ struct TabStoreTests {
         #expect(store.tabs.first?.lastActive == date(30))
     }
 
-    @Test("closing the current tab picks the neighbour to the right")
+    @Test("closing the current tab picks the neighbor to the right")
     func closeCurrentPicksRight() {
         let store = TabStore()
         let a = store.newTab(title: "A", now: date(0))
@@ -76,7 +76,7 @@ struct TabStoreTests {
         #expect(store.currentTabID == c.id)
     }
 
-    @Test("closing the last tab picks the neighbour to the left")
+    @Test("closing the last tab picks the neighbor to the left")
     func closeLastPicksLeft() {
         let store = TabStore()
         let a = store.newTab(title: "A", now: date(0))
@@ -314,7 +314,7 @@ struct TabStoreTests {
 
     // MARK: Undo close
 
-    @Test("reinstating a closed tab puts it back in its place and at the centre")
+    @Test("reinstating a closed tab puts it back in its place and at the center")
     func reinstateRestoresPlace() throws {
         let store = TabStore()
         let a = store.newTab(url: URL(string: "https://a.example"), now: date(0))
@@ -331,7 +331,7 @@ struct TabStoreTests {
         #expect(store.currentTabID == b.id)
     }
 
-    @Test("reinstating a tab closed away from the centre leaves the centre alone")
+    @Test("reinstating a tab closed away from the center leaves the center alone")
     func reinstateKeepsCurrent() throws {
         let store = TabStore()
         let a = store.newTab(url: URL(string: "https://a.example"), now: date(0))
@@ -454,7 +454,7 @@ struct TabStoreUpdateTests {
 @MainActor
 struct TabStoreLoadIndexTests {
 
-    @Test("loadIndex reads the saved tabs and the centred one")
+    @Test("loadIndex reads the saved tabs and the centered one")
     func loadIndexReadsTheSavedTabs() async {
         let a = Tab(title: "A", lastActive: Date(timeIntervalSince1970: 0))
         let b = Tab(title: "B", lastActive: Date(timeIntervalSince1970: 10))
@@ -468,7 +468,7 @@ struct TabStoreLoadIndexTests {
         #expect(store.currentTabID == a.id)
     }
 
-    @Test("loadIndex centres the first tab when the saved one is gone")
+    @Test("loadIndex centers the first tab when the saved one is gone")
     func loadIndexFallsBackToTheFirstTab() async {
         let saved = TabIndex(
             openTabs: [Tab(title: "A", lastActive: Date(timeIntervalSince1970: 0))],

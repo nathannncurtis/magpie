@@ -81,7 +81,7 @@ struct PrivateModeTests {
         #expect(model.store.currentTabID == priv[0])
     }
 
-    @Test("closing a tab hands currency to a neighbour of its own mode")
+    @Test("closing a tab hands currency to a neighbor of its own mode")
     func closeStaysInMode() {
         let (model, normal, priv) = makeMixed()
         model.setPrivateMode(true)

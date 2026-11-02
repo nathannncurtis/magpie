@@ -114,7 +114,6 @@ struct EnginePickerScreen: View {
     private var otherField: some View {
         VStack(alignment: .leading, spacing: 6) {
             TextField(
-                // COPY: review — 06 has this line to write.
                 "Search URL, with %s for the query",
                 text: $otherURL
             )

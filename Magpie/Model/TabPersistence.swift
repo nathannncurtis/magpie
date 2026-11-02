@@ -4,7 +4,7 @@ import Foundation
 struct TabIndex: Codable, Equatable, Sendable {
     /// The open tabs, in stack order.
     var openTabs: [Tab]
-    /// The tab the stack centres on.
+    /// The tab the stack centers on.
     var currentTabID: Tab.ID?
     /// The archived tabs, oldest first.
     var archivedTabs: [Tab]

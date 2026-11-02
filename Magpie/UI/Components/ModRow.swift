@@ -167,7 +167,7 @@ struct ModRow: View {
                 if value.translation.width < -Layout.swipeTrigger {
                     onRemove?()
                 }
-                withAnimation(reduceMotion ? nil : Springs.settle.animation) {
+                withAnimation(Springs.settle.unlessReduced(reduceMotion: reduceMotion)) {
                     swipeOffset = 0
                 }
             }
@@ -205,7 +205,7 @@ private struct ModSwitch: View {
 
     var body: some View {
         Button {
-            withAnimation(reduceMotion ? nil : Springs.settle.animation) {
+            withAnimation(Springs.settle.unlessReduced(reduceMotion: reduceMotion)) {
                 isOn.toggle()
             }
         } label: {

@@ -39,7 +39,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             )
             .contentShape(.rect)
             .scaleEffect(configuration.isPressed && !reduceMotion ? 0.97 : 1)
-            .animation(reduceMotion ? nil : Springs.snap.animation, value: configuration.isPressed)
+            .animation(Springs.snap.unlessReduced(reduceMotion: reduceMotion), value: configuration.isPressed)
     }
 
     private var font: Font {

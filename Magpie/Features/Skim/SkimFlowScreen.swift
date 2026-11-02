@@ -48,7 +48,7 @@ struct SkimFlowScreen: View {
                     .ignoresSafeArea()
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: model.skimRun?.state)
+        .animation(Springs.crossfade, value: model.skimRun?.state)
         .onChange(of: model.skimRun?.state) { _, newState in
             guard let newState else { return }
             if case .working(let progress) = newState {
@@ -72,11 +72,11 @@ struct SkimFlowScreen: View {
 
     private func beginHandoff() {
         guard !handoff else { return }
-        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.smooth) {
+        withAnimation(Springs.resolved(Springs.smooth, reduceMotion: reduceMotion)) {
             handoff = true
         }
         Task {
-            try? await Task.sleep(for: .seconds(reduceMotion ? 0.2 : 0.35))
+            try? await Task.sleep(for: .seconds(reduceMotion ? Springs.crossfadeDuration : Springs.smoothDuration))
             handoff = false
         }
     }

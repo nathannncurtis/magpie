@@ -57,18 +57,18 @@ final class LinkMenuDelegate: NSObject, WKUIDelegate {
 
     private func menu(for url: URL, from webView: WKWebView?) -> UIMenu {
         let open = UIAction(
-            title: String(localized: "Open in New Tab"),
+            title: String(localized: "Open in new tab"),
             image: UIImage(systemName: "plus.square.on.square")
         ) { [weak self] _ in
             guard let self else { return }
             onOpenLink(url, isPrivate)
         }
         let privately = UIAction(
-            title: String(localized: "Open in Private Tab"),
+            title: String(localized: "Open in private tab"),
             image: UIImage(systemName: "eye.slash")
         ) { [weak self] _ in self?.onOpenLink(url, true) }
         let copy = UIAction(
-            title: String(localized: "Copy Link"),
+            title: String(localized: "Copy link"),
             image: UIImage(systemName: "doc.on.doc")
         ) { _ in UIPasteboard.general.url = url }
         let share = UIAction(

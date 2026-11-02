@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// A mod's icon: an on-ink glyph on a 44 pt ink tile, the same tile the Settings rows
-/// wear (03 · Mod icon). The mod's own colours stay in its index entry; the screens read
+/// wear (03 · Mod icon). The mod's own colors stay in its index entry; the screens read
 /// as one product, so the tile does not carry them.
 struct ModIcon: View {
 

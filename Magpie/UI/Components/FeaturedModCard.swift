@@ -98,7 +98,7 @@ private struct FeaturedPreviewSky<Content: View>: View {
 }
 
 /// The Google Answer Box mod's own picture: a mini search result with the direct answer
-/// ringed, drawn in SwiftUI, in its own light and dark palettes (board 06). The colours
+/// ringed, drawn in SwiftUI, in its own light and dark palettes (board 06). The colors
 /// are the picture's, not the app's; the words are the illustration's, fixed.
 private struct GoogleAnswerBoxPreview: View {
 

@@ -72,8 +72,8 @@ struct BarSwipeHandlers {
     var changed: (BarSwipe.Axis, CGSize) -> Void
     /// The drag lifted, with its predicted end.
     var ended: (BarSwipe.Axis, CGSize, CGSize) -> Void
-    /// The drag was cancelled, or never locked.
-    var cancelled: () -> Void
+    /// The drag was canceled, or never locked.
+    var canceled: () -> Void
 }
 
 /// Carries a drag on the bar, locking its axis after `BarSwipe.axisLock`. It runs beside
@@ -93,7 +93,7 @@ struct BarSwipeGesture: ViewModifier {
                     }
                     .onEnded { value in
                         defer { axis = nil }
-                        guard let axis else { return handlers.cancelled() }
+                        guard let axis else { return handlers.canceled() }
                         handlers.ended(axis, value.translation, value.predictedEndTranslation)
                     }
             )

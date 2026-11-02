@@ -10,7 +10,7 @@ extension Metrics {
 }
 
 extension View {
-    /// Caps the view at the readable column and centres it in whatever is left.
+    /// Caps the view at the readable column and centers it in whatever is left.
     /// At phone widths the cap never binds, so the layout is unchanged.
     func readableWidth(_ width: CGFloat = Metrics.Column.readable) -> some View {
         frame(maxWidth: width).frame(maxWidth: .infinity)

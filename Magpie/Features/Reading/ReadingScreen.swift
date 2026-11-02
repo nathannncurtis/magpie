@@ -3,7 +3,7 @@ import WebKit
 
 /// 02 · Reading: a web view that starts below the status bar and runs under the bar to
 /// the bottom edge, with the ReadingBar floating at the bottom. The strip above the
-/// page, under the status bar, takes the page's own top colour, so the screen still
+/// page, under the status bar, takes the page's own top color, so the screen still
 /// reads edge to edge. The bar takes the page's tint and slims on scroll; the URL
 /// pill opens the search sheet over the page, growing from the bar as one glass shape
 /// (05 · The bar into the sheet), and the page is one view with its tab card (05 · The
@@ -108,7 +108,7 @@ struct ReadingScreen: View {
             let menuBottomEdge = Metrics.Spacing.barBottomEdge(
                 safeAreaBottom: geo.safeAreaInsets.bottom)
             ZStack(alignment: .bottom) {
-                neighbourPage(width: geo.size.width)
+                neighborPage(width: geo.size.width)
                 pageArea(bottomClearance: menuBottomEdge + Metrics.Bar.readingHeight)
                     .offset(x: pageShift)
                 GlassEffectContainer {
@@ -173,7 +173,7 @@ struct ReadingScreen: View {
             }
         }
         // The strip the page leaves above itself, under the status bar: filled with the
-        // page's own top colour, so nothing shows through from the surface before.
+        // page's own top color, so nothing shows through from the surface before.
         .background(topEdgeFill.ignoresSafeArea(edges: .top))
         .modifier(PageDialogAlert(dialogs: session?.dialogs))
         .onChange(of: colorScheme) { _, _ in rereadPageTint() }
@@ -210,7 +210,7 @@ struct ReadingScreen: View {
         )
         .background {
             // Esc folds the menu back, as a tap away does.
-            Button(String(localized: "Close Menu"), action: closeMenu)
+            Button(String(localized: "Close menu"), action: closeMenu)
                 .keyboardShortcut(.cancelAction)
                 .opacity(0)
                 .frame(width: 0, height: 0)
@@ -268,7 +268,7 @@ struct ReadingScreen: View {
             ended: { axis, translation, predicted in
                 barSwipeEnded(axis, translation, predicted, width: width)
             },
-            cancelled: { resetBarSwipe() })
+            canceled: { resetBarSwipe() })
     }
 
     private func barSwipeChanged(_ axis: BarSwipe.Axis, _ translation: CGSize) {
@@ -314,7 +314,7 @@ struct ReadingScreen: View {
     private func commitStep(_ step: Int, width: CGFloat) {
         stepCommits += 1
         isStepping = true
-        withAnimation(reduceMotion ? nil : Springs.chrome.animation) {
+        withAnimation(Springs.chrome.unlessReduced(reduceMotion: reduceMotion)) {
             pageShift = reduceMotion ? 0 : -CGFloat(step) * width
             barShift = 0
         }
@@ -329,7 +329,7 @@ struct ReadingScreen: View {
     }
 
     private func resetBarSwipe() {
-        withAnimation(reduceMotion ? nil : Springs.settle.animation) {
+        withAnimation(Springs.settle.unlessReduced(reduceMotion: reduceMotion)) {
             pageShift = 0
             barShift = 0
             barRise = 0
@@ -339,7 +339,7 @@ struct ReadingScreen: View {
 
     /// The tab the page is being slid toward, drawn from its picture beside the page.
     @ViewBuilder
-    private func neighbourPage(width: CGFloat) -> some View {
+    private func neighborPage(width: CGFloat) -> some View {
         if pageShift != 0 {
             let delta = pageShift < 0 ? 1 : -1
             let edge = pageShift < 0 ? width : -width
@@ -380,7 +380,7 @@ struct ReadingScreen: View {
                             .safeAreaPadding(.bottom, bottomClearance)
                             // The page starts below the status bar and runs under the
                             // bar to the bottom edge; the strip it leaves above takes
-                            // the page's own top colour.
+                            // the page's own top color.
                             .ignoresSafeArea(edges: .bottom)
                             .webViewOnScrollGeometryChange(
                                 for: ScrollSnapshot.self,
@@ -411,7 +411,7 @@ struct ReadingScreen: View {
                         guard arrivalPicture != nil else { return }
                         try? await Task.sleep(for: Self.arrivalHold)
                         guard !Task.isCancelled else { return }
-                        withAnimation(.easeOut(duration: 0.18)) { onArrivalDone() }
+                        withAnimation(Springs.fadeIn) { onArrivalDone() }
                     }
                     // One view per session: a page re-hosted on a session change has
                     // been seen to keep the old view's stale handle, and a fresh view
@@ -425,7 +425,7 @@ struct ReadingScreen: View {
         }
     }
 
-    /// The bar's glass tint: the page's theme colour, else the page's own background,
+    /// The bar's glass tint: the page's theme color, else the page's own background,
     /// else the default (02 · Glass).
     private var barTint: Color {
         guard let session, session.failure == nil else { return Palette.pageTintGlass }
@@ -438,20 +438,20 @@ struct ReadingScreen: View {
         return Palette.pageTintGlass
     }
 
-    /// The colour of the strip above the page, under the status bar: the page's own top
-    /// colour at full strength, solid rather than glass, so the screen still reads edge
-    /// to edge with the page starting below the inset. Paper when the page has no colour
+    /// The color of the strip above the page, under the status bar: the page's own top
+    /// color at full strength, solid rather than glass, so the screen still reads edge
+    /// to edge with the page starting below the inset. Paper when the page has no color
     /// of its own to lend.
     private var topEdgeFill: Color { Self.topEdgeFill(for: session) }
 
-    /// What sits under the status bar, for its ink: the colour read at the top of the
+    /// What sits under the status bar, for its ink: the color read at the top of the
     /// page as it rests, else the strip's own.
     static func statusBarFill(for session: ReadingSession?) -> Color {
-        if let session, session.failure == nil, let top = session.topColour { return top }
+        if let session, session.failure == nil, let top = session.topColor { return top }
         return topEdgeFill(for: session)
     }
 
-    /// The strip's colour: the page's theme colour, else its background, else paper.
+    /// The strip's color: the page's theme color, else its background, else paper.
     static func topEdgeFill(for session: ReadingSession?) -> Color {
         guard let session, session.failure == nil else { return Palette.paper }
         if let themeColor = session.page.themeColor {
@@ -484,7 +484,7 @@ struct ReadingScreen: View {
             try? await Task.sleep(for: Self.sizeSettleDelay)
             guard !Task.isCancelled, let session else { return }
             session.captureOpportunity()
-            await session.refreshTopColour()
+            await session.refreshTopColor()
         }
     }
 
@@ -495,14 +495,14 @@ struct ReadingScreen: View {
 
     /// Opens the menu on the same spring the glass grows on.
     private func openMenu() {
-        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
+        withAnimation(Springs.chrome.resolved(reduceMotion: reduceMotion)) {
             isMenuOpen = true
         }
     }
 
     /// Folds the menu back into the bar.
     private func closeMenu() {
-        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
+        withAnimation(Springs.chrome.resolved(reduceMotion: reduceMotion)) {
             isMenuOpen = false
         }
     }

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// About Magpie (04 · 11): the version, the licence, and where the source lives.
+/// About Magpie (04 · 11): the version, the license, and where the source lives.
 struct AboutPage: View {
     var body: some View {
         SettingsScaffold(title: String(localized: "About Magpie"), showsBack: true) {
@@ -8,7 +8,7 @@ struct AboutPage: View {
                 SettingsRow(icon: .symbol("info.circle"), title: String(localized: "Version")) {
                     value(Self.version)
                 }
-                SettingsRow(icon: .symbol("doc.text"), title: String(localized: "Licence")) {
+                SettingsRow(icon: .symbol("doc.text"), title: String(localized: "License")) {
                     value("MPL-2.0")
                 }
                 .divided(true)

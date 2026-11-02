@@ -48,7 +48,7 @@ struct TabLabel: View {
 }
 
 /// A stand-in tile while no favicon has been fetched: the host's initial on a hue the
-/// host picks for itself, so a tab keeps its colour across launches.
+/// host picks for itself, so a tab keeps its color across launches.
 private struct FaviconTile: View {
     let host: String?
     let size: CGFloat

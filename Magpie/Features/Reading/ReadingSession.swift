@@ -44,13 +44,12 @@ struct PageLoadFailure {
         case .crashed: return String(localized: "Something went wrong showing it. Try again.")
         case .unreachable: break
         }
-        // COPY: review — 06 still has this line to write.
         return String(localized: "It didn't answer. Try again in a moment.")
     }
 }
 
-/// The page's own background colour, read back from the page as "r,g,b" and used as the
-/// bar tint when the page declares no theme colour.
+/// The page's own background color, read back from the page as "r,g,b" and used as the
+/// bar tint when the page declares no theme color.
 enum PageBackgroundColor {
 
     static func parse(_ text: String) -> Color? {
@@ -107,11 +106,11 @@ final class ReadingSession {
 
     /// The page's load failure; nil while a page shows.
     private(set) var failure: PageLoadFailure?
-    /// The page's own background, when it sets one and declares no theme colour.
+    /// The page's own background, when it sets one and declares no theme color.
     private(set) var pageBackground: Color?
-    /// The colour at the top of what the reader sees: what shows under the status bar,
+    /// The color at the top of what the reader sees: what shows under the status bar,
     /// read at load and wherever the reader comes to rest. Nil until read.
-    private(set) var topColour: Color?
+    private(set) var topColor: Color?
     /// The site's own icon, when the page declares one.
     private(set) var pageIconURL: URL?
     /// Whether the network path is up.
@@ -215,7 +214,7 @@ final class ReadingSession {
     /// The load event's own settle is not relied on for the picture; it has not been seen
     /// to arrive on the simulator. This counts as a settle. A page that has not laid out
     /// yet settles later, when its content lands: a capture against no layout cannot
-    /// show the page. The page's own colour is sampled only once a picture has been
+    /// show the page. The page's own color is sampled only once a picture has been
     /// stored, never here: running page JavaScript at commit time sits before the first
     /// paint and has been seen to stall the load.
     func captureOpportunity() {
@@ -318,10 +317,10 @@ final class ReadingSession {
     private let monitor = NWPathMonitor()
     private let monitorQueue = DispatchQueue(label: "com.magpiebrowser.reading.path")
 
-    /// Reads the page's effective background colour in the appearance it is currently
+    /// Reads the page's effective background color in the appearance it is currently
     /// rendered under, as "r,g,b"; "" when none can be read. The nearest opaque
-    /// background on body and its ancestors wins, otherwise the page's canvas colour —
-    /// which follows the page's colour scheme, so the value flips with the appearance.
+    /// background on body and its ancestors wins, otherwise the page's canvas color —
+    /// which follows the page's color scheme, so the value flips with the appearance.
     private static let pageBackgroundScript = #"""
         const rgb = (s) => {
             const m = s && s.match(/^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)$/);
@@ -341,10 +340,10 @@ final class ReadingSession {
         return m ? m[1] + "," + m[2] + "," + m[3] : "";
         """#
 
-    /// Reads the background behind the top centre of the viewport, as "r,g,b": the
+    /// Reads the background behind the top center of the viewport, as "r,g,b": the
     /// nearest opaque background from the element there up through its ancestors; ""
     /// when none is opaque.
-    private static let topColourScript = #"""
+    private static let topColorScript = #"""
         const rgb = (s) => {
             const m = s && s.match(/^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)$/);
             return (!m || m[4] === undefined || parseFloat(m[4]) !== 0) ? m : null;
@@ -453,7 +452,7 @@ final class ReadingSession {
                     }
                     if event == .finished {
                         await refreshPageBackground()
-                        await refreshTopColour()
+                        await refreshTopColor()
                         await readPageIcon()
                         settle()
                     }
@@ -601,7 +600,7 @@ final class ReadingSession {
         failure = nil
         committedThisLoad = false
         pageBackground = nil
-        topColour = nil
+        topColor = nil
         // The page being left does not keep speaking for the one arriving: its icon
         // goes with it, read afresh once the new page has settled.
         pageIconURL = nil
@@ -633,7 +632,7 @@ final class ReadingSession {
                             + "url=\(self.page.url?.absoluteString ?? "nil")")
                     self.loadWatch = nil
                     // A first load can finish before the navigation watch subscribes;
-                    // the page colour and icon are read here too.
+                    // the page color and icon are read here too.
                     await self.refreshPageBackground()
                     await self.readPageIcon()
                     self.settle()
@@ -696,7 +695,7 @@ final class ReadingSession {
         // Stopping a stalled load ends its sequence with a cancellation of its own; the
         // stalled page stands.
         if failure?.reason == .stalled { return }
-        // The load a download came out of ends cancelled; the page stays as it was.
+        // The load a download came out of ends canceled; the page stays as it was.
         if downloads?.consumesFailure() == true { return }
         let underlying: Error
         if case WebPage.NavigationError.failedProvisionalNavigation(let inner) = error {
@@ -746,7 +745,7 @@ final class ReadingSession {
     private func present(_ failure: PageLoadFailure) {
         self.failure = failure
         pageBackground = nil
-        topColour = nil
+        topColor = nil
         // The failure page takes the web view's place in the hierarchy, so the
         // session's hold on it is dropped here too — a detached view held alive keeps
         // its accessibility line open. The probe re-finds it when a load lands.
@@ -763,8 +762,8 @@ final class ReadingSession {
     }
 
     /// The under-page background: what the bar tints with when the page declares no
-    /// theme colour of its own. Re-run whenever the appearance changes — a page that
-    /// follows the colour scheme renders a different background under each.
+    /// theme color of its own. Re-run whenever the appearance changes — a page that
+    /// follows the color scheme renders a different background under each.
     func refreshPageBackground() async {
         guard page.themeColor == nil, page.url != nil else { return }
         guard
@@ -775,16 +774,16 @@ final class ReadingSession {
         pageBackground = PageBackgroundColor.parse(text)
     }
 
-    /// Reads the colour under the status bar; a page with no opaque background there
-    /// leaves the strip's own colour to stand.
-    func refreshTopColour() async {
+    /// Reads the color under the status bar; a page with no opaque background there
+    /// leaves the strip's own color to stand.
+    func refreshTopColor() async {
         guard failure == nil, page.url != nil else { return }
         guard
             let result = try? await page.callJavaScript(
-                Self.topColourScript, contentWorld: .defaultClient),
+                Self.topColorScript, contentWorld: .defaultClient),
             let text = result as? String
         else { return }
-        topColour = PageBackgroundColor.parse(text)
+        topColor = PageBackgroundColor.parse(text)
     }
 
     /// Reads the site's icon link from the page once per site, so the tab's card and

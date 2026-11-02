@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The URL pill (03 · Chrome): the host alone, centred, which grows to fill the bar.
+/// The URL pill (03 · Chrome): the host alone, centered, which grows to fill the bar.
 /// Tapping it opens search. A warning triangle shows only on errors; HTTPS is assumed, so
 /// there is never a lock.
 struct URLPill: View {

@@ -205,7 +205,7 @@ struct AppModelTests {
         #expect(model.sessions.isEmpty)
     }
 
-    @Test("closing a tab hands currency to its neighbour")
+    @Test("closing a tab hands currency to its neighbor")
     func closingHandsCurrencyOver() {
         let model = makeModel()
         model.openFromLaunch(url("a.example"), now: date(0))
