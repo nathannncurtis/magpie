@@ -24,7 +24,7 @@ enum Metrics {
             max(barBottomEdgeMin, safeAreaBottom - bottomSafeAreaAllowance)
         }
         /// The least a bar's bottom edge sits above the screen bottom.
-        private static let barBottomEdgeMin: CGFloat = 26
+        static let barBottomEdgeMin: CGFloat = 26
         /// How much of the bottom safe area the bar is allowed to eat into.
         private static let bottomSafeAreaAllowance: CGFloat = 8
         /// A suggestion row.
@@ -44,6 +44,9 @@ enum Metrics {
         /// Gap below a section header, before its group.
         static let gapSectionBottom: CGFloat = 7
     }
+
+    /// How faint a disabled control sits: still there, not calling, still legible.
+    static let disabledOpacity = 0.45
 
     /// The least a control measures, so a tap never lands on less.
     static let tapTarget: CGFloat = 44
@@ -86,16 +89,22 @@ enum Metrics {
 
     /// Bar heights.
     enum Bar {
+        /// The one height every floating bar and bottom row shares at the default type
+        /// size; each grows with Dynamic Type from here.
+        static let height: CGFloat = 54
+        /// The widest a floating bar grows. Past it (a foldable's open inner screen, an
+        /// iPad) the bar stays this wide and sits centred, never edge to edge.
+        static let maxWidth: CGFloat = 560
         /// The reading bar in its full state.
-        static let readingHeight: CGFloat = 60
+        static let readingHeight: CGFloat = height
         /// The reading bar collapsed to its slim pill.
         static let readingSlimHeight: CGFloat = 38
         /// The Skim query bar.
         static let skimQueryHeight: CGFloat = 42
         /// The Skim control bar.
-        static let skimControlHeight: CGFloat = 56
+        static let skimControlHeight: CGFloat = height
         /// The bottom search pill on Archive and Bookmarks.
-        static let bottomSearchPillHeight: CGFloat = 54
+        static let bottomSearchPillHeight: CGFloat = height
         /// The "Install from URL" footer pill.
         static let installFooterHeight: CGFloat = 52
         /// The primary onboarding CTA.

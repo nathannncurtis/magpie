@@ -73,6 +73,10 @@ enum Palette {
     static let sheetSolid = dynamic(light: 0xF5F4F0, dark: 0x1A1B1F)
     /// Ghost buttons and inset tiles.
     static let fill = dynamic(light: 0x101115, lightOpacity: 0.06, dark: 0xFFFFFF, darkOpacity: 0.07)
+    /// A disabled primary button's fill: a step stronger than `fill`, so the capsule
+    /// still reads as a button against paper in light and the dark surface alike.
+    static let fillDisabled = dynamic(
+        light: 0x101115, lightOpacity: 0.12, dark: 0xFFFFFF, darkOpacity: 0.18)
     /// The tile behind an emoji in a Skim section.
     static let emojiTile = dynamic(light: 0xEEECE6, dark: 0xFFFFFF, darkOpacity: 0.07)
     /// The engine tag inside the search field.

@@ -4,8 +4,11 @@ Each component is one SwiftUI view in `UI/Components/`. Sizes are in points. "Da
 
 ## Chrome
 
+**FloatingBar**: the one shell every floating bar and bottom row wears (Tabs, Launch, Archive, Bookmarks and History search pills, SkimControlBar, Skim's Cancel, ReadingBar). It is 54 tall at the default size (`Metrics.Bar.height`, growing with Dynamic Type), inset 14 from the sides (`insetFloating`; the reading bar animates its own inset), and sits `max(26, safe-area-bottom − 8)` above the bottom via `floatingBarBottomEdge(safeAreaBottom:)`. Its width is capped at `Metrics.Bar.maxWidth` (560) and centred, so on a wide screen (a foldable open, an iPad) it never runs edge to edge, and nothing in it assumes a phone width. The surface is `clear` (the contents carry their own glass) or a glass capsule, optionally tinted and interactive.
+- **FloatingBarSlots** gives a row fixed leading, centre and trailing slots. The centre holds the middle of the bar whatever the sides measure, so a `PlusButton` there is exactly centred on every row that has one (Tabs and Launch); a flexible centre takes what the wider side leaves.
+
 **ReadingBar**
-- Glass capsule, 60 tall; inset 12 from the screen sides and 26 above the bottom edge (see 01 Spacing). Padding: 4 on the leading side, 5 on the trailing side. The 60/38 heights scale with Dynamic Type, capped at the first accessibility size.
+- A `FloatingBar` glass capsule tinted by the page, 54 tall; inset 12 from the screen sides and 26 above the bottom edge (see 01 Spacing). Padding: 4 on the leading side, 5 on the trailing side. The 54/38 heights scale with Dynamic Type, capped at the first accessibility size.
 - Contents, left to right:
   - `CircleButton(back)`
   - `URLPill`, which grows to fill
@@ -14,7 +17,7 @@ Each component is one SwiftUI view in `UI/Components/`. Sizes are in points. "Da
 - Icon colour: the page tint's readable foreground. The default is #3A2E26 on the warm tint, and the dark default is #F2F2EE.
 - **States:** full; **slim** while scrolling (05 · Chrome on scroll); **••• pressed**, which fills that button with `ink` at 8–10% while the menu is open.
 
-**CircleButton**: a 48 × 48 hit area (minimum 44) holding a 20 pt symbol, with no background of its own. A disabled button keeps its place and its hit area, at 45% opacity.
+**CircleButton**: a 48 × 48 hit area (minimum 44) holding a 20 pt symbol, with no background of its own. A disabled button keeps its place and its hit area, at `Metrics.disabledOpacity` (45%); it draws through a style that adds no dimming of its own, so the back chevron is faded once, not twice.
 
 **URLPill**: shows the host only ("quietweb.org"), in `row` medium, centred. It is 48 tall in the full bar and 30 in the slim bar, and its tap target never drops below 44 tall. A warning triangle (`exclamationmark.triangle.fill`) appears only on errors; HTTPS is assumed, so no lock ever shows. Tapping it opens search.
 
@@ -97,9 +100,9 @@ The sheet **hugs its content**: 14 pt between the last group and the bar, never 
   - tap to open
 
 **TabStack**: cards sit side by side on the mist, 14 pt apart, with the current card centred and its neighbours peeking in from the screen edges.
-- Bottom row, inset 16 from the sides and 34 above the bottom: `ArchivedChip` ("Archived · 12") on the left, the count ("3 open", `small`, `labelOnMist`) in the middle, and `PlusButton` on the right.
+- Bottom row, a `FloatingBar` with three slots: `ArchivedChip` ("Archived · 12") leading, `PlusButton` exactly centred, and the count ("3 open", `small`, `labelOnMist`) trailing; the same slots as Launch's folded row.
 
-**ArchivedChip**: glass capsule, at least 46 tall (growing with Dynamic Type), padding 0 × 16, with an `archivebox` icon and the label in `row` semibold.
+**ArchivedChip**: glass capsule, at least 46 tall (growing with Dynamic Type), padding 0 × 16, with an `archivebox` icon and the label in `row` semibold. The label is one line and fixed-size: on a narrow or folded width it never wraps.
 
 **PlusButton**: 54 × 54 ink glass circle (paper in dark) with a 22 pt plus.
 
@@ -136,7 +139,7 @@ Photos come only from the source pages' `og:image` or largest article image. The
 - Cards sit in a horizontal row under a "Sources" heading.
 
 **SkimControlBar**
-- Glass capsule, 56 tall, inset 14 from the sides and 26 above the bottom (see 01 Spacing).
+- A `FloatingBar` glass capsule, 54 tall, inset 14 from the sides and 26 above the bottom (see 01 Spacing). The Skim page fades its own background in behind the bar (a bottom scrim), so the text never sits on busy page content.
 - Contents, left to right:
   - "Dig deeper · up to 10", with the mark, in `row` semibold
   - a divider: 1 × 24, `ink` at 14%
@@ -165,14 +168,14 @@ Photos come only from the source pages' `og:image` or largest article image. The
 
 **Icons**: inline symbols take `Typography.icon(.small | .regular | .large)`: 15, 18 and 22 pt, medium weight, scaling with Dynamic Type.
 
-**PrimaryButtonStyle**: the one primary action, an `ink` capsule with an `onInk` label (paper in dark), pressed to 0.97. Sizes: `bar` (54 tall, full width, `buttonBar`), `sheet` (50 tall, `buttonPill`) and `compact` (hugs its label, 44 pt target). Disabled, the fill drops to `fill` and the label to `textSecondary`, which keeps 4.5:1; it never fades out. Used by Get, Install, Continue and Show search results.
+**PrimaryButtonStyle**: the one primary action, an `ink` capsule with an `onInk` label (paper in dark), pressed to 0.97. Sizes: `bar` (54 tall, full width, `buttonBar`), `sheet` (50 tall, `buttonPill`) and `compact` (hugs its label, 44 pt target). Disabled, the fill drops to `fillDisabled` (a step stronger than `fill`, so it reads in dark too) and the label to `textSecondary`, which keeps 4.5:1; it never fades out. Used by Get, Install, Continue and Show search results.
 
 **FolderRow**: a 28 pt `ink` tile (radius 9) holding a `folder` line icon in `onInk`, then the name, the count and a chevron. The row is at least 44 tall. The tile is the same ink tile the Settings rows and mod icons wear; folders no longer carry their own colours.
 
 **SkimPageRow**: like ListRow, but the leading 26 pt tile is the mark on `ink` (radius 7) and the trailing element is a `FaviconStack` of its sources at 18 pt. The subtitle reads "Skim page · Kitchen".
 
 **BottomSearchPill**
-- Glass capsule, at least 54 tall (growing with Dynamic Type), inset 14 from the sides and 26 above the bottom (see 01 Spacing).
+- A `FloatingBar` glass capsule, at least 54 tall (growing with Dynamic Type), inset 14 from the sides and 26 above the bottom (see 01 Spacing).
 - Contents: a search icon and the placeholder in `row` `textOnMistSecondary`.
 - Focused, it lifts itself clear of the keyboard, keeping its 26 pt foot clearance above the keys.
 - The list behind it uses the soft scroll-edge effect.
@@ -210,7 +213,7 @@ Photos come only from the source pages' `og:image` or largest article image. The
 - **Selected:** a 2 pt `ink` ring, a 22 pt `ink` check badge at top right, and a more opaque fill.
 - **Other tile:** no glass, just a 1 pt `ink` 14% outline and a generic icon on a `fill` square.
 
-**PrimaryCTA**: the primary button in its `bar` size: 54 tall, full width minus 32, with semibold text that scales with Dynamic Type. In dark it is paper. Disabled, it reads in the quiet fill, not faded.
+**PrimaryCTA**: the primary button in its `bar` size: 54 tall, full width minus 32, with semibold text that scales with Dynamic Type. In dark it is paper. Disabled, it reads in `fillDisabled`, not faded.
 
 ## Settings
 
