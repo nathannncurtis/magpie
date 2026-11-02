@@ -34,6 +34,7 @@ struct TabLabel: View {
                 .font(.system(size: LabelMetrics.favicon * 0.75, weight: .semibold))
                 .foregroundStyle(Palette.textPrimary)
                 .frame(width: LabelMetrics.favicon, height: LabelMetrics.favicon)
+                .accessibilityIdentifier("tabs.label.private")
         } else if let image = faviconData.flatMap(UIImage.init(data:)) {
             Image(uiImage: image)
                 .resizable()

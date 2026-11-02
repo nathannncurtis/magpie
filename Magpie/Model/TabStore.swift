@@ -23,12 +23,39 @@ final class TabStore {
     /// The archive keeps tabs for 30 days, then deletes them.
     static let archiveRetention: TimeInterval = 30 * 24 * 60 * 60
 
+    /// Each mode's own current tab, so flipping between ordinary and private tabs lands
+    /// back where each left off. Keyed by `isPrivate`.
+    private var rememberedCurrent: [Bool: Tab.ID] = [:]
+
     private let persistence: TabPersistence?
     private var indexWrite: Task<Void, Never>?
     private var snapshotWrites: [Tab.ID: Task<Void, Never>] = [:]
 
     /// The current tab, if any.
     var currentTab: Tab? { tabs.first { $0.id == currentTabID } }
+
+    /// The open tabs of one mode, in stack order: private tabs, or the ordinary ones.
+    func tabs(inPrivate isPrivate: Bool) -> [Tab] {
+        tabs.filter { $0.isPrivate == isPrivate }
+    }
+
+    /// The tab a mode centres on: the one it last had current, else its last tab.
+    func currentTabID(inPrivate isPrivate: Bool) -> Tab.ID? {
+        if let id = rememberedCurrent[isPrivate],
+            tabs.contains(where: { $0.id == id && $0.isPrivate == isPrivate })
+        {
+            return id
+        }
+        return tabs.last { $0.isPrivate == isPrivate }?.id
+    }
+
+    /// Makes a tab current, and the one its mode comes back to.
+    private func setCurrent(_ id: Tab.ID?) {
+        currentTabID = id
+        if let id, let tab = tabs.first(where: { $0.id == id }) {
+            rememberedCurrent[tab.isPrivate] = id
+        }
+    }
 
     /// An empty store with nothing behind it.
     init(persistence: TabPersistence? = nil) {
@@ -47,10 +74,10 @@ final class TabStore {
         guard let persistence, let index = try? await persistence.loadIndex() else { return }
         tabs = index.openTabs
         archivedTabs = index.archivedTabs
-        currentTabID =
+        setCurrent(
             index.currentTabID.flatMap { id in
                 tabs.contains { $0.id == id } ? id : nil
-            } ?? tabs.first?.id
+            } ?? tabs.first?.id)
     }
 
     // MARK: Open tabs
@@ -69,7 +96,7 @@ final class TabStore {
             url: url, title: title, faviconURL: faviconURL, faviconData: faviconData, lastActive: now,
             isPrivate: isPrivate)
         tabs.append(tab)
-        currentTabID = tab.id
+        setCurrent(tab.id)
         saveIndex()
         return tab
     }
@@ -78,14 +105,14 @@ final class TabStore {
     /// tab or navigating in it marks it active.
     func select(_ id: Tab.ID) {
         guard tabs.contains(where: { $0.id == id }) else { return }
-        currentTabID = id
+        setCurrent(id)
         saveIndex()
     }
 
     /// Makes the tab current and marks it active — opening it, or navigating in it.
     func activate(_ id: Tab.ID, now: Date) {
         guard let i = tabs.firstIndex(where: { $0.id == id }) else { return }
-        currentTabID = id
+        setCurrent(id)
         tabs[i].lastActive = now
         saveIndex()
     }
@@ -137,15 +164,17 @@ final class TabStore {
         saveIndex()
     }
 
-    /// Closes the tab. Closing the current tab hands currency to the neighbour on its
-    /// right, or the one on its left when there is no right neighbour.
+    /// Closes the tab. Closing the current tab hands currency to the neighbour of its own
+    /// mode on its right, or the one on its left when there is no right neighbour.
     func close(_ id: Tab.ID) {
         guard let i = tabs.firstIndex(where: { $0.id == id }) else { return }
         let wasCurrent = currentTabID == id
         let wasPrivate = tabs[i].isPrivate
         tabs.remove(at: i)
         if wasCurrent {
-            currentTabID = tabs.indices.contains(i) ? tabs[i].id : tabs.last?.id
+            let sameMode = tabs.indices.filter { tabs[$0].isPrivate == wasPrivate }
+            let next = sameMode.first { $0 >= i } ?? sameMode.last
+            setCurrent(next.map { tabs[$0].id } ?? tabs.last?.id)
         }
         if wasPrivate {
             // Nothing of it was ever on disk.
@@ -198,7 +227,7 @@ final class TabStore {
         guard let after else { return [] }
         // Private tabs never reach the archive: it is written to disk.
         let stale = tabs.filter {
-            !$0.isPrivate && $0.id != currentTabID && now.timeIntervalSince($0.lastActive) >= after
+            !$0.isPrivate && $0.id != currentTabID(inPrivate: false) && now.timeIntervalSince($0.lastActive) >= after
         }
         guard !stale.isEmpty else { return [] }
         let ids = stale.map(\.id)
@@ -239,7 +268,7 @@ final class TabStore {
         tab.archivedAt = nil
         tab.lastActive = now
         tabs.append(tab)
-        currentTabID = id
+        setCurrent(id)
         saveIndex()
         return true
     }
@@ -268,9 +297,10 @@ final class TabStore {
             stripped.snapshot = nil
             return stripped
         }
-        // Private tabs never reach the disk; a private current tab is written as none.
+        // Private tabs never reach the disk; the ordinary mode's current tab is the one
+        // written, whichever mode is up.
         let saved = tabs.filter { !$0.isPrivate }
-        let current = saved.contains { $0.id == currentTabID } ? currentTabID : nil
+        let current = currentTabID(inPrivate: false)
         return TabIndex(
             openTabs: saved.map(strip),
             currentTabID: current,

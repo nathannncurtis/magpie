@@ -18,6 +18,13 @@ enum Palette {
 
     /// Primary filled controls: toggles on, icon squares, primary buttons, the Search key.
     static let ink = dynamic(light: 0x101115, dark: 0xF6F5F1)
+    /// `ink` as it reads in light, held whatever the appearance: the ground of the private
+    /// look, which is night in both.
+    static let nightInk = Color(hex: 0x101115)
+    /// The private look's lower edge: `nightInk` a shade deeper.
+    static let nightInkDeep = Color(hex: 0x08090B)
+    /// Text and icons on `nightInk`: `paper`'s light value, held.
+    static let onNightInk = Color(hex: 0xF6F5F1)
     /// Text and icons on `ink`. Ink and paper swap in dark.
     static let onInk = dynamic(light: 0xF6F5F1, dark: 0x101115)
     /// Brand paper.
