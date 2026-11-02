@@ -137,6 +137,10 @@ final class ReadingSession {
     /// Called with the address each time a top-level load commits, so the history can note it.
     var onPageCommitted: (@MainActor (URL) -> Void)?
 
+    /// Whether the first load's commit counts as a visit; off when the page is a saved tab
+    /// coming back, which was noted when it was first opened.
+    var recordsInitialCommit = true
+
     /// Called when the page's title lands, so the tab's label follows the page itself —
     /// the settle moments can stop before a title arrives.
     var onPageTitled: (@MainActor () -> Void)?
@@ -477,6 +481,10 @@ final class ReadingSession {
 
     private func noteCommitted() {
         guard let url = page.url else { return }
+        if !recordsInitialCommit {
+            recordsInitialCommit = true
+            if url == initialURL { return }
+        }
         onPageCommitted?(url)
     }
 

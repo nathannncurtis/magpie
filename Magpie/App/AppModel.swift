@@ -422,7 +422,8 @@ final class AppModel {
     /// The tab's page session, made on demand and kept in step with the tab. Every page
     /// carries the mods' configuration, so the installed scripts run on each; a reused
     /// session whose page is already loaded settles again, so it still gets its picture.
-    func ensureSession(for tab: Tab) -> ReadingSession {
+    /// A tab that comes back, rather than one just opened, does not count as a new visit.
+    func ensureSession(for tab: Tab, isNewVisit: Bool = false) -> ReadingSession {
         if let session = sessions[tab.id] {
             refireSettleIfPictureless(tab, session: session)
             return session
@@ -440,6 +441,7 @@ final class AppModel {
             downloads: downloads)
         session.logTag = "tab=\(tab.id.uuidString.prefix(4))"
         session.isPrivate = tab.isPrivate
+        session.recordsInitialCommit = isNewVisit
         session.viewportSize = restingPageSize
         if tab.url != nil { session.scrollToRestore = tab.scrollOffset }
         sessions[tab.id] = session
@@ -758,7 +760,7 @@ final class AppModel {
         let tab = store.newTab(url: url, isPrivate: launchIsPrivate, now: now)
         isPrivateMode = tab.isPrivate
         launchIsPrivate = false
-        _ = ensureSession(for: tab)
+        _ = ensureSession(for: tab, isNewVisit: true)
         searchPrefill = nil
         surface = .reading(searchOpen: false)
     }
@@ -768,7 +770,7 @@ final class AppModel {
     /// ordinary one.
     func openLinkInNewTab(_ url: URL, isPrivate: Bool, now: Date = .now) {
         let tab = store.newTab(url: url, isPrivate: isPrivate, now: now)
-        _ = ensureSession(for: tab)
+        _ = ensureSession(for: tab, isNewVisit: true)
         searchPrefill = nil
         surface = .reading(searchOpen: false)
     }
