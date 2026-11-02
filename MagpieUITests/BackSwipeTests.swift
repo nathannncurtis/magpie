@@ -33,6 +33,16 @@ final class BackSwipeTests: XCTestCase {
             element(app, "bookmarks.screen").waitForNonExistence(timeout: 10), "off the bookmarks")
     }
 
+    /// The Done at the top right leaves, the same as the swipe, from the list and from a folder.
+    func testBookmarksDoneLeaves() {
+        let app = launch(surface: "bookmarks")
+
+        XCTAssertTrue(element(app, "bookmarks.screen").waitForExistence(timeout: 20), "the bookmarks")
+        element(app, "bookmarks.done").tap()
+        XCTAssertTrue(
+            element(app, "bookmarks.screen").waitForNonExistence(timeout: 10), "off the bookmarks")
+    }
+
     func testSettingsSwipeBack() {
         let app = launch(surface: "settings")
 

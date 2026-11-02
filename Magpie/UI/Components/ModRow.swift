@@ -99,9 +99,7 @@ struct ModRow: View {
                 .frame(minWidth: trailing.isToggle ? nil : Layout.actionSlot, alignment: .trailing)
         }
         .padding(.vertical, Layout.verticalPadding)
-        // The card's own colour, so the row is opaque: the swipe action under it shows
-        // only where a swipe has moved the row aside, never through empty space.
-        .background(Palette.card)
+        .contentShape(.rect)
         // A container, so the row's name stays its own and the Get button and switch
         // inside keep theirs.
         .accessibilityElement(children: .contain)
@@ -114,7 +112,7 @@ struct ModRow: View {
             .foregroundStyle(Palette.warningText)
             .padding(.horizontal, 6)
             .padding(.vertical, 3)
-            .background(Palette.warningBackground, in: RoundedRectangle(cornerRadius: 6))
+            .background(Palette.warningBackground, in: RoundedRectangle(cornerRadius: Metrics.Radius.badge))
             .accessibilityIdentifier("mods.notReviewed")
     }
 
@@ -142,13 +140,15 @@ struct ModRow: View {
             // White on light teal; dark's bright teal needs dark text (1.5:1 in white).
             .foregroundStyle(colorScheme == .dark ? Palette.onInk : .white)
             .frame(width: Layout.swipeOpenWidth, alignment: .center)
+            // Only as wide as the row has moved aside: the row is frosted, so nothing may
+            // sit under it.
+            .frame(width: -swipeOffset, alignment: .trailing)
+            .clipped()
             .frame(maxHeight: .infinity)
-            // Rounded to the card's radius, the shape that covers it: a square
-            // tile would reach past the row's rounded ends at the corners.
             .background(
                 Palette.teal,
                 in: RoundedRectangle(
-                    cornerRadius: Metrics.Radius.card,
+                    cornerRadius: Metrics.Radius.chip,
                     style: .continuous)
             )
             .accessibilityIdentifier("mods.remove")

@@ -17,14 +17,13 @@ struct BottomSearchPill: View {
     private enum PillMetrics {
         static let height: CGFloat = Metrics.Bar.bottomSearchPillHeight
         static let horizontalPadding: CGFloat = 20
-        static let icon: CGFloat = 17
         static let iconGap: CGFloat = 10
     }
 
     var body: some View {
         HStack(spacing: PillMetrics.iconGap) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: PillMetrics.icon, weight: .medium))
+                .font(Typography.icon(.regular))
                 .imageScale(.medium)
                 .foregroundStyle(Palette.textOnMistSecondary)
             TextField(placeholder, text: $text)

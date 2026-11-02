@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Settings (04 · 11): the mist, Done at the top right, the default-browser card, and the
+/// Settings (04 · 11): the mist, the screen header with Done at the top right, the default-browser card, and the
 /// three groups. Its pages — the engine list, filter lists, the archive picker, About —
 /// push inside it with the bar hidden and a back button of their own.
 struct SettingsScreen: View {
@@ -14,10 +14,10 @@ struct SettingsScreen: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            SettingsScaffold(title: String(localized: "Settings"), trailing: { done }) {
+            SettingsScaffold(title: String(localized: "Settings")) {
                 DefaultBrowserCard()
-                SettingsSectionLabel(title: String(localized: "Search"))
-                SettingsGroup {
+                SectionLabel(title: String(localized: "Search"))
+                GroupedBox {
                     engineRow
                         .accessibilityIdentifier("settings.engine")
 
@@ -36,8 +36,8 @@ struct SettingsScreen: View {
                             set: { model.preferences.skimEnabled = $0 }))
                 }
 
-                SettingsSectionLabel(title: String(localized: "Privacy"))
-                SettingsGroup {
+                SectionLabel(title: String(localized: "Privacy"))
+                GroupedBox {
                     toggleRow(
                         icon: .symbol("shield.lefthalf.filled"), title: String(localized: "Ads & trackers"),
                         id: "settings.ads", isDivided: false,
@@ -51,7 +51,7 @@ struct SettingsScreen: View {
                             get: { model.blocker.blocksCookieBanners },
                             set: { model.blocker.blocksCookieBanners = $0 }))
 
-                    SettingsRow(icon: .symbol("cellularbars"), title: String(localized: "Filter lists")) {
+                    SettingsRow(icon: .symbol("list.bullet.rectangle"), title: String(localized: "Filter lists")) {
                         Text(
                             ContentBlocker.updatedText(
                                 from: model.blocker.lastUpdated, now: .now)
@@ -65,8 +65,8 @@ struct SettingsScreen: View {
                     .accessibilityIdentifier("settings.filterLists")
                 }
 
-                SettingsSectionLabel(title: String(localized: "Tabs & more"))
-                SettingsGroup {
+                SectionLabel(title: String(localized: "Tabs & more"))
+                GroupedBox {
                     SettingsRow(icon: .symbol("archivebox"), title: String(localized: "Archive tabs after")) {
                         rowValue(Preferences.archiveIntervalLabel(model.preferences.archiveInterval))
                         SettingsChevron()
@@ -74,7 +74,7 @@ struct SettingsScreen: View {
                     .action { path.append(.archivePicker) }
                     .accessibilityIdentifier("settings.archive")
 
-                    SettingsRow(icon: .symbol("bookmark"), title: String(localized: "Passwords")) {
+                    SettingsRow(icon: .symbol("key"), title: String(localized: "Passwords")) {
                         rowValue(String(localized: "iOS Passwords"))
                         SettingsChevron()
                     }
@@ -82,7 +82,7 @@ struct SettingsScreen: View {
                     .divided(true)
                     .accessibilityIdentifier("settings.passwords")
 
-                    SettingsRow(icon: .symbol("link"), title: String(localized: "About Magpie")) {
+                    SettingsRow(icon: .symbol("info.circle"), title: String(localized: "About Magpie")) {
                         rowValue("\(Self.version) · MPL-2.0")
                         SettingsChevron()
                     }
@@ -138,16 +138,6 @@ struct SettingsScreen: View {
             .foregroundStyle(Palette.textOnMistSecondaryMeta)
     }
 
-    private var done: some View {
-        Button("Done") { model.closeSettings() }
-            .font(.system(.subheadline, weight: .semibold))
-            .foregroundStyle(Palette.textPrimary)
-            .padding(.leading, 8)
-            .frame(minHeight: 44)
-            .contentShape(.rect)
-            .accessibilityIdentifier("settings.done")
-    }
-
     private static var version: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
     }
@@ -163,48 +153,32 @@ struct SettingsScreen: View {
     }
 }
 
-/// The shared frame of Settings and its pages: the mist, a top row (Done, or back), the
-/// title, and the scrolling content under it.
-struct SettingsScaffold<Trailing: View, Content: View>: View {
+/// The shared frame of Settings and its pages: the mist, the screen header (back on a
+/// page, Done always), and the scrolling content under it.
+struct SettingsScaffold<Content: View>: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppModel.self) private var model
     let title: String
     var showsBack = false
-    @ViewBuilder var trailing: () -> Trailing
     @ViewBuilder var content: () -> Content
-
-    init(
-        title: String,
-        showsBack: Bool = false,
-        @ViewBuilder trailing: @escaping () -> Trailing = { EmptyView() },
-        @ViewBuilder content: @escaping () -> Content
-    ) {
-        self.title = title
-        self.showsBack = showsBack
-        self.trailing = trailing
-        self.content = content
-    }
 
     var body: some View {
         ZStack {
             MistBackground()
                 .ignoresSafeArea()
             VStack(spacing: 0) {
-                // The row stays 36 tall; the 44 pt targets in it spill 4 pt over its
-                // edges, so it rides above what follows to keep the spill tappable.
-                topRow
-                    .padding(.horizontal, 16)
-                    .frame(height: 36)
-                    .readableWidth()
-                    .zIndex(1)
+                ScreenHeader(
+                    title: title, titleID: "settings.title",
+                    leading: {
+                        if showsBack {
+                            HeaderBackButton(id: "settings.back") { dismiss() }
+                        }
+                    },
+                    trailing: {
+                        HeaderDoneButton(id: "settings.done") { model.closeSettings() }
+                    })
                 ScrollView {
                     VStack {
-                        Text(title)
-                            .font(Typography.screenTitle)
-                            .foregroundStyle(Palette.textPrimary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 22)
-                            .padding(.bottom, 10)
                         content()
                         Color.clear.frame(height: 32)
                     }
@@ -213,28 +187,5 @@ struct SettingsScaffold<Trailing: View, Content: View>: View {
             }
         }
         .navigationBarHidden(true)
-    }
-
-    private var topRow: some View {
-        HStack {
-            if showsBack {
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "chevron.backward")
-                        .font(.system(.callout, weight: .medium))
-                        .foregroundStyle(Palette.textPrimary)
-                        .frame(width: 44, height: 44)
-                        .contentShape(.rect)
-                }
-                // The 44 pt target grows left over the row's inset, so the glyph holds
-                // the place the 36 pt bar gave it instead of shifting with the frame.
-                .padding(.leading, -4)
-                .accessibilityLabel("Back")
-                .accessibilityIdentifier("settings.back")
-            }
-            Spacer()
-            trailing()
-        }
     }
 }

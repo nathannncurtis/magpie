@@ -48,7 +48,7 @@ Later launches restore the last tab, with no animation.
   - `SkimHeader`
   - `SkimSection`s
   - "Sources" with a row of `SourceCard`s
-- **Floating controls:** `SkimQueryBar` at the top and `SkimControlBar` at the bottom.
+- **Floating controls:** a trailing "Done" (`skim.done`, on a glass capsule) in a `ScreenHeader` control row at the top, with the `SkimQueryBar` under it, and the `SkimControlBar` at the bottom. Done leaves the page, the same as `cancelSkim()`.
 - **Content rhythm:** an emoji, a **bold term**, " — ", a short claim, then citation dots. Every claim carries at least one dot.
 - **Share:** creates a self-contained page (HTML snapshot) that includes its sources. Saving puts it in Bookmarks as a Skim page.
 - **Availability:** Skim exists only on devices that can run Apple Foundation Models (iPhone 15 Pro and later, Apple Intelligence on, a supported language). Everywhere else every Skim entry point is hidden: there are no disabled states and no upsell.
@@ -66,7 +66,7 @@ Later launches restore the last tab, with no animation.
 
 ## 06 · Mods
 - **Background:** the mist.
-- **Header:** "Mods" in `screenTitle`, with "Done" at top right.
+- **Header:** "Mods" in a `ScreenHeader`, with "Done" at top right (`mods.done`). Section headings use `SectionLabel`; the cards are `GroupedBox`es; the installed empty state is `EmptyListState`.
 - **Segments:** Directory | Installed · N.
 - **Directory tab:** the `FeaturedModCard` (Google Answer Box), then "Popular this week" (`sectionTitle`) and a card of `ModRow`s.
 - **Directory install:** while the entry's file is fetched and checked, the row's Get gives way to the 24 pt `MarkSpinner` (05 · 06). More than one can run at once, each row carrying its own mark; a Get for an entry already installing does nothing. The install stays on the Directory tab: when it lands, the row's Get becomes a popping `InstalledCheck` in place. An install that does not land shows one plain line under the card, with Get as the way to try again.
@@ -101,26 +101,26 @@ Later launches restore the last tab, with no animation.
 - **Duration:** about 30–60 s. When done, it plays 05 · Skim finishes.
 
 ## 09 · Archive
-- **Header:** "Archive" in `screenTitle`, with "Done" at top right.
-- **List:** rows on the mist, grouped by `DayHeader` (Today, Yesterday, Earlier this week, then one per month, newest first). A month band names its year only outside the current year: "October", "October 2025". Each row: favicon, title, site, time.
+- **Header:** "Archive" in a `ScreenHeader`, with "Done" at top right (`archive.done`).
+- **List:** rows on the mist, grouped by `SectionLabel` (Today, Yesterday, Earlier this week, then one per month, newest first). A month band names its year only outside the current year: "October", "October 2025". Each row: favicon, title, site, time. A row dated in the current year never shows the year ("Sep 30"); an older one does ("Sep 30, 2025").
 - **Actions:** tap a row to restore the tab; swipe to delete.
 - **Search:** the `BottomSearchPill` with "Search archived tabs" searches titles and addresses; the pill rides the keyboard.
 - **Retention:** 30 days, then deleted.
 
 ## 10 · Bookmarks
-- **Header:** "Bookmarks", with Edit (top left) and Done.
+- **Header:** "Bookmarks" in a `ScreenHeader`, with Edit (top left) and Done (top right). Done leaves, as the back swipe does (`bookmarks.done`). While editing, the leading label reads "Save", never "Done". An open folder swaps Edit for Back; Done stays.
 - **Folders:** a "Folders" section of `FolderRow`s, then "Recently added", mixing `ListRow`s and `SkimPageRow`s.
 - **Edit mode:** adds "New folder", rename, reorder and delete.
 - **Search:** the `BottomSearchPill` with "Search bookmarks"; the pill rides the keyboard.
 
 ## 11 · Settings
-- **Background:** the mist, with grouped boxes (`SettingsGroup`, frosted).
-- **Header:** "Settings", with Done.
+- **Background:** the mist, with grouped boxes (`GroupedBox`, frosted).
+- **Header:** "Settings" in a `ScreenHeader`, with Done. Its pages carry Back at the leading edge and the same Done, which closes Settings.
 - **Default browser:** the `DefaultBrowserCard` sits on top until Magpie is the default.
 - **Groups:**
   - **Search:** Search engine › · Suggestions [toggle] · Skim for me [toggle]
   - **Privacy:** Ads & trackers [toggle] · Cookie banners [toggle] · Filter lists ("Updated 2 h ago" ›)
-  - **Tabs & more:** Archive tabs after ("1 day" ›) · Passwords ("iOS Passwords" ›, which opens iOS Passwords) · About Magpie ("1.0 · MPL-2.0" ›)
+  - **Tabs & more:** Archive tabs after ("1 day" ›) · Passwords (`key`; "iOS Passwords" ›, which opens iOS Passwords) · About Magpie ("1.0 · MPL-2.0" ›)
 - There is no account and no sync.
 
 ## 12 · Install from URL
@@ -160,7 +160,7 @@ Every edge state follows one pattern: one plain line saying what happened, and o
 
 ### 16 · Skim couldn't finish
 - **Layout:** the Skim working scene with the mark **standing still** at 55% opacity, the title, then one line in `meta` saying why.
-- **Actions:** "Show search results" (ink CTA) and "Try again" (text button).
+- **Actions:** "Show search results" (the primary button) and "Try again" (text button), and a trailing "Done" (`skim.done`) that leaves, the same as `cancelSkim()`.
 - **Trigger:** fewer than 2 pages could be read, or the model refused. Never show a half-built page.
 
 ### 17 · Install failed

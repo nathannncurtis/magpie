@@ -19,6 +19,7 @@ struct SkimFlowScreen: View {
                 if let page = run.page {
                     SkimPageScreen(
                         page: page,
+                        onDone: { model.cancelSkim() },
                         onEditQuery: { model.editSkimQuery() },
                         onDigDeeper: { model.skimDigDeeper() },
                         onOpenSource: { model.openFromLaunch($0) })
@@ -36,6 +37,7 @@ struct SkimFlowScreen: View {
                     SkimFailedScreen(
                         query: run.query,
                         line: failure.line,
+                        onDone: { model.cancelSkim() },
                         onShowResults: { model.showSkimSearchResults() },
                         onRetry: { model.retrySkim() }
                     )

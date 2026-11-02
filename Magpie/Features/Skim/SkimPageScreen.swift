@@ -9,6 +9,7 @@ import SwiftUI
 struct SkimPageScreen: View {
 
     let page: SkimPage
+    let onDone: () -> Void
     let onEditQuery: () -> Void
     let onDigDeeper: () -> Void
     let onOpenSource: (URL) -> Void
@@ -57,16 +58,23 @@ struct SkimPageScreen: View {
                     )
                     .modifier(Arrived(shown: step >= barsStep, drop: -12))
                 }
-                SkimQueryBar(query: page.query, onEdit: onEditQuery)
-                    .padding(.horizontal, Metrics.Spacing.insetFloating)
-                    .readableWidth()
-                    .padding(.top, SkimQueryBar.topGap)
-                    .onGeometryChange(for: CGFloat.self) {
-                        $0.frame(in: .global).minY
-                    } action: {
-                        queryBarTop = $0
-                    }
-                    .modifier(Arrived(shown: step >= barsStep, drop: -12))
+                VStack(spacing: 0) {
+                    ScreenHeader(
+                        title: nil,
+                        trailing: {
+                            HeaderDoneButton(id: "skim.done", onGlass: true, action: onDone)
+                        })
+                    SkimQueryBar(query: page.query, onEdit: onEditQuery)
+                        .padding(.horizontal, Metrics.Spacing.insetFloating)
+                        .readableWidth()
+                        .padding(.top, SkimQueryBar.topGap)
+                        .onGeometryChange(for: CGFloat.self) {
+                            $0.frame(in: .global).minY
+                        } action: {
+                            queryBarTop = $0
+                        }
+                        .modifier(Arrived(shown: step >= barsStep, drop: -12))
+                }
             }
         }
         .onGeometryChange(for: CGFloat.self) {
@@ -272,6 +280,7 @@ private struct Arrived: ViewModifier {
 #Preview("Mosaic") {
     SkimPageScreen(
         page: SkimFixture.page(photoCount: 3),
+        onDone: {},
         onEditQuery: {},
         onDigDeeper: {},
         onOpenSource: { _ in })

@@ -98,9 +98,12 @@ All radii use the continuous (squircle) style.
 |---|---|
 | Reading bar, bottom pills, CTAs | capsule (height/2) |
 | Sheets (top corners) | 38, matching the device corners; system sheets give this for free |
-| Content cards (mods, featured, folder tiles) | 22–24 |
-| Grouped boxes (menu groups, settings groups) | 20 |
+| Grouped boxes (menu groups, settings groups, mod cards) | 20 |
 | Engine tiles, source cards, preview boxes | 18–20 |
+| Text fields (`Radius.field`) | 14 |
+| Chips and answer tiles (`Radius.chip`) | 12 |
+| Small tiles (`Radius.tile`) | 8 |
+| Tags and badges (`Radius.badge`) | 6 |
 | Search field | 17 (outer ring) / 15.5 (inner) |
 | Icon squares (menu, mod icons) | 9 (30 pt) / 12 (44 pt) |
 | Favicons | 26 pt → 7, 20 pt → 6, 16 pt → 4 |
@@ -108,7 +111,7 @@ All radii use the continuous (squircle) style.
 
 ## Shadows
 
-Glass gets its shadow from the system. Solid cards use a soft, wide shadow:
+Glass gets its shadow from the system. Solid cards (the Skim source card) use a soft, wide shadow:
 - Light: `y 14, blur 30, spread −18, #102824 @ 35%` plus a hairline `#102824 @ 6%`.
 - Dark: `#000 @ 60%` plus a white hairline at 7%.
 

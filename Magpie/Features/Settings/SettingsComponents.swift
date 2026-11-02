@@ -1,29 +1,8 @@
 import SwiftUI
 
-/// The pieces Settings and its pages are built from (03 · Settings): the grouped box,
-/// its rows, the icon square, and the toggle row. The icon square and the chevron are
+/// The pieces Settings and its pages are built from (03 · Settings): the rows of a
+/// `GroupedBox`, the icon square, and the toggle row. The icon square and the chevron are
 /// the menu's too; the menu's groups, rows and toggle rows are its own.
-struct SettingsGroup<Content: View>: View {
-    @ViewBuilder var content: () -> Content
-
-    var body: some View {
-        VStack(spacing: 0) {
-            content()
-        }
-        .background(
-            .regularMaterial,
-            in: RoundedRectangle(cornerRadius: Metrics.Radius.boxGrouped, style: .continuous)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: Metrics.Radius.boxGrouped, style: .continuous)
-                .strokeBorder(Palette.groupHairline, lineWidth: 0.75)
-        )
-        // The box's 16 from the screen's edges; the rows and their hairlines run the
-        // box's width, no wider.
-        .padding(.horizontal, Metrics.Spacing.insetList)
-    }
-}
-
 /// What a row's icon square shows: an SF Symbol, the mark, the drawn cookie, an engine's
 /// favicon, or the Other engine's plus glyph.
 enum SettingsIcon {
@@ -124,7 +103,7 @@ struct IconSquare: View {
                     RoundedRectangle(cornerRadius: Metrics.Radius.iconSquareSmall, style: .continuous)
                         .fill(Palette.fill)
                     Image(systemName: "plus")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(Typography.icon(.small))
                         .foregroundStyle(Palette.textPrimary)
                 }
                 .frame(width: 30, height: 30)
@@ -144,8 +123,7 @@ struct IconSquare: View {
         switch icon {
         case .symbol(let name):
             Image(systemName: name)
-                .font(.system(size: 16, weight: .medium))
-                .imageScale(.medium)
+                .font(Typography.icon(.small))
         case .mark:
             Mark(size: 18, style: .solid)
         case .cookie:
@@ -256,7 +234,7 @@ struct SettingsToggleRow: View {
 struct SettingsChevron: View {
     var body: some View {
         Image(systemName: "chevron.right")
-            .font(.system(size: 13, weight: .medium))
+            .font(Typography.icon(.small))
             .foregroundStyle(Palette.textOnMistSecondaryMeta)
     }
 }
@@ -266,27 +244,8 @@ struct SettingsChevron: View {
 struct SettingsCheckmark: View {
     var body: some View {
         Image(systemName: "checkmark")
-            .font(.system(size: 14, weight: .semibold))
+            .font(Typography.icon(.small))
             .foregroundStyle(Palette.textPrimary)
             .accessibilityHidden(true)
-    }
-}
-
-/// An uppercase section label above a group.
-struct SettingsSectionLabel: View {
-    let title: String
-
-    var body: some View {
-        Text(title)
-            .font(Typography.label)
-            .tracking(Typography.labelTracking)
-            .textCase(.uppercase)
-            .foregroundStyle(Palette.labelOnMist)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.leading, Metrics.Spacing.insetList + 4)
-            .padding(.trailing, Metrics.Spacing.insetList)
-            .padding(.top, Metrics.Spacing.gapSectionTop)
-            .padding(.bottom, Metrics.Spacing.gapSectionBottom)
-            .accessibilityAddTraits(.isHeader)
     }
 }
