@@ -45,3 +45,33 @@ struct NavigationPolicyTests {
         #expect(NavigationPolicy.decide(url: nil, isMainFrame: true, isLinkActivation: true) == .cancel)
     }
 }
+
+@Suite("NavigationPolicy new windows")
+struct NavigationPolicyNewWindowTests {
+
+    private func decide(_ url: String, tapped: Bool) -> NavigationPolicy {
+        NavigationPolicy.decide(
+            url: URL(string: url), isMainFrame: true, isLinkActivation: tapped, isNewWindow: true)
+    }
+
+    @Test("a tapped web link in a new window opens a tab", arguments: ["https://example.com", "http://example.com/a"])
+    func tapped(url: String) {
+        #expect(decide(url, tapped: true) == .openInNewTab)
+    }
+
+    @Test("a window nobody tapped for is a pop-up and is dropped")
+    func popUp() {
+        #expect(decide("https://example.com", tapped: false) == .cancel)
+    }
+
+    @Test("a blank new window is not opened")
+    func blank() {
+        #expect(decide("about:blank", tapped: true) == .allow)
+    }
+
+    @Test("another app's scheme still hands off from a tapped new-window link")
+    func handOff() {
+        #expect(decide("tel:+15551234567", tapped: true) == .handOff)
+        #expect(decide("tel:+15551234567", tapped: false) == .cancel)
+    }
+}
