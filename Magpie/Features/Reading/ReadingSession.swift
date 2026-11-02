@@ -7,13 +7,30 @@ import WebKit
 
 /// What the can't-load page says (04 · 15; copy in 06 · Edge states).
 struct PageLoadFailure {
+
+    /// Why the page is not showing.
+    enum Reason: Equatable {
+        /// The load failed, or the site did not answer.
+        case unreachable
+        /// The load never got as far as showing a page.
+        case stalled
+        /// The page's renderer died, and died again after one reload.
+        case crashed
+    }
+
     /// The host the page was on, in display form.
     let host: String
     /// Whether the network path was down.
     let isOffline: Bool
+    var reason = Reason.unreachable
 
     var title: String {
-        host.isEmpty
+        switch reason {
+        case .stalled: return String(localized: "This page stopped loading")
+        case .crashed: return String(localized: "This page stopped working")
+        case .unreachable: break
+        }
+        return host.isEmpty
             ? String(localized: "Can't reach this page")
             : String(localized: "Can't reach \(host)")
     }
@@ -21,6 +38,11 @@ struct PageLoadFailure {
     var line: String {
         if isOffline {
             return String(localized: "You're offline. It'll load when you're back.")
+        }
+        switch reason {
+        case .stalled: return String(localized: "It took too long. Try again in a moment.")
+        case .crashed: return String(localized: "Something went wrong showing it. Try again.")
+        case .unreachable: break
         }
         // COPY: review — 06 still has this line to write.
         return String(localized: "It didn't answer. Try again in a moment.")
@@ -48,6 +70,35 @@ enum CaptureOutcome {
     case stored(Data)
     case miss
     case notReady
+}
+
+/// What to do when a page's renderer dies: reload once, and show the failure page when
+/// it dies again soon after. Kept apart from the session so the rule can be tested.
+struct RendererRecovery {
+
+    enum Action: Equatable {
+        /// The same death, reported twice.
+        case ignore
+        case reload
+        case fail
+    }
+
+    /// Two reports closer than this are one death: the navigation watch and the load's
+    /// own sequence both hear it.
+    static let sameDeath: TimeInterval = 0.5
+    /// A death this soon after a reload is a page that cannot be shown.
+    static let window: TimeInterval = 20
+
+    private var lastDeath: Date?
+    private var lastReload: Date?
+
+    mutating func died(at now: Date) -> Action {
+        if let lastDeath, now.timeIntervalSince(lastDeath) < Self.sameDeath { return .ignore }
+        lastDeath = now
+        if let lastReload, now.timeIntervalSince(lastReload) < Self.window { return .fail }
+        lastReload = now
+        return .reload
+    }
 }
 
 /// One page being read: the web page it shows, the bar tint, and the connection watch.
@@ -93,7 +144,24 @@ final class ReadingSession {
     private var readingViewHolds = 0
 
     /// A reading view took the page.
-    func readingViewAppeared() { readingViewHolds += 1 }
+    func readingViewAppeared() {
+        readingViewHolds += 1
+        // A tab whose renderer died while it was away reloads as it comes back.
+        if reloadWhenShown {
+            reloadWhenShown = false
+            retry()
+        }
+    }
+
+    /// Whether the renderer died while no reading view held the page.
+    private(set) var reloadWhenShown = false
+    @ObservationIgnored private var recovery = RendererRecovery()
+    /// Whether the current load has committed: a page that did is on its way to the
+    /// screen, and a slow tail of subresources does not make it a failed load.
+    private(set) var committedThisLoad = false
+    /// Where the reader was on this page, to scroll back to once it has loaded. One shot,
+    /// and only for the address it was saved on.
+    @ObservationIgnored var scrollToRestore: Double?
 
     /// A reading view let the page go. Its disappearance can come before WebKit has
     /// handed the page back, while the view is still animating out, so the hold lasts
@@ -334,7 +402,8 @@ final class ReadingSession {
         // A session dropped before its task ran never starts a load.
         guard !Task.isCancelled else { return }
         SnapshotLog.event("observer start \(logTag)")
-        open(initialURL)
+        requestedURL = initialURL
+        startLoad { self.page.load(self.initialURL) }
         while !Task.isCancelled {
             do {
                 for try await event in page.navigations {
@@ -342,6 +411,7 @@ final class ReadingSession {
                         "nav \(logTag) \(Self.describe(event)) url=\(loggable(page.url))")
                     if event == .committed {
                         failure = nil
+                        committedThisLoad = true
                         lastCommittedURL = page.url
                     }
                     if event == .finished {
@@ -360,6 +430,13 @@ final class ReadingSession {
                 // A single load's failure also lands here; the load's own sequence
                 // records it, so keep listening for the rest of the session.
                 if case WebPage.NavigationError.failedProvisionalNavigation = error { continue }
+                if case WebPage.NavigationError.webContentProcessTerminated = error {
+                    rendererTerminated()
+                    // Listen again, after a beat: a dead page that throws on every
+                    // subscription must not spin.
+                    try? await Task.sleep(for: .milliseconds(250))
+                    continue
+                }
                 return
             }
         }
@@ -369,6 +446,9 @@ final class ReadingSession {
     /// moment that fired this, so it settles once more a beat later.
     private func settle() {
         settleWithLateBeat()
+        if scrollToRestore != nil {
+            Task { [weak self] in await self?.restoreScroll() }
+        }
     }
 
     private func settleWithLateBeat() {
@@ -379,6 +459,38 @@ final class ReadingSession {
             guard !Task.isCancelled else { return }
             self?.onPageSettled?()
         }
+    }
+
+    /// How far down the page the reader is, in page points; nil when the page is not in a
+    /// state to say — mid-load, failed, or not answering. Bounded, because a dead renderer
+    /// never answers.
+    func scrollOffset() async -> Double? {
+        guard failure == nil, page.url != nil, !page.isLoading else { return nil }
+        let value: Double? = await capped(Self.scrollCap) {
+            let result = try? await self.page.callJavaScript(
+                "return window.scrollY", contentWorld: .defaultClient)
+            return (result as? NSNumber)?.doubleValue
+        }
+        return value.flatMap { $0.isFinite && $0 >= 0 ? $0 : nil }
+    }
+
+    /// Scrolls the loaded page back to where the reader was. A late-laid-out page is
+    /// given a few tries to grow tall enough. One shot: the offset is spent either way.
+    private func restoreScroll() async {
+        guard let target = scrollToRestore, !page.isLoading, page.url != nil, failure == nil
+        else { return }
+        scrollToRestore = nil
+        for _ in 0..<Self.restoreTries {
+            guard !Task.isCancelled else { return }
+            let script = "window.scrollTo(0, \(target)); return window.scrollY"
+            let result = try? await page.callJavaScript(script, contentWorld: .defaultClient)
+            if let reached = (result as? NSNumber)?.doubleValue, abs(reached - target) < 2 {
+                SnapshotLog.event("scroll restored \(logTag)")
+                return
+            }
+            try? await Task.sleep(for: .milliseconds(250))
+        }
+        SnapshotLog.event("scroll restore gave up \(logTag)")
     }
 
     /// The tab let its page go: closed, archived, or pruned past the live cap. The page's
@@ -399,6 +511,7 @@ final class ReadingSession {
 
     /// Loads a page outright.
     func open(_ url: URL) {
+        scrollToRestore = nil
         requestedURL = url
         startLoad { self.page.load(url) }
     }
@@ -420,6 +533,7 @@ final class ReadingSession {
     /// Goes back one page.
     func goBack() {
         guard let back = page.backForwardList.backList.last else { return }
+        scrollToRestore = nil
         requestedURL = back.url
         startLoad { self.page.load(back) }
     }
@@ -427,6 +541,7 @@ final class ReadingSession {
     /// Goes forward one page.
     func goForward() {
         guard let forward = page.backForwardList.forwardList.first else { return }
+        scrollToRestore = nil
         requestedURL = forward.url
         startLoad { self.page.load(forward) }
     }
@@ -435,6 +550,7 @@ final class ReadingSession {
         _ events: () -> some AsyncSequence<WebPage.NavigationEvent, Error>
     ) {
         failure = nil
+        committedThisLoad = false
         pageBackground = nil
         topColour = nil
         // The page being left does not keep speaking for the one arriving: its icon
@@ -482,7 +598,24 @@ final class ReadingSession {
                 "load watch gave up \(self.logTag) loading=\(self.page.isLoading) "
                     + "progress=\(self.page.estimatedProgress) "
                     + "url=\(self.page.url?.absoluteString ?? "nil")")
+            if Self.loadStalled(
+                failed: self.failure != nil, committed: self.committedThisLoad)
+            {
+                self.page.stopLoading()
+                self.failedURL = self.requestedURL ?? self.page.url
+                self.present(
+                    PageLoadFailure(
+                        host: HostFormatter.host(for: self.requestedURL ?? self.page.url),
+                        isOffline: !self.isOnline, reason: .stalled))
+            }
         }
+    }
+
+    /// Whether a load the watch gave up on left the reader with nothing: no failure
+    /// already shown, and the load never committed. A committed page is showing, or about
+    /// to, and one subresource that never ends does not take it away.
+    static func loadStalled(failed: Bool, committed: Bool) -> Bool {
+        !failed && !committed
     }
 
     /// Observes one load: a throw is the page failing to load. The load's own sequence
@@ -491,7 +624,9 @@ final class ReadingSession {
     private func drive<Events: AsyncSequence>(_ events: Events) async
     where Events.Element == WebPage.NavigationEvent, Events.Failure == Error {
         do {
-            for try await _ in events {}
+            for try await event in events where event == .committed {
+                committedThisLoad = true
+            }
             SnapshotLog.event("load finished \(logTag)")
             settle()
         } catch {
@@ -501,6 +636,13 @@ final class ReadingSession {
 
     private func fail(with error: Error) {
         guard !Task.isCancelled else { return }
+        if case WebPage.NavigationError.webContentProcessTerminated = error {
+            rendererTerminated()
+            return
+        }
+        // Stopping a stalled load ends its sequence with a cancellation of its own; the
+        // stalled page stands.
+        if failure?.reason == .stalled { return }
         let underlying: Error
         if case WebPage.NavigationError.failedProvisionalNavigation(let inner) = error {
             underlying = inner
@@ -514,8 +656,40 @@ final class ReadingSession {
                 .notConnectedToInternet, .networkConnectionLost, .dataNotAllowed,
             ].contains(urlError.code)
         }
-        failure = PageLoadFailure(
-            host: HostFormatter.host(for: requestedURL ?? page.url), isOffline: offline)
+        present(
+            PageLoadFailure(
+                host: HostFormatter.host(for: requestedURL ?? page.url), isOffline: offline))
+    }
+
+    /// The renderer behind the page died. On screen it reloads once at once; away, it
+    /// reloads when the tab is next shown; dying again soon after, it shows the failure.
+    func rendererTerminated(at now: Date = .now) {
+        let action = recovery.died(at: now)
+        SnapshotLog.event("renderer died \(logTag) \(action)")
+        switch action {
+        case .ignore:
+            return
+        case .reload:
+            if isOnReadingScreen {
+                retry()
+            } else {
+                reloadWhenShown = true
+            }
+        case .fail:
+            reloadWhenShown = false
+            loadTask?.cancel()
+            loadWatch?.cancel()
+            loadWatch = nil
+            failedURL = page.url ?? requestedURL
+            present(
+                PageLoadFailure(
+                    host: HostFormatter.host(for: page.url ?? requestedURL),
+                    isOffline: false, reason: .crashed))
+        }
+    }
+
+    private func present(_ failure: PageLoadFailure) {
+        self.failure = failure
         pageBackground = nil
         topColour = nil
         // The failure page takes the web view's place in the hierarchy, so the
@@ -785,6 +959,9 @@ final class ReadingSession {
     private static let loadWatchStart: Duration = .milliseconds(250)
     private static let loadWatchInterval: Duration = .milliseconds(200)
     private static let loadWatchLimit: Duration = .seconds(90)
+    /// How long the scroll position may take to read, and how often a restore tries.
+    private static let scrollCap: Duration = .milliseconds(700)
+    private static let restoreTries = 8
 }
 
 extension ReadingSession: Hashable {
@@ -823,9 +1000,9 @@ private struct SnapshotUnavailable: Error {}
 /// Runs a capture under a cap: one that does not answer in time reads as nil. All on the
 /// main actor, where the page lives.
 @MainActor
-private func capped(
-    _ cap: Duration, _ capture: @escaping @MainActor () async -> Data?
-) async -> Data? {
+private func capped<Value: Sendable>(
+    _ cap: Duration, _ capture: @escaping @MainActor () async -> Value?
+) async -> Value? {
     await withCheckedContinuation { continuation in
         let gate = ResumeGate(continuation)
         Task { gate.resume(await capture()) }
@@ -838,15 +1015,15 @@ private func capped(
 
 /// Hands the value to the first of many finishers; the rest are dropped.
 @MainActor
-private final class ResumeGate {
-    private var continuation: CheckedContinuation<Data?, Never>?
+private final class ResumeGate<Value: Sendable> {
+    private var continuation: CheckedContinuation<Value?, Never>?
     private var resumed = false
 
-    init(_ continuation: CheckedContinuation<Data?, Never>) {
+    init(_ continuation: CheckedContinuation<Value?, Never>) {
         self.continuation = continuation
     }
 
-    func resume(_ value: Data?) {
+    func resume(_ value: Value?) {
         guard !resumed else { return }
         resumed = true
         continuation?.resume(returning: value)

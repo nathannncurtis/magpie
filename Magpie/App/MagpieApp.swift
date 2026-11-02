@@ -21,14 +21,14 @@ struct MagpieApp: App {
                     started = true
                     if let url = pendingURL {
                         pendingURL = nil
-                        model.openFromLaunch(url)
+                        model.openExternalLink(url)
                     }
                     UITestEnvironment.applySurfaceOverride(to: model)
                     await UITestEnvironment.play(UITestEnvironment.script, on: model)
                 }
                 .onOpenURL { url in
                     guard url.scheme == "http" || url.scheme == "https" else { return }
-                    if started { model.openFromLaunch(url) } else { pendingURL = url }
+                    if started { model.openExternalLink(url) } else { pendingURL = url }
                 }
                 // The app switcher keeps a picture of the screen on disk; with a
                 // private tab open, that picture is the mist.
@@ -45,6 +45,7 @@ struct MagpieApp: App {
                     }
                 }
                 .onChange(of: scenePhase) { _, phase in
+                    if phase == .background { model.appEnteredBackground() }
                     if phase == .active {
                         model.refreshArchive()
                         Task { await model.refreshBlocking() }

@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import UIKit
 import WebKit
 
 /// Which surface is up (04 · the navigation map).
@@ -268,6 +269,27 @@ final class AppModel {
     /// The last step of the first-launch flow: the choices are saved and the app appears.
     func completeOnboarding() {
         preferences.hasCompletedOnboarding = true
+        if let url = linkAwaitingOnboarding {
+            linkAwaitingOnboarding = nil
+            openExternalLink(url)
+        }
+    }
+
+    /// A link from another app that arrived while onboarding covered the app.
+    private var linkAwaitingOnboarding: URL?
+
+    /// A link handed over by another app: opened in a new tab, with nothing left covering
+    /// it. Settings closes and a Skim run is cancelled first; onboarding is not skipped,
+    /// so its link waits and opens the moment onboarding is done.
+    func openExternalLink(_ url: URL, now: Date = .now) {
+        if needsOnboarding {
+            linkAwaitingOnboarding = url
+            return
+        }
+        closeSettings()
+        if surface == .skim { cancelSkim() }
+        launchIsPrivate = false
+        openFromLaunch(url, now: now)
     }
 
     /// The engine searches run on, from the user's choice.
@@ -350,6 +372,7 @@ final class AppModel {
         session.logTag = "tab=\(tab.id.uuidString.prefix(4))"
         session.isPrivate = tab.isPrivate
         session.viewportSize = restingPageSize
+        if tab.url != nil { session.scrollToRestore = tab.scrollOffset }
         sessions[tab.id] = session
         sessionTasks[tab.id] = Task {
             await session.run()
@@ -401,6 +424,9 @@ final class AppModel {
     /// Lets the tab's page go, and every piece of work kept for it. The tab keeps its
     /// picture and its address; its page loads again from there when it is opened.
     private func dropSession(_ id: Tab.ID) {
+        // Its place in the page goes onto the tab first; the page answers while the
+        // session is still held, and the rebuilt one scrolls back to it.
+        recordScrollOffset(of: sessions[id], for: id)
         sessionTasks[id]?.cancel()
         sessionTasks[id] = nil
         sessions[id]?.close()
@@ -411,6 +437,31 @@ final class AppModel {
         captureRetries[id] = nil
         captureGates[id] = nil
         retryAttempts[id] = nil
+    }
+
+    /// Reads the session's place in its page and keeps it on the tab.
+    private func recordScrollOffset(of session: ReadingSession?, for id: Tab.ID) {
+        guard let session else { return }
+        Task { [weak self] in
+            guard let offset = await session.scrollOffset() else { return }
+            self?.store.setScrollOffset(offset, for: id)
+        }
+    }
+
+    /// The app left the foreground: every live page's place is kept, and written before
+    /// the app is suspended.
+    func appEnteredBackground() {
+        let task = UIApplication.shared.beginBackgroundTask(withName: "scroll-offsets")
+        Task { [weak self] in
+            guard let self else { return }
+            for (id, session) in self.sessions {
+                if let offset = await session.scrollOffset() {
+                    self.store.setScrollOffset(offset, for: id)
+                }
+            }
+            await self.store.flushWrites()
+            UIApplication.shared.endBackgroundTask(task)
+        }
     }
 
     /// The system is short of memory: only the current tab keeps its page live. The
