@@ -38,6 +38,8 @@ Put all strings in `Localizable.xcstrings`; English only at 1.0.
 | Empty Bookmarks | "No bookmarks yet" / "Tap Bookmark in the menu to keep a page here." (drafted, `// COPY: review`) |
 | Empty Installed | "Nothing installed" / "Mods from the directory or a link show up here." (drafted, `// COPY: review`) |
 | Offline | "Can't reach {host}" / "You're offline. It'll load when you're back." · "Try again" |
+| Stalled load | "This page stopped loading" / "It took too long. Try again in a moment." · "Try again" |
+| Renderer died twice | "This page stopped working" / "Something went wrong showing it. Try again." · "Try again" |
 | Skim failed | "Only {n} of {m} pages could be read. That's not enough to Skim." · "Show search results" · "Try again" |
 | Install failed (web page) | "That's a web page, not a mod." / "Magpie needs a link to a userscript (ending in .user.js) or a filter list." |
 

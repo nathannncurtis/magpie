@@ -157,6 +157,10 @@ Every edge state follows one pattern: one plain line saying what happened, and o
 - **The bar stays**, at its default tint.
 - **Offline:** the page reloads by itself when the connection returns (`NWPathMonitor`).
 - **Other failures** follow the same layout with different copy (see 06).
+- **Stalled load:** a load that has not committed when the 90 s watch gives up is stopped and shows "This page stopped loading". A page that committed is left alone.
+- **Renderer died:** the visible page reloads once by itself. A tab away from the screen reloads when it is next shown. A second death within 20 s shows "This page stopped working".
+- **Place in the page:** each tab keeps its scroll offset when its page is dropped (memory warning, live-session cap) and when the app backgrounds; a rebuilt page or a relaunch scrolls back to it. Private tabs keep it in memory only.
+- **Links from other apps** close Settings and cancel a Skim run before opening in a new tab; during onboarding the link waits and opens when onboarding is done.
 
 ### 16 · Skim couldn't finish
 - **Layout:** the Skim working scene with the mark **standing still** at 55% opacity, the title, then one line in `meta` saying why.

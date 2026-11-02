@@ -106,6 +106,8 @@ final class TabStore {
         var changed = false
         if let url, tabs[i].url != url {
             tabs[i].url = url
+            // The place belonged to the page left behind.
+            tabs[i].scrollOffset = nil
             changed = true
         }
         if !trimmed.isEmpty, tabs[i].title != trimmed {
@@ -120,6 +122,16 @@ final class TabStore {
         guard changed else { return }
         tabs[i].lastActive = now
         saveIndex()
+    }
+
+    /// Keeps how far down its page the open tab was read, so a rebuilt page can scroll back.
+    /// A private tab keeps it in memory only: the index never carries a private tab.
+    func setScrollOffset(_ offset: Double?, for id: Tab.ID) {
+        guard let i = tabIndex(id) else { return }
+        let kept = offset.flatMap { $0 > 0 ? $0 : nil }
+        guard tabs[i].scrollOffset != kept else { return }
+        tabs[i].scrollOffset = kept
+        if !tabs[i].isPrivate { saveIndex() }
     }
 
     /// The site's icon onto the tab, open or archived: the bytes the card's label and the
