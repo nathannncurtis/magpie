@@ -15,6 +15,8 @@ struct BookmarksScreen: View {
     @State private var renamingFolder: BookmarkFolder?
     @State private var renamedText = ""
     @State private var bottomInset: CGFloat = 0
+    /// The delete just made, on offer for an undo.
+    @State private var undo: UndoNotice?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -82,6 +84,9 @@ struct BookmarksScreen: View {
         } action: {
             bottomInset = $0
         }
+        .undoNotice(
+            $undo, bottomInset: bottomInset, lift: pillWanted ? UndoNoticeMetrics.abovePill : 0
+        )
         .ignoresSafeArea(.container, edges: .bottom)
         .environment(\.editMode, .constant(editing ? .active : .inactive))
         // Out of a folder first, then off the bookmarks.
@@ -219,16 +224,16 @@ struct BookmarksScreen: View {
             .accessibilityAddTraits(.isButton)
             .accessibilityIdentifier("bookmarks.folder.\(folder.name)")
             .listRow()
-            .deleteDisabled(!editing)
         }
         .onMove { offsets, destination in
             store.moveFolders(fromOffsets: offsets, toOffset: destination)
         }
         .onDelete { offsets in
             let folders = store.folders
-            for index in offsets where folders.indices.contains(index) {
-                store.removeFolder(folders[index].id)
+            let removed = offsets.compactMap { index in
+                folders.indices.contains(index) ? store.removeFolder(folders[index].id) : nil
             }
+            offerUndo(of: removed)
         }
     }
 
@@ -251,10 +256,24 @@ struct BookmarksScreen: View {
         }
         .onDelete { offsets in
             let bookmarks = visibleBookmarks
-            for index in offsets where bookmarks.indices.contains(index) {
-                store.remove(bookmarks[index].id)
-            }
+            offerUndo(of: offsets.compactMap { removeBookmark(at: $0, in: bookmarks) })
         }
+    }
+
+    private func removeBookmark(at index: Int, in bookmarks: [Bookmark]) -> Bookmark? {
+        bookmarks.indices.contains(index) ? store.remove(bookmarks[index].id) : nil
+    }
+
+    /// A swipe deletes at once; the capsule puts the bookmarks back.
+    private func offerUndo(of removed: [Bookmark]) {
+        guard !removed.isEmpty else { return }
+        undo = .deleted { removed.forEach { store.reinstate($0) } }
+    }
+
+    /// Same for folders: back in place, with the bookmarks they held.
+    private func offerUndo(of removed: [BookmarkStore.RemovedFolder]) {
+        guard !removed.isEmpty else { return }
+        undo = .deleted { removed.reversed().forEach { store.reinstate($0) } }
     }
 
     /// "New folder", at the head of the folders while editing.
@@ -306,9 +325,7 @@ struct BookmarksScreen: View {
                         .listRow()
                     }
                     .onDelete { offsets in
-                        for index in offsets where bookmarks.indices.contains(index) {
-                            store.remove(bookmarks[index].id)
-                        }
+                        offerUndo(of: offsets.compactMap { removeBookmark(at: $0, in: bookmarks) })
                     }
                 }
                 .listStyle(.plain)

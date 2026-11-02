@@ -310,12 +310,31 @@ final class TabStore {
         return true
     }
 
-    /// Deletes archived tabs for good, snapshot files included.
-    func deleteArchived(_ ids: [Tab.ID]) {
+    /// Deletes archived tabs, snapshot files included. Returns the tabs as they were, in
+    /// memory only, for an undo.
+    @discardableResult
+    func deleteArchived(_ ids: [Tab.ID]) -> [Tab] {
         let doomed = Set(ids)
-        guard archivedTabs.contains(where: { doomed.contains($0.id) }) else { return }
+        let removed = archivedTabs.filter { doomed.contains($0.id) }
+        guard !removed.isEmpty else { return [] }
         archivedTabs.removeAll { doomed.contains($0.id) }
         for id in ids { forgetSnapshot(for: id) }
+        saveIndex()
+        return removed
+    }
+
+    /// Puts deleted archived tabs back, oldest first as the archive keeps them, with the
+    /// snapshots deleting dropped written again.
+    func reinstateArchived(_ tabs: [Tab]) {
+        let present = Set(archivedTabs.map(\.id))
+        let open = Set(self.tabs.map(\.id))
+        let returning = tabs.filter { !present.contains($0.id) && !open.contains($0.id) }
+        guard !returning.isEmpty else { return }
+        archivedTabs.append(contentsOf: returning)
+        archivedTabs.sort { ($0.archivedAt ?? $0.lastActive) < ($1.archivedAt ?? $1.lastActive) }
+        for tab in returning {
+            if let snapshot = tab.snapshot { scheduleSnapshotWrite(snapshot, for: tab.id) }
+        }
         saveIndex()
     }
 

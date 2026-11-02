@@ -242,9 +242,24 @@ final class BookmarkStore {
         saveIndex()
     }
 
-    /// Removes a bookmark.
-    func remove(_ id: Bookmark.ID) {
-        bookmarks.removeAll { $0.id == id }
+    /// Removes a bookmark. Returns it as it was, for an undo.
+    @discardableResult
+    func remove(_ id: Bookmark.ID) -> Bookmark? {
+        guard let i = bookmarks.firstIndex(where: { $0.id == id }) else { return nil }
+        let removed = bookmarks.remove(at: i)
+        saveIndex()
+        return removed
+    }
+
+    /// Puts a removed bookmark back. One already back is left alone.
+    func reinstate(_ bookmark: Bookmark) {
+        guard !bookmarks.contains(where: { $0.id == bookmark.id }) else { return }
+        // A folder deleted since leaves the bookmark unfiled.
+        var restored = bookmark
+        if let folderID = restored.folderID, !folders.contains(where: { $0.id == folderID }) {
+            restored.folderID = nil
+        }
+        bookmarks.append(restored)
         saveIndex()
     }
 
@@ -307,11 +322,40 @@ final class BookmarkStore {
         saveIndex()
     }
 
-    /// Deletes a folder. Its bookmarks stay, unfiled.
-    func removeFolder(_ id: BookmarkFolder.ID) {
-        folders.removeAll { $0.id == id }
+    /// A folder just deleted, with what it takes to put it back as it was.
+    struct RemovedFolder: Equatable, Sendable {
+        let folder: BookmarkFolder
+        /// Its place in the list.
+        let index: Int
+        /// The bookmarks that sat in it.
+        let memberIDs: [Bookmark.ID]
+    }
+
+    /// Deletes a folder. Its bookmarks stay, unfiled. Returns what an undo needs.
+    @discardableResult
+    func removeFolder(_ id: BookmarkFolder.ID) -> RemovedFolder? {
+        guard let index = folders.firstIndex(where: { $0.id == id }) else { return nil }
+        let folder = folders.remove(at: index)
+        var members: [Bookmark.ID] = []
         for i in bookmarks.indices where bookmarks[i].folderID == id {
+            members.append(bookmarks[i].id)
             bookmarks[i].folderID = nil
+        }
+        saveIndex()
+        return RemovedFolder(folder: folder, index: index, memberIDs: members)
+    }
+
+    /// Puts a deleted folder back in its place, with the bookmarks it held that are still
+    /// unfiled.
+    func reinstate(_ removed: RemovedFolder) {
+        guard !folders.contains(where: { $0.id == removed.folder.id }) else { return }
+        folders.insert(removed.folder, at: min(removed.index, folders.count))
+        for i in folders.indices {
+            folders[i].order = i
+        }
+        let members = Set(removed.memberIDs)
+        for i in bookmarks.indices where members.contains(bookmarks[i].id) && bookmarks[i].folderID == nil {
+            bookmarks[i].folderID = removed.folder.id
         }
         saveIndex()
     }

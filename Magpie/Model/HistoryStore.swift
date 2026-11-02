@@ -159,11 +159,23 @@ final class HistoryStore {
         saveIndex()
     }
 
-    /// Removes entries.
-    func remove(_ ids: [HistoryEntry.ID]) {
-        guard !ids.isEmpty else { return }
+    /// Removes entries. Returns them as they were, for an undo.
+    @discardableResult
+    func remove(_ ids: [HistoryEntry.ID]) -> [HistoryEntry] {
+        guard !ids.isEmpty else { return [] }
         let gone = Set(ids)
+        let removed = entries.filter { gone.contains($0.id) }
         entries.removeAll { gone.contains($0.id) }
+        saveIndex()
+        return removed
+    }
+
+    /// Puts removed entries back where their dates place them.
+    func reinstate(_ removed: [HistoryEntry]) {
+        let present = Set(entries.map(\.id))
+        let returning = removed.filter { !present.contains($0.id) }
+        guard !returning.isEmpty else { return }
+        entries = Array((entries + returning).sorted { $0.visitedAt > $1.visitedAt }.prefix(capacity))
         saveIndex()
     }
 

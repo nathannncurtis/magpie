@@ -10,7 +10,8 @@ Cold start, no tabs ── Launch (01, keyboard up) ──search──▶ Readin
 Reading ──tap URL──▶ Search sheet (01 morph)       Reading ──•••──▶ Menu (05)
 Reading ──tab count──▶ Tabs (03) ──Archived chip──▶ Archive (09)
 Menu ──Mods tile──▶ Mods (06) ──footer──▶ Install from URL (12)
-Menu ──Bookmark tile: tap saves, long-press──▶ Bookmarks (10)      Menu ──Settings ›──▶ Settings (11)
+Menu ──Bookmarks ›──▶ Bookmarks (10)      Menu ──Bookmark tile: tap saves, long-press──▶ Bookmarks (10)
+Menu ──Settings ›──▶ Settings (11)
 Menu ──History ›──▶ History (18)       Settings ──Clear browsing data ›──▶ Clear browsing data (19)
 Menu ──Downloads ›──▶ Downloads (20)
 First ever launch ──▶ Welcome (07a) ──▶ Engine picker (07b) ──▶ Launch (01)
@@ -59,10 +60,13 @@ Later launches restore the last tab, with no animation.
   - `SkimHeader`
   - `SkimSection`s
   - "Sources" with a row of `SourceCard`s
-- **Floating controls:** a trailing "Done" (`skim.done`, on a glass capsule) in a `ScreenHeader` control row at the top, with the `SkimQueryBar` under it, and the `SkimControlBar` at the bottom. Done leaves the page, the same as `cancelSkim()`.
+- **Floating controls:** a trailing "Done" (`skim.done`, on a glass capsule) in a `ScreenHeader` control row at the top, with the `SkimQueryBar` under it, and the `SkimControlBar` at the bottom. Done leaves the page, the same as `cancelSkim()`. Every Skim screen has a visible way out besides the swipe: Done on the page and on the failure (`skim.done`), Cancel on the working scene (`skim.cancel`).
 - **Content rhythm:** an emoji, a **bold term**, " — ", a short claim, then citation dots. Every claim carries at least one dot.
 - **Share:** creates a self-contained page (HTML snapshot) that includes its sources. Saving puts it in Bookmarks as a Skim page.
 - **Availability:** Skim exists only on devices that can run Apple Foundation Models (iPhone 15 Pro and later, Apple Intelligence on, a supported language). Everywhere else every Skim entry point is hidden: there are no disabled states and no upsell.
+
+## Deleting and undo
+One pattern for removing a row, on Bookmarks (rows and folders), History, Downloads, Archive and the installed Mods: swipe left, with a full swipe allowed, and the row goes at once, with no confirmation. The glass capsule "Deleted · Undo" ("Removed · Undo" for a mod, `undo.capsule`) rises above the list's foot, clear of the search pill, and goes after 4 s or on leaving the screen; Undo puts the row back where it was. Only the latest delete can be undone. Bulk or irreversible actions keep their confirmation: Clear browsing data, and Clear history…. The tab stack's "Closed · Undo" (03) is the same capsule.
 
 ## 05 · Menu
 - **Opening:** the `MenuSheet` grows out of the bar. The bar stays at the base with ••• pressed.
@@ -70,9 +74,9 @@ Later launches restore the last tab, with no animation.
 - **Tiles:** Skim, Bookmark, Share, Mods, Private.
 - **Groups:**
   - (ads & trackers, cookie banners, archive timing)
-  - (search engine, Skim for me, Desktop site, History ›, Downloads ›, Settings ›)
+  - (search engine, Skim for me, Desktop site, Bookmarks ›, History ›, Downloads ›, Settings ›)
 - **Desktop site:** a toggle shown while a page with a site is up. It flips desktop mode for that host, remembered per host (a site and its www twin share the choice), and the page reloads. Magpie applies it through the navigation decider's preferences on every top-level navigation (`preferredContentMode`: `.desktop` when on, `.recommended` when off).
-- **Bookmark tile:** a tap saves the page, with a light haptic and the icon filling in; a long-press opens Bookmarks (10).
+- **Bookmark tile:** a tap saves the page, with a light haptic and the icon filling in; a long-press opens Bookmarks (10), as the plain Bookmarks › row (`menu.bookmarks`) in the second group does. The row is the way in people find; the long-press stays as the shortcut.
 - **Dismissing:** tap •••, swipe down, or tap the page.
 - **Board fix:** the static board screen 05 shows too much space above the bar. The spec value of 14 pt wins.
 
@@ -115,7 +119,7 @@ Later launches restore the last tab, with no animation.
 ## 09 · Archive
 - **Header:** "Archive" in a `ScreenHeader`, with "Done" at top right (`archive.done`).
 - **List:** rows on the mist, grouped by `SectionLabel` (Today, Yesterday, Earlier this week, then one per month, newest first). A month band names its year only outside the current year: "October", "October 2025". Each row: favicon, title, site, time. A row dated in the current year never shows the year ("Sep 30"); an older one does ("Sep 30, 2025").
-- **Actions:** tap a row to restore the tab; swipe to delete.
+- **Actions:** tap a row to restore the tab; swipe left to delete, with the undo capsule (see Deleting and undo).
 - **Search:** the `BottomSearchPill` with "Search archived tabs" searches titles and addresses; the pill rides the keyboard.
 - **Retention:** 30 days, then deleted.
 
@@ -123,6 +127,8 @@ Later launches restore the last tab, with no animation.
 - **Header:** "Bookmarks" in a `ScreenHeader`, with Edit (top left) and Done (top right). Done leaves, as the back swipe does (`bookmarks.done`). While editing, the leading label reads "Save", never "Done". An open folder swaps Edit for Back; Done stays.
 - **Folders:** a "Folders" section of `FolderRow`s, then "Recently added", mixing `ListRow`s and `SkimPageRow`s.
 - **Edit mode:** adds "New folder", rename, reorder and delete.
+- **Opening:** a tap opens the page in a new tab; if a tab of the same mode already shows that page (scheme, host, path and query match; the fragment and a trailing slash don't count), the tap switches to that tab instead. Skim pages open on the Skim surface.
+- **Deleting:** a swipe left on a bookmark or a folder deletes it at once and raises the undo capsule (see Deleting and undo). Deleting a folder keeps its bookmarks, unfiled; Undo puts the folder back with the bookmarks it held.
 - **Search:** the `BottomSearchPill` with "Search bookmarks"; the pill rides the keyboard.
 
 ## 11 · Settings
@@ -151,7 +157,7 @@ Every edge state follows one pattern: one plain line saying what happened, and o
 ### 13 · Mods · Installed
 - **Layout:** the same card of `ModRow`s as the Directory tab, with a trailing `Toggle` instead of Get.
 - **Toggle off:** keeps the mod but stops it running.
-- **Swipe left:** removes the mod.
+- **Swipe left:** removes the mod at once, with the undo capsule ("Removed · Undo"); Undo brings it back with its code and its on/off state.
 - **Mods added from a link:** keep a small warm "Not reviewed" tag after the name (`warningBackground` / `warningText`, 10 pt semibold, radius 6). The author line ends "· from a link".
 - **Hint under the card:** "Swipe a mod left to remove it. Off keeps it, but it stops running." (`small`, `textOnMistSecondary`)
 - **Footer:** the `InstallFooter` stays.
@@ -187,7 +193,7 @@ Every edge state follows one pattern: one plain line saying what happened, and o
 - **Background:** the mist. "Downloads" in `screenTitle`, "Done" at top right; a swipe in from the leading edge goes back to the screen that opened it.
 - **What downloads:** a navigation whose response is a Content-Disposition attachment or a type the page cannot show, and a link with the `download` attribute. WebPage offers no download delegate, so the load is cancelled and the file fetched on its own, carrying the page's cookies; the page the load came out of stays as it was. Private tabs download too, into the same folder.
 - **Where it lands:** the app's Documents/Downloads, which the Files app lists and edits in place. A name already taken gets a number before its extension: "report 2.pdf".
-- **Rows:** plain rows on the mist, newest first: a file glyph, the name, then size and date. A tap opens the file in QuickLook; swipe left deletes it from disk.
+- **Rows:** plain rows on the mist, newest first: a file glyph, the name, then size and date. A tap opens the file in QuickLook; swipe left deletes it, with the undo capsule. The file is set aside until the capsule runs out and comes back whole on Undo.
 - **Toast:** a small glass capsule above the bar, on any screen. "Downloading <name>" with a spinner while it runs; "Downloaded <name>" with a check once done, held six seconds, and a tap opens the file in QuickLook. "Couldn't download <name>" when it fails; a tap dismisses.
 - **Empty:** `EmptyListState`, `arrow.down.circle`, "No downloads yet" / "Files you save from a page land here, and in the Files app."
 
@@ -213,7 +219,7 @@ Every edge state follows one pattern: one plain line saying what happened, and o
 - **Header:** "History" in `screenTitle`, with "Done" at top right; a swipe in from the leading edge goes back too. The header lives in one small view in the screen's file so the shared header can replace it.
 - **Record:** each committed top-level navigation in a normal tab: address, title, time. Private tabs leave nothing. The same address twice in a row is one entry; only web pages count. The list keeps the last 5,000 visits. The title is filled in once the page names itself.
 - **List:** rows on the mist, grouped by `DayHeader` as in the archive (09). Each row: site tile, title (the site while untitled), site, time.
-- **Actions:** tap a row to open it in a new tab; swipe left to remove it. "Clear history…" ends the list, in red, and asks "Clear all history?" before it clears. It hides while a search narrows the list.
+- **Actions:** tap a row to open it in a new tab; swipe left to remove it, with the undo capsule. "Clear history…" ends the list, in red, and asks "Clear all history?" before it clears. It hides while a search narrows the list.
 - **Search:** the `BottomSearchPill` with "Search history" filters titles and sites; the pill rides the keyboard.
 - **Empty:** "No history yet" / "Pages you visit show up here." (drafted, `// COPY: review`); no pill. A search with no match: "No results" / "Nothing in your history matches that search."
 - **Entry:** Menu · History ›. The menu folds and History opens over the page; Done or a back swipe returns to it.

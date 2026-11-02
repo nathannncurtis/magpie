@@ -39,6 +39,8 @@ struct ModsScreen: View {
     /// The mod whose install did not land, for the one line under the card.
     @State private var failedID: String?
     @State private var bottomInset: CGFloat = 0
+    /// The removal just made, on offer for an undo.
+    @State private var undo: UndoNotice?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -96,6 +98,10 @@ struct ModsScreen: View {
         } action: {
             bottomInset = $0
         }
+        .undoNotice(
+            $undo, bottomInset: bottomInset,
+            lift: Metrics.Bar.installFooterHeight + Layout.footerInset
+        )
         .ignoresSafeArea(edges: .bottom)
         .sheet(isPresented: $showingInstallSheet) {
             InstallSheet { draft in
@@ -248,7 +254,9 @@ struct ModsScreen: View {
             trailing: installedTrailing(for: mod, landed: landed),
             onRemove: {
                 withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.settle.animation) {
-                    store.remove(id: mod.id)
+                    if let removed = store.remove(id: mod.id) {
+                        undo = .removed { store.reinstate(removed) }
+                    }
                 }
             }
         )
