@@ -55,6 +55,16 @@ enum UITestEnvironment {
         return nil
     }
 
+    /// A link the search sheet finds on the pasteboard (`-uiTestingPasteboard=<url>`), so
+    /// the tests never depend on the system's paste prompt.
+    static var pasteboardLink: String? {
+        let prefix = "-uiTestingPasteboard="
+        for argument in launchArguments where argument.hasPrefix(prefix) {
+            return String(argument.dropFirst(prefix.count))
+        }
+        return nil
+    }
+
     /// Whether the seeded lists stay empty, for the empty states.
     static var listsEmpty: Bool {
         launchArguments.contains("-uiTestingListState=empty")
@@ -249,12 +259,15 @@ extension AppModel {
             blocker: ContentBlocker(store: blockerStore, defaults: blockingDefaults),
             bookmarks: BookmarkStore(
                 persistence: FileSystemBookmarkPersistence(directory: scratch)),
+            history: HistoryStore(persistence: FileSystemHistoryPersistence(directory: scratch)),
             suggestions: StubSuggestionProvider(
                 rowsByPrefix: ["magpie test", "magpie test page", "magpie test search"]),
             recents: RecentSearches(),
             modStore: modStore,
             modDirectory: fixtureDirectory(),
-            skimAvailable: UITestEnvironment.skimFaked)
+            skimAvailable: UITestEnvironment.skimFaked,
+            downloads: DownloadStore(
+                directory: scratch.appending(component: "downloads", directoryHint: .isDirectory)))
     }
 
     /// The directory over the bundled fixture index, cached warm so nothing fetches.

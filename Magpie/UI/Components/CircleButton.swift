@@ -11,7 +11,7 @@ enum CircleButtonLayout {
     static let pressedFillOpacity = 0.09
     /// How faint a disabled button's symbol sits: still there, not calling, and still
     /// plain against a mid-luminance tint.
-    static let disabledOpacity = 0.45
+    static let disabledOpacity = Metrics.disabledOpacity
 }
 
 /// A bar button (03 · Chrome): a 48 × 48 hit area holding a 20 pt symbol, with no
@@ -43,13 +43,22 @@ struct CircleButton<Content: View>: View {
             content()
                 .frame(width: CircleButtonLayout.hitSize, height: CircleButtonLayout.hitSize)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(UndimmedButtonStyle())
         .opacity(isEnabled ? 1 : CircleButtonLayout.disabledOpacity)
         .background {
             if isPressed {
                 Circle().fill(Palette.ink.opacity(CircleButtonLayout.pressedFillOpacity))
             }
         }
+    }
+}
+
+/// A plain button style that leaves the label alone. The stock plain style dims a
+/// disabled label itself, and on top of the fade here it left the back chevron
+/// nearly invisible; the one fade is `Metrics.disabledOpacity`.
+private struct UndimmedButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
     }
 }
 

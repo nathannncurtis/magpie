@@ -16,6 +16,8 @@ struct LaunchScreen: View {
     var isPrivate: Bool = false
     let suggestions: any SuggestionProviding
     let recents: any RecentSearchStoring
+    /// The user's hosts and the pasteboard, for the field.
+    var addressAssist = AddressAssist()
     /// Text the field opens with: the Skim query bar's edit.
     var initialText: String = ""
     var onSkim: (String) -> Void = { _ in }
@@ -40,12 +42,11 @@ struct LaunchScreen: View {
 
     private enum Layout {
         static let markSize: CGFloat = 96
-        static let rowInset: CGFloat = 16
     }
 
     var body: some View {
         ZStack {
-            MistBackground()
+            MistBackground(night: isPrivate)
                 .ignoresSafeArea()
             if folded {
                 foldedContent
@@ -59,6 +60,7 @@ struct LaunchScreen: View {
                     initialText: initialText,
                     suggestions: suggestions,
                     recents: recents,
+                    addressAssist: addressAssist,
                     onOpen: onOpen,
                     onSkim: onSkim,
                     onDismiss: dismiss
@@ -90,6 +92,8 @@ struct LaunchScreen: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("launch.screen")
+        // A private search is night whatever the system is, like the private stack.
+        .preferredColorScheme(isPrivate ? .dark : nil)
     }
 
     /// With tabs, a dismissal goes back to the stack; without, the sheet folds away here.
@@ -98,7 +102,7 @@ struct LaunchScreen: View {
             onDismiss()
             return
         }
-        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
+        withAnimation(Springs.chrome.resolved(reduceMotion: reduceMotion)) {
             folded = true
         }
     }
@@ -106,7 +110,7 @@ struct LaunchScreen: View {
     /// The sheet back up, its field focused, for a new tab or a private one.
     private func unfold(_ open: () -> Void) {
         open()
-        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
+        withAnimation(Springs.chrome.resolved(reduceMotion: reduceMotion)) {
             folded = false
         }
     }
@@ -117,37 +121,36 @@ struct LaunchScreen: View {
                 .foregroundStyle(Palette.textPrimary)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .accessibilityHidden(true)
-            // Three equal columns, so the + holds the centre whatever the chip's width.
-            HStack(spacing: 0) {
-                ArchivedChip(count: archivedCount, action: onShowArchive)
-                    .accessibilityIdentifier("launch.archive")
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                PlusButton(action: { unfold(onNewTab) })
-                    .contextMenu {
-                        Button(action: { unfold(onNewPrivateTab) }) {
-                            Label(String(localized: "New private tab"), systemImage: "eye.slash")
+            FloatingBar {
+                FloatingBarSlots {
+                    ArchivedChip(count: archivedCount, action: onShowArchive)
+                        .accessibilityIdentifier("launch.archive")
+                } center: {
+                    PlusButton(action: { unfold(onNewTab) })
+                        .contextMenu {
+                            Button(action: { unfold(onNewPrivateTab) }) {
+                                Label(String(localized: "New private tab"), systemImage: "eye.slash")
+                            }
                         }
-                    }
-                    .accessibilityAction(named: Text(String(localized: "New private tab"))) {
-                        unfold(onNewPrivateTab)
-                    }
-                    .accessibilityIdentifier("launch.plus")
-                    .frame(maxWidth: .infinity)
-                CircleButton(systemName: "gearshape", action: onShowSettings)
-                    .foregroundStyle(Palette.textPrimary)
-                    .accessibilityLabel(Text(String(localized: "Settings")))
-                    .accessibilityIdentifier("launch.settings")
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                        .accessibilityAction(named: Text(String(localized: "New private tab"))) {
+                            unfold(onNewPrivateTab)
+                        }
+                        .accessibilityIdentifier("launch.plus")
+                } trailing: {
+                    CircleButton(systemName: "gearshape", action: onShowSettings)
+                        .foregroundStyle(Palette.textPrimary)
+                        .accessibilityLabel(Text(String(localized: "Settings")))
+                        .accessibilityIdentifier("launch.settings")
+                }
             }
-            .padding(.horizontal, Layout.rowInset)
-            .padding(.bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset))
+            .floatingBarBottomEdge(safeAreaBottom: bottomInset)
         }
         .ignoresSafeArea(edges: .bottom)
     }
 
     private func rise() {
         guard !arrived else { return }
-        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation) {
+        withAnimation(Springs.chrome.resolved(reduceMotion: reduceMotion)) {
             arrived = true
         }
     }

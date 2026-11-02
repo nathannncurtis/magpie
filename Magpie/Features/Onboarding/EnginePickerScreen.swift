@@ -114,7 +114,6 @@ struct EnginePickerScreen: View {
     private var otherField: some View {
         VStack(alignment: .leading, spacing: 6) {
             TextField(
-                // COPY: review — 06 has this line to write.
                 "Search URL, with %s for the query",
                 text: $otherURL
             )
@@ -127,11 +126,11 @@ struct EnginePickerScreen: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 11)
             .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                RoundedRectangle(cornerRadius: Metrics.Radius.field, style: .continuous)
                     .fill(Palette.searchFieldFill)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                RoundedRectangle(cornerRadius: Metrics.Radius.field, style: .continuous)
                     .strokeBorder(
                         chosenEngine != nil
                             ? AnyShapeStyle(Palette.ink) : AnyShapeStyle(Palette.engineTileOtherOutline),

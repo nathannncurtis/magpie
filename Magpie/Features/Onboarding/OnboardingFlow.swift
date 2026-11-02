@@ -15,9 +15,12 @@ struct OnboardingFlow: View {
                     preferences.hasCompletedOnboarding = true
                 }
                 .transition(.opacity)
+                .backSwipe {
+                    withAnimation(Springs.crossfade) { showsPicker = false }
+                }
             } else {
                 WelcomeScreen {
-                    withAnimation(.easeInOut(duration: 0.25)) { showsPicker = true }
+                    withAnimation(Springs.crossfade) { showsPicker = true }
                 }
                 .transition(.opacity)
             }

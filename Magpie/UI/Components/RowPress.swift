@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// Press feedback for the lists' tappable rows, which take their tap from a gesture
-/// rather than a Button: the row keeps its tap gesture, and a zero-distance drag
-/// alongside it lights the ghost fill while a finger is down.
+/// Press feedback for the lists' tappable rows: the row is a button with its own style,
+/// which lights the ghost fill while a finger is down. A drag gesture on the row would
+/// take the touch from the list's swipe to delete, so the press comes from the button.
 extension View {
 
     /// The row's tap, with the pressed fill behind it while the touch lasts.
@@ -13,21 +13,21 @@ extension View {
 
 private struct RowPress: ViewModifier {
     let action: () -> Void
-    @State private var pressed = false
 
     func body(content: Content) -> some View {
-        content
-            .background(Palette.fill.opacity(pressed ? 1 : 0))
+        Button(action: action) {
+            content
+        }
+        .buttonStyle(RowPressStyle())
+    }
+}
+
+/// The pressed fill behind a row, with no dimming of its own.
+private struct RowPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(Palette.fill.opacity(configuration.isPressed ? 1 : 0))
             .contentShape(.rect)
-            .onTapGesture(perform: action)
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { value in
-                        // A moving finger is a scroll, not a press.
-                        pressed = value.translation == .zero
-                    }
-                    .onEnded { _ in pressed = false }
-            )
     }
 }
 

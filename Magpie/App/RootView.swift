@@ -1,3 +1,4 @@
+import QuickLook
 import SwiftUI
 import WebKit
 
@@ -51,23 +52,26 @@ struct RootView: View {
                         isPrivate: model.launchIsPrivate,
                         suggestions: model.suggestions,
                         recents: model.searchRecents,
+                        addressAssist: model.addressAssist,
                         initialText: model.searchPrefill ?? "",
                         onSkim: { model.startSkim(query: $0) },
                         onOpen: { model.openFromLaunch($0) },
                         onDismiss: { model.dismissLaunchSearch() },
                         hasTabs: !model.store.tabs.isEmpty,
                         archivedCount: model.store.archivedTabs.count,
-                        onNewTab: { model.newTabFromTabs() },
+                        onNewTab: { model.newNormalTab() },
                         onNewPrivateTab: { model.newPrivateTab() },
                         onShowArchive: { model.showArchive() },
                         onShowSettings: { model.showSettings() }
                     )
+                    // Back to the stack, when there is one to go back to.
+                    .backSwipe(isEnabled: !model.store.tabs.isEmpty) { model.dismissLaunchSearch() }
                 }
             case .reading(let searchOpen):
                 ReadingScreen(
                     session: model.currentSession,
                     tabID: model.store.currentTabID,
-                    tabCount: model.store.tabs.count,
+                    tabCount: model.store.tabs(inPrivate: model.currentIsPrivate).count,
                     isPrivate: model.currentIsPrivate,
                     isSearchOpen: searchOpen,
                     engine: model.engine,
@@ -77,6 +81,7 @@ struct RootView: View {
                     focusSuspended: coversOverLaunch,
                     suggestions: model.suggestions,
                     recents: model.searchRecents,
+                    addressAssist: model.addressAssist,
                     onSkim: { model.startSkim(query: $0) },
                     chromeNamespace: chrome,
                     cardNamespace: cards,
@@ -84,9 +89,13 @@ struct RootView: View {
                     onSearchDismiss: { model.closeSearchOverPage() },
                     onAddressTap: { model.openSearchOverPage() },
                     onTabsTap: { model.showTabs() },
+                    hasAdjacentTab: { model.adjacentTab($0) != nil },
+                    adjacentPicture: { model.adjacentTab($0)?.snapshot },
+                    onStepTab: { model.stepTab($0) },
                     onPageSize: { model.notePageSize($0) },
                     arrivalPicture: model.cardArrivalPicture,
                     onArrivalDone: { model.cardArrivalDone() },
+                    onOpenLink: { model.openLinkInNewTab($0, isPrivate: $1) },
                     isFinding: Bindable(model).isFindingInPage
                 )
                 // The page never answers the keyboard. An address just submitted
@@ -101,14 +110,21 @@ struct RootView: View {
             case .tabs:
                 TabsScreen(
                     store: model.store,
+                    isPrivateMode: model.isPrivateMode,
+                    onModeChange: { model.setPrivateMode($0) },
                     onOpen: { model.openTab($0) },
-                    onNewTab: { model.newTabFromTabs() },
+                    onNewTab: { model.newNormalTab() },
                     onNewPrivateTab: { model.newPrivateTab() },
                     onClose: { model.closeTab($0) },
                     onShowArchive: { model.showArchive() },
+                    closedNotice: model.closedTabNotice,
+                    onUndo: { model.undoCloseTab() },
+                    onNoticeExpired: { model.expireClosedTabNotice($0) },
                     pageBackground: { id in model.sessions[id]?.pageBackground },
                     transitionNamespace: cards
                 )
+                // Back to the page the stack was opened from.
+                .backSwipe(isEnabled: model.canLeaveTabs) { model.leaveTabs() }
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("tabs.screen")
             case .archive:
@@ -117,25 +133,46 @@ struct RootView: View {
                     onRestore: { model.restoreArchivedTab($0) },
                     onDone: { model.doneWithArchive() }
                 )
+                .backSwipe { model.doneWithArchive() }
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("archive.screen")
             case .bookmarks:
                 BookmarksScreen(
                     store: model.bookmarks,
-                    onOpen: { model.openBookmark($0) }
+                    onOpen: { model.openBookmark($0) },
+                    onClose: { model.closeBookmarks() }
                 )
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("bookmarks.screen")
+            case .history:
+                HistoryScreen(
+                    store: model.history,
+                    onOpen: { model.openHistoryEntry($0) },
+                    onDone: { model.closeHistory() }
+                )
+                .backSwipe { model.closeHistory() }
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("history.screen")
             case .mods:
                 ModsScreen(
                     directory: model.modDirectory,
                     store: model.modStore,
                     onDone: { model.closeMods() }
                 )
+                .backSwipe { model.closeMods() }
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("mods.screen")
+            case .downloads:
+                DownloadsScreen(
+                    store: model.downloads,
+                    onDone: { model.closeDownloads() }
+                )
+                .backSwipe { model.closeDownloads() }
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("downloads.screen")
             case .skim:
                 SkimFlowScreen()
+                    .backSwipe { model.cancelSkim() }
                     .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("skim.screen")
             case nil:
@@ -148,6 +185,22 @@ struct RootView: View {
             }
         }
         .animation(movesWithChrome ? transition : nil, value: model.surface)
+        // A download's progress and result ride above whatever screen is up.
+        .overlay(alignment: .bottom) {
+            if let toast = model.downloads.toast {
+                DownloadToast(
+                    toast: toast,
+                    onOpen: { model.downloads.open($0) },
+                    onDismiss: { model.downloads.dismissToast() }
+                )
+                .padding(.bottom, Self.toastBottom)
+                .transition(
+                    reduceMotion
+                        ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(transition, value: model.downloads.toast)
+        .quickLookPreview(Bindable(model.downloads).preview)
         .onChange(of: model.surface != nil) { _, present in
             guard present else { return }
             movesWithChrome = true
@@ -162,7 +215,7 @@ struct RootView: View {
         .statusBarInk(statusBarInk)
     }
 
-    /// Over a page the status bar sits on the page's own colours, so its ink follows what
+    /// Over a page the status bar sits on the page's own colors, so its ink follows what
     /// is under it; everywhere else, and under a full screen, it is the system's.
     private var statusBarInk: StatusBarInk {
         guard case .reading = model.surface, !coversOverLaunch else { return .automatic }
@@ -191,8 +244,11 @@ struct RootView: View {
     /// hidden or fully transparent view is not taken to be.
     private static let unseen = 0.01
 
+    /// How far the download toast floats above the screen's foot: clear of the bar.
+    private static let toastBottom: CGFloat = 96
+
     private var transition: Animation? {
-        reduceMotion ? .easeInOut(duration: 0.2) : Springs.chrome.animation
+        Springs.chrome.resolved(reduceMotion: reduceMotion)
     }
 }
 

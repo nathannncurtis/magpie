@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 extension Color {
-    /// An sRGB colour from a 0xRRGGBB value, at the given opacity.
+    /// An sRGB color from a 0xRRGGBB value, at the given opacity.
     init(hex: UInt32, opacity: Double = 1) {
         let red = Double((hex >> 16) & 0xFF) / 255
         let green = Double((hex >> 8) & 0xFF) / 255
@@ -11,13 +11,20 @@ extension Color {
     }
 }
 
-/// Every colour token, each with a light and a dark value that follow the system appearance.
+/// Every color token, each with a light and a dark value that follow the system appearance.
 enum Palette {
 
     // MARK: Brand
 
     /// Primary filled controls: toggles on, icon squares, primary buttons, the Search key.
     static let ink = dynamic(light: 0x101115, dark: 0xF6F5F1)
+    /// `ink` as it reads in light, held whatever the appearance: the ground of the private
+    /// look, which is night in both.
+    static let nightInk = Color(hex: 0x101115)
+    /// The private look's lower edge: `nightInk` a shade deeper.
+    static let nightInkDeep = Color(hex: 0x08090B)
+    /// Text and icons on `nightInk`: `paper`'s light value, held.
+    static let onNightInk = Color(hex: 0xF6F5F1)
     /// Text and icons on `ink`. Ink and paper swap in dark.
     static let onInk = dynamic(light: 0xF6F5F1, dark: 0x101115)
     /// Brand paper.
@@ -33,7 +40,7 @@ enum Palette {
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
-    /// The sheen's middle stop, for the fills that must be one solid colour.
+    /// The sheen's middle stop, for the fills that must be one solid color.
     static let sheenMid = Color(hex: 0x10B981)
     /// Numbers and glyphs on the sheen, dark in both modes: white falls short of contrast on it.
     static let onSheen = dynamic(light: 0x101115, dark: 0x101115)
@@ -66,6 +73,10 @@ enum Palette {
     static let sheetSolid = dynamic(light: 0xF5F4F0, dark: 0x1A1B1F)
     /// Ghost buttons and inset tiles.
     static let fill = dynamic(light: 0x101115, lightOpacity: 0.06, dark: 0xFFFFFF, darkOpacity: 0.07)
+    /// A disabled primary button's fill: a step stronger than `fill`, so the capsule
+    /// still reads as a button against paper in light and the dark surface alike.
+    static let fillDisabled = dynamic(
+        light: 0x101115, lightOpacity: 0.12, dark: 0xFFFFFF, darkOpacity: 0.18)
     /// The tile behind an emoji in a Skim section.
     static let emojiTile = dynamic(light: 0xEEECE6, dark: 0xFFFFFF, darkOpacity: 0.07)
     /// The engine tag inside the search field.
@@ -75,7 +86,7 @@ enum Palette {
     static let toggleOn = dynamic(light: 0x101115, dark: 0x5EEAD4)
     /// A toggle in its off state.
     static let toggleOff = dynamic(light: 0xDADAD4, dark: 0xFFFFFF, darkOpacity: 0.16)
-    /// The default reading-bar tint when the site gives no colour.
+    /// The default reading-bar tint when the site gives no color.
     static let pageTintGlass = dynamic(
         light: 0xFFF6EE, lightOpacity: 0.55, dark: 0x2C241E, darkOpacity: 0.55)
     /// The background of a warning box.
@@ -213,7 +224,7 @@ enum Palette {
 }
 
 private extension Palette {
-    /// A colour that switches with the system appearance.
+    /// A color that switches with the system appearance.
     static func dynamic(
         light: UInt32, lightOpacity: Double = 1, dark: UInt32, darkOpacity: Double = 1
     ) -> Color {
@@ -227,7 +238,7 @@ private extension Palette {
 }
 
 private extension UIColor {
-    /// An sRGB colour from a 0xRRGGBB value, at the given opacity.
+    /// An sRGB color from a 0xRRGGBB value, at the given opacity.
     convenience init(hex: UInt32, opacity: Double) {
         let red = CGFloat((hex >> 16) & 0xFF) / 255
         let green = CGFloat((hex >> 8) & 0xFF) / 255

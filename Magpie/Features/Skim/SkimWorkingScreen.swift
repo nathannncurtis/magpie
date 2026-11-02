@@ -59,9 +59,8 @@ struct SkimWorkingScreen: View {
             VStack {
                 Spacer()
                 cancel
+                    .floatingBarBottomEdge(safeAreaBottom: bottomInset)
             }
-            .padding(.horizontal, Metrics.Spacing.insetFloating)
-            .padding(.bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset))
         }
         .onGeometryChange(for: CGFloat.self) {
             $0.safeAreaInsets.bottom
@@ -104,17 +103,17 @@ struct SkimWorkingScreen: View {
     }
 
     private var cancel: some View {
-        Button(action: onCancel) {
-            Text("Cancel")
-                .font(Typography.buttonBar)
-                .foregroundStyle(Palette.textPrimary)
-                .frame(maxWidth: .infinity)
-                .frame(minHeight: Metrics.Bar.skimControlHeight)  // grows with Dynamic Type
-                .contentShape(.capsule)
+        FloatingBar(surface: .glass(interactive: true)) {
+            Button(action: onCancel) {
+                Text("Cancel")
+                    .font(Typography.buttonBar)
+                    .foregroundStyle(Palette.textPrimary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .contentShape(.capsule)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("skim.cancel")
         }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("skim.cancel")
-        .glassEffect(.regular.interactive(), in: .capsule)
     }
 
     /// The query as the board writes it: the first letter up, the rest as typed.
@@ -124,7 +123,7 @@ struct SkimWorkingScreen: View {
 
     private func arrive() {
         guard !titleArrived else { return }
-        withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : .easeOut(duration: 0.5).delay(0.4)) {
+        withAnimation(Springs.resolved(Springs.slowFadeIn.delay(0.4), reduceMotion: reduceMotion)) {
             titleArrived = true
         }
     }

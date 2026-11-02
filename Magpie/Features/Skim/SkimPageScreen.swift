@@ -9,6 +9,7 @@ import SwiftUI
 struct SkimPageScreen: View {
 
     let page: SkimPage
+    let onDone: () -> Void
     let onEditQuery: () -> Void
     let onDigDeeper: () -> Void
     let onOpenSource: (URL) -> Void
@@ -50,23 +51,28 @@ struct SkimPageScreen: View {
                         onDigDeeper: onDigDeeper,
                         shareURL: shareURL
                     )
-                    .padding(.horizontal, Metrics.Spacing.insetFloating)
-                    .readableWidth()
-                    .padding(
-                        .bottom, Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset)
-                    )
+                    .floatingBarBottomEdge(safeAreaBottom: bottomInset)
+                    // A scrim under the bar, so its text never sits on busy page content.
+                    .background(alignment: .bottom) { barScrim }
                     .modifier(Arrived(shown: step >= barsStep, drop: -12))
                 }
-                SkimQueryBar(query: page.query, onEdit: onEditQuery)
-                    .padding(.horizontal, Metrics.Spacing.insetFloating)
-                    .readableWidth()
-                    .padding(.top, SkimQueryBar.topGap)
-                    .onGeometryChange(for: CGFloat.self) {
-                        $0.frame(in: .global).minY
-                    } action: {
-                        queryBarTop = $0
-                    }
-                    .modifier(Arrived(shown: step >= barsStep, drop: -12))
+                VStack(spacing: 0) {
+                    ScreenHeader(
+                        title: nil,
+                        trailing: {
+                            HeaderDoneButton(id: "skim.done", onGlass: true, action: onDone)
+                        })
+                    SkimQueryBar(query: page.query, onEdit: onEditQuery)
+                        .padding(.horizontal, Metrics.Spacing.insetFloating)
+                        .readableWidth()
+                        .padding(.top, SkimQueryBar.topGap)
+                        .onGeometryChange(for: CGFloat.self) {
+                            $0.frame(in: .global).minY
+                        } action: {
+                            queryBarTop = $0
+                        }
+                        .modifier(Arrived(shown: step >= barsStep, drop: -12))
+                }
             }
         }
         .onGeometryChange(for: CGFloat.self) {
@@ -83,6 +89,20 @@ struct SkimPageScreen: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("skim.page")
+    }
+
+    /// The page's own background fading in behind the bottom bar, tall enough to cover
+    /// the bar and its edge.
+    private var barScrim: some View {
+        LinearGradient(
+            colors: [Palette.skimBackground.opacity(0), Palette.skimBackground.opacity(0.92)],
+            startPoint: .top, endPoint: .bottom
+        )
+        .frame(
+            height: Metrics.Bar.skimControlHeight
+                + Metrics.Spacing.barBottomEdge(safeAreaBottom: bottomInset) + Layout.barClearance
+        )
+        .allowsHitTesting(false)
     }
 
     // MARK: Content
@@ -272,6 +292,7 @@ private struct Arrived: ViewModifier {
 #Preview("Mosaic") {
     SkimPageScreen(
         page: SkimFixture.page(photoCount: 3),
+        onDone: {},
         onEditQuery: {},
         onDigDeeper: {},
         onOpenSource: { _ in })

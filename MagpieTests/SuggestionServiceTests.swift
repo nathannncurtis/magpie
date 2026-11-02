@@ -192,8 +192,8 @@ struct SuggestionServiceTests {
         #expect(CannedSuggestProtocol.requestCount == 1)
     }
 
-    @Test("a superseded call is cancelled and never asks")
-    func cancelledCallAsksNothing() async {
+    @Test("a superseded call is canceled and never asks")
+    func canceledCallAsksNothing() async {
         CannedSuggestProtocol.serve("type=list", body: #"["cars",["cars for sale"]]"#)
         let task = Task {
             await service(debounce: .milliseconds(500)).suggestions(
@@ -203,7 +203,7 @@ struct SuggestionServiceTests {
         task.cancel()
         let rows = await task.value
         #expect(rows == [])
-        #expect(CannedSuggestProtocol.requestCount == 0, "a cancelled call still reached the network")
+        #expect(CannedSuggestProtocol.requestCount == 0, "a canceled call still reached the network")
     }
 
     @Test("the session carries no cookies and gives up quickly")

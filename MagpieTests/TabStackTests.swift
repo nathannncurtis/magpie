@@ -43,8 +43,8 @@ struct StackLayoutTests {
         abs(a - b) < 0.001
     }
 
-    @Test("the current card is centred at 62% of the container")
-    func currentCardCentred() {
+    @Test("the current card is centered at 62% of the container")
+    func currentCardCentered() {
         let frame = StackLayout.cardFrame(offset: 0, container: container)
 
         #expect(approximately(frame.width, cardWidth))
@@ -53,8 +53,8 @@ struct StackLayoutTests {
         #expect(approximately(frame.midY, container.height / 2))
     }
 
-    @Test("neighbours peek in from both edges by the same amount")
-    func neighboursPeekSymmetrically() {
+    @Test("neighbors peek in from both edges by the same amount")
+    func neighborsPeekSymmetrically() {
         let left = StackLayout.cardFrame(offset: -1, container: container)
         let right = StackLayout.cardFrame(offset: 1, container: container)
 

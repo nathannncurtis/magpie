@@ -39,7 +39,6 @@ struct SkimQueryBar: View {
         static let inset = Metrics.Spacing.insetFloating
         static let gap: CGFloat = 9
         static let sidePadding: CGFloat = 14
-        static let iconSize: CGFloat = 15
         static let markSize: CGFloat = 12
         static let tagGap: CGFloat = 5
         /// The touch target the bar carries: the 44 pt minimum, invisible. The glass
@@ -51,7 +50,7 @@ struct SkimQueryBar: View {
         Button(action: onEdit) {
             HStack(spacing: Layout.gap) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: Layout.iconSize, weight: .medium))
+                    .font(Typography.icon(.small))
                 Text(query)
                     .font(Typography.row)
                     .foregroundStyle(Palette.skimQueryText)
@@ -90,7 +89,6 @@ struct SkimControlBar: View {
     let shareURL: URL?
 
     private enum Layout {
-        static let height = Metrics.Bar.skimControlHeight
         static let markSize: CGFloat = 18
         static let digGap: CGFloat = 9
         static let leadingPadding: CGFloat = 18
@@ -98,6 +96,14 @@ struct SkimControlBar: View {
     }
 
     var body: some View {
+        FloatingBar(surface: .glass(interactive: true)) {
+            row
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("skim.controlBar")
+    }
+
+    private var row: some View {
         HStack(spacing: 0) {
             if canDigDeeper {
                 Button(action: onDigDeeper) {
@@ -120,11 +126,6 @@ struct SkimControlBar: View {
         }
         .padding(.leading, canDigDeeper ? Layout.leadingPadding : Layout.trailingPadding)
         .padding(.trailing, Layout.trailingPadding)
-        .frame(minHeight: Layout.height)  // grows with Dynamic Type
-        .frame(maxWidth: .infinity)
-        .glassEffect(.regular.interactive(), in: .capsule)
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("skim.controlBar")
     }
 
     @ViewBuilder

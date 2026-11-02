@@ -120,12 +120,16 @@ final class UITestPageServer: @unchecked Sendable {
     private func reply(to request: Data) -> Data {
         let route = Self.route(of: request)
         let page = Self.page(for: route)
-        let head = [
+        var lines = [
             "HTTP/1.1 200 OK",
             "Content-Type: \(Self.contentType(for: route)); charset=utf-8",
             "Content-Length: \(page.utf8.count)",
             "Connection: close",
-        ].joined(separator: "\r\n")
+        ]
+        if route == "/download.txt" {
+            lines.append("Content-Disposition: attachment; filename=\"magpie-sample.txt\"")
+        }
+        let head = lines.joined(separator: "\r\n")
         var reply = Data((head + "\r\n\r\n").utf8)
         reply.append(Data(page.utf8))
         return reply
@@ -141,28 +145,76 @@ final class UITestPageServer: @unchecked Sendable {
         return path.split(separator: "?").first.map(String.init) ?? "/"
     }
 
-    /// The page a route serves; the block's colour tells the routes apart.
+    /// The page a route serves; the block's color tells the routes apart.
     private static func page(for route: String) -> String {
         switch route {
         case "/search":
             return shell(title: "magpie test", path: route, block: "#B3410C")
         case "/page":
             return shell(title: "magpie test page", path: route, block: "#2B62C2")
+        case "/mode":
+            return modeProbe
+        case "/links":
+            return linksPage
         case "/mod.user.js":
             return UITestModFixtures.userscript
         case "/mod.list.txt":
             return UITestModFixtures.filterList
+        case "/download.txt":
+            return "A file saved from the stub server.\n"
         default:
             return shell(title: "magpie test", path: route, block: "#2B8A5A")
         }
     }
+
+    /// A page that says which version of itself it loaded: "mode: desktop" when the
+    /// browser identifies as a computer, "mode: mobile" otherwise.
+    private static let modeProbe = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>magpie test mode</title>
+        </head>
+        <body>
+        <h1 id="mode">mode: loading</h1>
+        <script>
+        document.getElementById("mode").textContent =
+            /Macintosh/.test(navigator.userAgent) ? "mode: desktop" : "mode: mobile";
+        </script>
+        </body>
+        </html>
+        """
+
+    /// A page that asks for new windows and dialogs: a `target=_blank` link, a button
+    /// that calls `window.open` on a tap, one script call to `window.open` with no tap
+    /// behind it, and buttons for alert and confirm.
+    private static let linksPage = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>magpie links</title>
+        <style>
+        body { margin: 0; padding: 24px; font: 22px -apple-system; }
+        a, button { display: block; margin: 0 0 28px; font-size: 26px; padding: 14px; }
+        </style>
+        </head>
+        <body>
+        <a id="blank" href="/page" target="_blank">open blank</a>
+        <button id="alert" onclick="alert('hello from the page')">say hello</button>
+        <button id="confirm" onclick="document.title = confirm('sure?') ? 'yes' : 'no'">ask</button>
+        <script>window.open('/mod.list.txt');</script>
+        </body>
+        </html>
+        """
 
     /// What each route serves; mods' files are not pages.
     private static func contentType(for route: String) -> String {
         switch route {
         case "/mod.user.js":
             return "text/javascript"
-        case "/mod.list.txt":
+        case "/mod.list.txt", "/download.txt":
             return "text/plain"
         default:
             return "text/html"
@@ -170,7 +222,7 @@ final class UITestPageServer: @unchecked Sendable {
     }
 
     /// A page that follows the appearance, so the flow's shots read under both. Its
-    /// content is loud — the route as a banner over a colour block — so a capture is
+    /// content is loud — the route as a banner over a color block — so a capture is
     /// unmistakable in the shots and a blank one cannot hide.
     private static func shell(title: String, path: String, block: String) -> String {
         """

@@ -244,4 +244,38 @@ struct BookmarkStoreTests {
         #expect(store.folders.map(\.name) == ["Kept"])
         #expect(store.folders.first?.id == folder.id)
     }
+
+    @Test("a removed bookmark comes back on undo")
+    func reinstateBookmark() {
+        let store = BookmarkStore()
+        let saved = store.add(url: url("https://quietweb.org/slow"), title: "Slow", now: date(1))
+
+        let removed = store.remove(saved.id)
+        #expect(store.bookmarks.isEmpty)
+
+        if let removed { store.reinstate(removed) }
+        #expect(store.bookmarks == [saved])
+    }
+
+    @Test("a deleted folder comes back in its place with the bookmarks it held")
+    func reinstateFolder() {
+        let store = BookmarkStore()
+        let first = store.newFolder(name: "First")
+        let second = store.newFolder(name: "Second")
+        let third = store.newFolder(name: "Third")
+        let inSecond = store.add(
+            url: url("https://a.example/1"), title: "One", folder: second.id, now: date(1))
+        let elsewhere = store.add(
+            url: url("https://a.example/2"), title: "Two", folder: third.id, now: date(2))
+
+        let removed = store.removeFolder(second.id)
+        #expect(store.folders.map(\.name) == ["First", "Third"])
+        #expect(store.bookmarks.first { $0.id == inSecond.id }?.folderID == nil)
+
+        if let removed { store.reinstate(removed) }
+        #expect(store.folders.map(\.id) == [first.id, second.id, third.id])
+        #expect(store.folders.map(\.order) == [0, 1, 2])
+        #expect(store.bookmarks.first { $0.id == inSecond.id }?.folderID == second.id)
+        #expect(store.bookmarks.first { $0.id == elsewhere.id }?.folderID == third.id)
+    }
 }

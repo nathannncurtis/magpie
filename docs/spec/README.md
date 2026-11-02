@@ -12,10 +12,10 @@ Status: draft 1, 2026-10-30. Sources:
 
 ## Files
 
-1. `01-foundations.md`: colour, mist, type, spacing, radii, shadows, icons, the mark
+1. `01-foundations.md`: color, mist, type, spacing, radii, shadows, icons, the mark
 2. `02-glass.md`: where Liquid Glass goes and the SwiftUI API for each case
 3. `03-components.md`: every reusable piece, with sizes and states
-4. `04-screens.md`: each screen, its layout and behaviour, light and dark
+4. `04-screens.md`: each screen, its layout and behavior, light and dark
 5. `05-motion.md`: springs, the seven moments, Reduce Motion
 6. `06-copy.md`: voice and every string on the boards
 7. `07-assets.md`: icons, fonts, favicons, app icon

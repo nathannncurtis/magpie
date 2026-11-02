@@ -34,6 +34,7 @@ struct TabLabel: View {
                 .font(.system(size: LabelMetrics.favicon * 0.75, weight: .semibold))
                 .foregroundStyle(Palette.textPrimary)
                 .frame(width: LabelMetrics.favicon, height: LabelMetrics.favicon)
+                .accessibilityIdentifier("tabs.label.private")
         } else if let image = faviconData.flatMap(UIImage.init(data:)) {
             Image(uiImage: image)
                 .resizable()
@@ -47,7 +48,7 @@ struct TabLabel: View {
 }
 
 /// A stand-in tile while no favicon has been fetched: the host's initial on a hue the
-/// host picks for itself, so a tab keeps its colour across launches.
+/// host picks for itself, so a tab keeps its color across launches.
 private struct FaviconTile: View {
     let host: String?
     let size: CGFloat

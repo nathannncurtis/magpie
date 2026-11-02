@@ -89,6 +89,20 @@ struct ModsStoreTests {
         #expect(io.loadBody(for: "a-mod") == nil)
     }
 
+    @Test("a removed mod comes back with its code")
+    func reinstateRemoved() {
+        let io = InMemoryModStoreIO()
+        let store = makeStore(io: io)
+        store.install(draft())
+
+        let removed = store.remove(id: "a-mod")
+        #expect(io.loadBody(for: "a-mod") == nil)
+
+        if let removed { store.reinstate(removed) }
+        #expect(store.mods.map(\.id) == ["a-mod"])
+        #expect(io.loadBody(for: "a-mod") == "code();")
+    }
+
     @Test("the script's values are kept per mod")
     func values() {
         let store = makeStore()

@@ -25,8 +25,8 @@ struct TabStoreTests {
         #expect(store.tabs.last?.url == URL(string: "https://b.example"))
     }
 
-    @Test("select centres a tab without marking it active")
-    func selectCentresWithoutTouching() {
+    @Test("select centers a tab without marking it active")
+    func selectCentersWithoutTouching() {
         let store = TabStore()
         let first = store.newTab(title: "A", now: date(0))
         store.newTab(title: "B", now: date(10))
@@ -63,7 +63,7 @@ struct TabStoreTests {
         #expect(store.tabs.first?.lastActive == date(30))
     }
 
-    @Test("closing the current tab picks the neighbour to the right")
+    @Test("closing the current tab picks the neighbor to the right")
     func closeCurrentPicksRight() {
         let store = TabStore()
         let a = store.newTab(title: "A", now: date(0))
@@ -76,7 +76,7 @@ struct TabStoreTests {
         #expect(store.currentTabID == c.id)
     }
 
-    @Test("closing the last tab picks the neighbour to the left")
+    @Test("closing the last tab picks the neighbor to the left")
     func closeLastPicksLeft() {
         let store = TabStore()
         let a = store.newTab(title: "A", now: date(0))
@@ -276,7 +276,8 @@ struct TabStoreTests {
 
         let index = try #require(await persistence.loadIndex())
         #expect(index.openTabs.map(\.id) == [open.id])
-        #expect(index.currentTabID == nil)
+        // Currency is written as the ordinary mode's own, not the private tab on top.
+        #expect(index.currentTabID == open.id)
         #expect(await persistence.loadSnapshot(for: hidden.id) == nil)
         #expect(store.hasPrivateTabs)
     }
@@ -309,6 +310,84 @@ struct TabStoreTests {
         #expect(store.tabs.last?.archivedAt == nil)
         #expect(store.tabs.last?.lastActive == date(100_050))
         #expect(!store.restore(a.id, now: date(100_060)))
+    }
+
+    // MARK: Undo close
+
+    @Test("reinstating a closed tab puts it back in its place and at the center")
+    func reinstateRestoresPlace() throws {
+        let store = TabStore()
+        let a = store.newTab(url: URL(string: "https://a.example"), now: date(0))
+        let b = store.newTab(url: URL(string: "https://b.example"), now: date(10))
+        let c = store.newTab(url: URL(string: "https://c.example"), now: date(20))
+        store.select(b.id)
+
+        let closed = try #require(store.close(b.id))
+        #expect(store.tabs.map(\.id) == [a.id, c.id])
+        #expect(store.currentTabID == c.id)
+
+        store.reinstate(closed)
+        #expect(store.tabs.map(\.id) == [a.id, b.id, c.id])
+        #expect(store.currentTabID == b.id)
+    }
+
+    @Test("reinstating a tab closed away from the center leaves the center alone")
+    func reinstateKeepsCurrent() throws {
+        let store = TabStore()
+        let a = store.newTab(url: URL(string: "https://a.example"), now: date(0))
+        let b = store.newTab(url: URL(string: "https://b.example"), now: date(10))
+
+        let closed = try #require(store.close(a.id))
+        store.reinstate(closed)
+
+        #expect(store.tabs.map(\.id) == [a.id, b.id])
+        #expect(store.currentTabID == b.id)
+    }
+
+    @Test("a closed tab keeps its snapshot through an undo, and it is written to disk again")
+    func reinstateKeepsSnapshot() async throws {
+        let persistence = InMemoryTabPersistence()
+        let store = TabStore(persistence: persistence)
+        let a = store.newTab(url: URL(string: "https://a.example"), now: date(0))
+        store.newTab(url: URL(string: "https://b.example"), now: date(10))
+        let picture = Data([1, 2, 3])
+        store.setSnapshot(picture, for: a.id)
+
+        let closed = try #require(store.close(a.id))
+        store.reinstate(closed)
+        await store.flushWrites()
+
+        #expect(store.tabs.first?.snapshot == picture)
+        #expect(await persistence.loadSnapshot(for: a.id) == picture)
+    }
+
+    @Test("a private tab comes back in memory and still never reaches the disk")
+    func reinstatePrivate() async throws {
+        let persistence = InMemoryTabPersistence()
+        let store = TabStore(persistence: persistence)
+        store.newTab(url: URL(string: "https://a.example"), now: date(0))
+        let secret = store.newTab(url: URL(string: "https://b.example"), isPrivate: true, now: date(10))
+
+        let closed = try #require(store.close(secret.id))
+        store.reinstate(closed)
+        await store.flushWrites()
+
+        #expect(store.tabs.map(\.id).contains(secret.id))
+        let saved = try await persistence.loadIndex()
+        #expect(saved?.openTabs.contains { $0.id == secret.id } == false)
+    }
+
+    @Test("reinstating a tab that is already open does nothing")
+    func reinstateTwice() throws {
+        let store = TabStore()
+        store.newTab(url: URL(string: "https://a.example"), now: date(0))
+        let b = store.newTab(url: URL(string: "https://b.example"), now: date(10))
+
+        let closed = try #require(store.close(b.id))
+        store.reinstate(closed)
+        store.reinstate(closed)
+
+        #expect(store.tabs.count == 2)
     }
 }
 
@@ -375,7 +454,7 @@ struct TabStoreUpdateTests {
 @MainActor
 struct TabStoreLoadIndexTests {
 
-    @Test("loadIndex reads the saved tabs and the centred one")
+    @Test("loadIndex reads the saved tabs and the centered one")
     func loadIndexReadsTheSavedTabs() async {
         let a = Tab(title: "A", lastActive: Date(timeIntervalSince1970: 0))
         let b = Tab(title: "B", lastActive: Date(timeIntervalSince1970: 10))
@@ -389,7 +468,7 @@ struct TabStoreLoadIndexTests {
         #expect(store.currentTabID == a.id)
     }
 
-    @Test("loadIndex centres the first tab when the saved one is gone")
+    @Test("loadIndex centers the first tab when the saved one is gone")
     func loadIndexFallsBackToTheFirstTab() async {
         let saved = TabIndex(
             openTabs: [Tab(title: "A", lastActive: Date(timeIntervalSince1970: 0))],

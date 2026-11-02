@@ -10,7 +10,10 @@ Cold start, no tabs ── Launch (01, keyboard up) ──search──▶ Readin
 Reading ──tap URL──▶ Search sheet (01 morph)       Reading ──•••──▶ Menu (05)
 Reading ──tab count──▶ Tabs (03) ──Archived chip──▶ Archive (09)
 Menu ──Mods tile──▶ Mods (06) ──footer──▶ Install from URL (12)
-Menu ──Bookmark tile: tap saves, long-press──▶ Bookmarks (10)      Menu ──Settings ›──▶ Settings (11)
+Menu ──Bookmarks ›──▶ Bookmarks (10)      Menu ──Bookmark tile: tap saves, long-press──▶ Bookmarks (10)
+Menu ──Settings ›──▶ Settings (11)
+Menu ──History ›──▶ History (18)       Settings ──Clear browsing data ›──▶ Clear browsing data (19)
+Menu ──Downloads ›──▶ Downloads (20)
 First ever launch ──▶ Welcome (07a) ──▶ Engine picker (07b) ──▶ Launch (01)
 ```
 
@@ -19,27 +22,36 @@ Later launches restore the last tab, with no animation.
 ---
 
 ## 01 · Launch / search
-- **Background:** the mist.
+- **Background:** the mist. For a private tab (03 · Modes) it is the night mist, and the screen is dark whatever the system appearance.
 - **Sheet:** a `SearchSheet` attached to the keyboard, glass, edge to edge, top corners 38. The field is focused with the keyboard up on arrival.
 - **Suggestions:** up to 3 rows, coming from the chosen engine's suggest API. The first row's Skim pill is primed (ink). The rows stagger in once as the list arrives; typing animates the rows it adds or drops, never resetting the list.
 - **Empty field:** show recent searches as rows, or no rows at all. Nothing else.
 - **Submitting:** a query goes to the chosen engine; a URL goes to that site. The Skim pill runs Skim (08).
+- **Copied link:** when the pasteboard probably holds a web address and the field is empty (or still holds only the page's own address), the first row reads "Go to copied link" and opens it in one tap. The sheet only asks whether a link is there, which raises no paste prompt; the pasteboard is read when the row is tapped, so the row cannot show where it goes.
+- **Inline completion:** a typed host-like prefix (letters, digits, dots and hyphens only) is finished in the field with the rest selected, from the hosts of the user's tabs and bookmarks first, then a short bundled list of well-known sites. Typing replaces the selection, Delete removes it, Return and moving the caret accept it. Suggestions follow what was typed, not the completion.
+- **Carried address:** the address a page's sheet opens with arrives selected, so typing replaces it.
 - **Opened from a page:** the bar morphs into this sheet and the sheet turns solid (02, 05 · Open search).
-- **Dismissed with no tabs:** a swipe down or a tap away folds the sheet into the mist; there is no stack to go back to, and the screen never goes blank. The mark (sheen, 96) sits in the centre, over a bottom row placed like the tabs row (03): the Archived chip on the left, + in the centre (it brings the sheet back with the keyboard up; a long-press opens a private tab), and a Settings gear on the right.
+- **Dismissed with no tabs:** a swipe down or a tap away folds the sheet into the mist; there is no stack to go back to, and the screen never goes blank. The mark (sheen, 96) sits in the center, over a bottom row placed like the tabs row (03, `FloatingBar`): the Archived chip on the left, + exactly in the center (it brings the sheet back with the keyboard up; a long-press opens a private tab), and a Settings gear on the right.
+- **Private:** "Private tab" in a glass capsule above the sheet (`eye.slash`), on the night mist. Recents and Skim stay off (03). A swipe down returns to the private stack.
 
 ## 02 · Reading
-- **Layout:** a `WKWebView` that starts below the status bar and runs to the bottom edge under the floating `ReadingBar`. The strip above the page, under the status bar, takes the page's own top colour (`themeColor`, else its own background, else paper), so the screen still reads edge to edge.
-- **Bar tint:** comes from the page's `themeColor`, or `underPageBackgroundColor` when there's no theme colour.
+- **Layout:** a `WKWebView` that starts below the status bar and runs to the bottom edge under the floating `ReadingBar`. The strip above the page, under the status bar, takes the page's own top color (`themeColor`, else its own background, else paper), so the screen still reads edge to edge.
+- **Bar tint:** comes from the page's `themeColor`, or `underPageBackgroundColor` when there's no theme color.
 - **Scrolling:** collapses the bar to slim (05 · Chrome on scroll).
 - **Dark mode on pages:** never inverted. Send `Sec-CH-Prefers-Color-Scheme: dark` to Google, and inject nothing; sites with a dark theme show it themselves.
 - **Blocking:** ads and trackers, and cookie banners, are blocked with `WKContentRuleList`s compiled from the downloaded lists. They are two separate rule sets on two separate toggles.
+- **Page interactions:** a `target=_blank` link opens a new tab, which becomes current (private if the page's tab is); a window a script opens with no tap behind it is dropped. A page's alert, confirm and prompt show as an alert over the reading screen, titled with the site's host. A long press on a link offers Open in new tab, Open in private tab, Copy link and Share, over the system link preview. Pulling the page down reloads it, with the system refresh control.
 - **Hardware keyboard:** ⌘T new tab, ⌘L the search sheet, ⌘W close tab, ⌘R reload, ⌘[ / ⌘] back and forward, ⌘F find on page, ⌘⇧\ the tabs screen; Esc folds the search sheet, the menu, or the find bar away. The page's own shortcuts work only while reading; every one shows in the system overlay (hold ⌘).
 
 ## 03 · Tabs
-- **Layout:** a `TabStack` on the mist. The current tab is centred; the others sit to each side, with labels above.
+- **Layout:** a `TabStack` on the mist. The current tab is centered; the others sit to each side, with labels above.
+- **Modes:** two stacks, never mixed. A glass two-segment control sits at the top center, below the status bar: "Tabs" | "Private" (the Private segment carries `eye.slash`; `tabs.mode.normal`, `tabs.mode.private`). It is always one tap. The screen shows only the tabs of the current mode, and the open count counts them. Each mode remembers its own current tab. Flipping swaps the stack with `Springs.chrome` (a crossfade under Reduce Motion). The mode follows the page being read: opening a private tab puts the screen in private mode, an ordinary one in ordinary mode.
 - **Gestures:** fling up to close; tap to open; swipe sideways to move through the stack.
-- **Bottom row:** the Archived chip (opens 09), the open count, and + (opens the launch search sheet, 01, on the mist, as a new tab). The row sits like the bars (foundations · bottom controls), its bottom edge `max(26, safe-area-bottom − 8)` above the physical bottom; the stack keeps clear of the status bar.
-- **Private tab:** a long-press on + (or the menu's Private tile) opens the launch search for a private tab, "Private tab" in a glass capsule above the sheet. A private tab keeps nothing: no saved place in the stack, no snapshot, no recent searches, no Skim, no auto-archive, no favicon fetch. Its cookies and site data live in one in-memory store shared by private tabs and dropped with the last one. The bar's pill and the tab's label carry `eye.slash`; VoiceOver reads ", private" after the name. With a private tab open, the app switcher's picture is the mist with `eye.slash`.
+- **Undo close:** after a card is flung closed, a glass capsule "Closed · Undo" sits above the bottom row for 4 seconds. Undo puts the tab back in its place in the stack and at the center. Only the latest close can be undone; leaving the screen, or closing the last tab, ends it. A private tab comes back too, for as long as the capsule is up and no longer.
+- **Bottom row:** a `FloatingBar` (03) with the Archived chip (opens 09) leading, + exactly centered (opens the launch search sheet, 01, on the mist, as a new tab) and the open count trailing. The row sits like the bars (foundations · bottom controls), its bottom edge `max(26, safe-area-bottom − 8)` above the physical bottom; the stack keeps clear of the status bar and the switch. + follows the mode: in private mode it opens a private tab. A long-press on + offers the other kind ("New private tab" in ordinary mode, "New tab" in private mode).
+- **Private mode:** the screen sits on the night mist (`MistBackground(night:)`: `nightInk` to `nightInkDeep` with the teal faint through it), dark whatever the system appearance; the glass chrome keeps its usual treatment. The menu's Private tile switches to private mode and opens a private tab's launch search (01). A private tab keeps nothing: no saved place in the stack, no snapshot, no recent searches, no Skim, no auto-archive, no favicon fetch. Its cookies and site data live in one in-memory store shared by private tabs and dropped with the last one. The bar's pill and the tab's label carry `eye.slash`, collapsed or full; VoiceOver reads ", private" after the name. A private page's top strip under the status bar is the page's own colour, as for any page. With a private tab open, the app switcher's picture is the mist with `eye.slash`.
+- **Private, empty:** with no private tab, a centered glass card on the night mist: `eye.slash`, "Private tabs", "Nothing here is saved. Closing the last private tab clears its cookies and history.", and a "New private tab" button. Closing the last private tab leaves this card.
+- **Leaving private mode:** flipping back to Tabs keeps the private tabs for the session, so they are there when the screen flips again. They are never saved to disk. With no ordinary tab, flipping to Tabs opens the ordinary launch search (01); a swipe down on it lands on the private stack, the only one left. Closing the last ordinary tab leaves the ordinary launch search.
 - **Auto-archive:** tabs untouched for the set time move to Archive. The default is 1 day, adjustable from 12 hours to 30 days, ON by default.
 
 ## 04 · Skim page
@@ -48,10 +60,13 @@ Later launches restore the last tab, with no animation.
   - `SkimHeader`
   - `SkimSection`s
   - "Sources" with a row of `SourceCard`s
-- **Floating controls:** `SkimQueryBar` at the top and `SkimControlBar` at the bottom.
+- **Floating controls:** a trailing "Done" (`skim.done`, on a glass capsule) in a `ScreenHeader` control row at the top, with the `SkimQueryBar` under it, and the `SkimControlBar` at the bottom, over a scrim of the page background so its text stays legible. Done leaves the page, the same as `cancelSkim()`. Every Skim screen has a visible way out besides the swipe: Done on the page and on the failure (`skim.done`), Cancel on the working scene (`skim.cancel`).
 - **Content rhythm:** an emoji, a **bold term**, " — ", a short claim, then citation dots. Every claim carries at least one dot.
 - **Share:** creates a self-contained page (HTML snapshot) that includes its sources. Saving puts it in Bookmarks as a Skim page.
 - **Availability:** Skim exists only on devices that can run Apple Foundation Models (iPhone 15 Pro and later, Apple Intelligence on, a supported language). Everywhere else every Skim entry point is hidden: there are no disabled states and no upsell.
+
+## Deleting and undo
+One pattern for removing a row, on Bookmarks (rows and folders), History, Downloads, Archive and the installed Mods: swipe left, with a full swipe allowed, and the row goes at once, with no confirmation. The glass capsule "Deleted · Undo" ("Removed · Undo" for a mod, `undo.capsule`) rises above the list's foot, clear of the search pill, and goes after 4 s or on leaving the screen; Undo puts the row back where it was. Only the latest delete can be undone. Bulk or irreversible actions keep their confirmation: Clear browsing data, and Clear history…. The tab stack's "Closed · Undo" (03) is the same capsule.
 
 ## 05 · Menu
 - **Opening:** the `MenuSheet` grows out of the bar. The bar stays at the base with ••• pressed.
@@ -59,14 +74,15 @@ Later launches restore the last tab, with no animation.
 - **Tiles:** Skim, Bookmark, Share, Mods, Private.
 - **Groups:**
   - (ads & trackers, cookie banners, archive timing)
-  - (search engine, Skim for me, Settings ›)
-- **Bookmark tile:** a tap saves the page, with a light haptic and the icon filling in; a long-press opens Bookmarks (10).
+  - (search engine, Skim for me, Desktop site, Bookmarks ›, History ›, Downloads ›, Settings ›)
+- **Desktop site:** a toggle shown while a page with a site is up. It flips desktop mode for that host, remembered per host (a site and its www twin share the choice), and the page reloads. Magpie applies it through the navigation decider's preferences on every top-level navigation (`preferredContentMode`: `.desktop` when on, `.recommended` when off).
+- **Bookmark tile:** a tap saves the page, with a light haptic and the icon filling in; a long-press opens Bookmarks (10), as the plain Bookmarks › row (`menu.bookmarks`) in the second group does. The row is the way in people find; the long-press stays as the shortcut.
 - **Dismissing:** tap •••, swipe down, or tap the page.
 - **Board fix:** the static board screen 05 shows too much space above the bar. The spec value of 14 pt wins.
 
 ## 06 · Mods
 - **Background:** the mist.
-- **Header:** "Mods" in `screenTitle`, with "Done" at top right.
+- **Header:** "Mods" in a `ScreenHeader`, with "Done" at top right (`mods.done`). Section headings use `SectionLabel`; the cards are `GroupedBox`es; the installed empty state is `EmptyListState`.
 - **Segments:** Directory | Installed · N.
 - **Directory tab:** the `FeaturedModCard` (Google Answer Box), then "Popular this week" (`sectionTitle`) and a card of `ModRow`s.
 - **Directory install:** while the entry's file is fetched and checked, the row's Get gives way to the 24 pt `MarkSpinner` (05 · 06). More than one can run at once, each row carrying its own mark; a Get for an entry already installing does nothing. The install stays on the Directory tab: when it lands, the row's Get becomes a popping `InstalledCheck` in place. An install that does not land shows one plain line under the card, with Get as the way to try again.
@@ -81,7 +97,7 @@ Later launches restore the last tab, with no animation.
 ## 07a · Welcome (first launch only)
 - **Background:** the mist.
 - **Anchor:** the block's top sits 0.23 of the height below the safe-area top (about 176 pt on a standard phone).
-- **Centre:** the mark draws itself (`MarkSpinner`, played once), then "magpie" in `wordmark` and "The browser you shape." in `row` `textOnMistSecondary` settle in beneath it.
+- **Center:** the mark draws itself (`MarkSpinner`, played once), then "magpie" in `wordmark` and "The browser you shape." in `row` `textOnMistSecondary` settle in beneath it.
 - **Bottom:** the `PrimaryCTA` "Get started", with "Free and open source. No account. Nothing collected." in `small` under it.
 
 ## 07b · Pick a search engine
@@ -94,33 +110,35 @@ Later launches restore the last tab, with no animation.
 
 ## 08 · Skim working
 - **Background:** the drifting mist.
-- **Centre:** the `MarkSpinner` at 96 pt, with the query title (`skimWorkingTitle`) fading in under it.
+- **Center:** the `MarkSpinner` at 96 pt, with the query title (`skimWorkingTitle`) fading in under it.
 - **Progress:** three source favicons fill in one by one as each page is read, with "Reading 3 pages" in `small`.
 - **Bottom:** a Cancel button.
 - **Nothing else:** no carousels, chips or typed text.
 - **Duration:** about 30–60 s. When done, it plays 05 · Skim finishes.
 
 ## 09 · Archive
-- **Header:** "Archive" in `screenTitle`, with "Done" at top right.
-- **List:** rows on the mist, grouped by `DayHeader` (Today, Yesterday, Earlier this week, then one per month, newest first). A month band names its year only outside the current year: "October", "October 2025". Each row: favicon, title, site, time.
-- **Actions:** tap a row to restore the tab; swipe to delete.
+- **Header:** "Archive" in a `ScreenHeader`, with "Done" at top right (`archive.done`).
+- **List:** rows on the mist, grouped by `SectionLabel` (Today, Yesterday, Earlier this week, then one per month, newest first). A month band names its year only outside the current year: "October", "October 2025". Each row: favicon, title, site, time. A row dated in the current year never shows the year ("Sep 30"); an older one does ("Sep 30, 2025").
+- **Actions:** tap a row to restore the tab; swipe left to delete, with the undo capsule (see Deleting and undo).
 - **Search:** the `BottomSearchPill` with "Search archived tabs" searches titles and addresses; the pill rides the keyboard.
 - **Retention:** 30 days, then deleted.
 
 ## 10 · Bookmarks
-- **Header:** "Bookmarks", with Edit (top left) and Done.
+- **Header:** "Bookmarks" in a `ScreenHeader`, with Edit (top left) and Done (top right). Done leaves, as the back swipe does (`bookmarks.done`). While editing, the leading label reads "Save", never "Done". An open folder swaps Edit for Back; Done stays.
 - **Folders:** a "Folders" section of `FolderRow`s, then "Recently added", mixing `ListRow`s and `SkimPageRow`s.
 - **Edit mode:** adds "New folder", rename, reorder and delete.
+- **Opening:** a tap opens the page in a new tab; if a tab of the same mode already shows that page (scheme, host, path and query match; the fragment and a trailing slash don't count), the tap switches to that tab instead. Skim pages open on the Skim surface.
+- **Deleting:** a swipe left on a bookmark or a folder deletes it at once and raises the undo capsule (see Deleting and undo). Deleting a folder keeps its bookmarks, unfiled; Undo puts the folder back with the bookmarks it held.
 - **Search:** the `BottomSearchPill` with "Search bookmarks"; the pill rides the keyboard.
 
 ## 11 · Settings
-- **Background:** the mist, with grouped boxes (`SettingsGroup`, frosted).
-- **Header:** "Settings", with Done.
+- **Background:** the mist, with grouped boxes (`GroupedBox`, frosted).
+- **Header:** "Settings" in a `ScreenHeader`, with Done. Its pages carry Back at the leading edge and the same Done, which closes Settings.
 - **Default browser:** the `DefaultBrowserCard` sits on top until Magpie is the default.
 - **Groups:**
   - **Search:** Search engine › · Suggestions [toggle] · Skim for me [toggle]
-  - **Privacy:** Ads & trackers [toggle] · Cookie banners [toggle] · Filter lists ("Updated 2 h ago" ›)
-  - **Tabs & more:** Archive tabs after ("1 day" ›) · Passwords ("iOS Passwords" ›, which opens iOS Passwords) · About Magpie ("1.0 · MPL-2.0" ›)
+  - **Privacy:** Ads & trackers [toggle] · Cookie banners [toggle] · Filter lists ("Updated 2 h ago" ›) · Clear browsing data ›
+  - **Tabs & more:** Archive tabs after ("1 day" ›) · Passwords (`key`; "iOS Passwords" ›, which opens iOS Passwords) · About Magpie ("1.0 · MPL-2.0" ›)
 - There is no account and no sync.
 
 ## 12 · Install from URL
@@ -139,13 +157,13 @@ Every edge state follows one pattern: one plain line saying what happened, and o
 ### 13 · Mods · Installed
 - **Layout:** the same card of `ModRow`s as the Directory tab, with a trailing `Toggle` instead of Get.
 - **Toggle off:** keeps the mod but stops it running.
-- **Swipe left:** removes the mod.
+- **Swipe left:** removes the mod at once, with the undo capsule ("Removed · Undo"); Undo brings it back with its code and its on/off state.
 - **Mods added from a link:** keep a small warm "Not reviewed" tag after the name (`warningBackground` / `warningText`, 10 pt semibold, radius 6). The author line ends "· from a link".
 - **Hint under the card:** "Swipe a mod left to remove it. Off keeps it, but it stops running." (`small`, `textOnMistSecondary`)
 - **Footer:** the `InstallFooter` stays.
 
 ### 14 · Empty list (Archive; same for Bookmarks and Installed)
-- **Layout:** the header stays. A centred block sits on the mist with its top at 0.35 of the screen's safe height (about 270 pt on a standard phone), laid over the whole screen rather than under the header: a 34 pt line icon in `labelOnMist`, a title in 16 pt semibold, and one line in `meta`.
+- **Layout:** the header stays. A centered block sits on the mist with its top at 0.35 of the screen's safe height (about 270 pt on a standard phone), laid over the whole screen rather than under the header: a 34 pt line icon in `labelOnMist`, a title in 16 pt semibold, and one line in `meta`.
 - **No search pill** when there's nothing to search.
 - **A search that matches nothing** shows the same block with "No results" and one line naming the list, while the pill stays to take the query back.
 - **Copy:**
@@ -153,21 +171,65 @@ Every edge state follows one pattern: one plain line saying what happened, and o
   - Bookmarks and Installed: see 06.
 
 ### 15 · Page can't load
-- **Layout:** Magpie's own page on `skimBackground` (dark #121316), centred: a 40 pt globe-with-slash line icon in `textTertiary`, a title in 18 pt semibold, one line in `body` `textSecondary`, and an ink capsule "Try again" (paper in dark), never under 44 tall.
+- **Layout:** Magpie's own page on `skimBackground` (dark #121316), centered: a 40 pt globe-with-slash line icon in `textTertiary`, a title in 18 pt semibold, one line in `body` `textSecondary`, and an ink capsule "Try again" (paper in dark), never under 44 tall.
 - **The bar stays**, at its default tint.
 - **Offline:** the page reloads by itself when the connection returns (`NWPathMonitor`).
 - **Other failures** follow the same layout with different copy (see 06).
+- **Stalled load:** a load that has not committed when the 90 s watch gives up is stopped and shows "This page stopped loading". A page that committed is left alone.
+- **Renderer died:** the visible page reloads once by itself. A tab away from the screen reloads when it is next shown. A second death within 20 s shows "This page stopped working".
+- **Place in the page:** each tab keeps its scroll offset when its page is dropped (memory warning, live-session cap) and when the app backgrounds; a rebuilt page or a relaunch scrolls back to it. Private tabs keep it in memory only.
+- **Links from other apps** close Settings and cancel a Skim run before opening in a new tab; during onboarding the link waits and opens when onboarding is done.
 
 ### 16 · Skim couldn't finish
 - **Layout:** the Skim working scene with the mark **standing still** at 55% opacity, the title, then one line in `meta` saying why.
-- **Actions:** "Show search results" (ink CTA) and "Try again" (text button).
+- **Actions:** "Show search results" (the primary button) and "Try again" (text button), and a trailing "Done" (`skim.done`) that leaves, the same as `cancelSkim()`.
 - **Trigger:** fewer than 2 pages could be read, or the model refused. Never show a half-built page.
 
 ### 17 · Install failed
 - **Layout:** the install sheet with the URL field kept. In the preview's place, a solid card with a bold reason and one line on what Magpie needs.
 - **Install** stays disabled at 30% until the link parses as a userscript or filter list.
 
+### 20 · Downloads
+- **Background:** the mist. "Downloads" in `screenTitle`, "Done" at top right; a swipe in from the leading edge goes back to the screen that opened it.
+- **What downloads:** a navigation whose response is a Content-Disposition attachment or a type the page cannot show, and a link with the `download` attribute. WebPage offers no download delegate, so the load is canceled and the file fetched on its own, carrying the page's cookies; the page the load came out of stays as it was. Private tabs download too, into the same folder.
+- **Where it lands:** the app's Documents/Downloads, which the Files app lists and edits in place. A name already taken gets a number before its extension: "report 2.pdf".
+- **Rows:** plain rows on the mist, newest first: a file glyph, the name, then size and date. A tap opens the file in QuickLook; swipe left deletes it, with the undo capsule. The file is set aside until the capsule runs out and comes back whole on Undo.
+- **Toast:** a small glass capsule above the bar, on any screen. "Downloading <name>" with a spinner while it runs; "Downloaded <name>" with a check once done, held six seconds, and a tap opens the file in QuickLook. "Couldn't download <name>" when it fails; a tap dismisses.
+- **Empty:** `EmptyListState`, `arrow.down.circle`, "No downloads yet" / "Files you save from a page land here, and in the Files app."
+
+### 21 · URL scheme
+- `magpie://open?url=<encoded>` opens an http or https address in a new tab. Anything else in `url` is ignored.
+- `magpie://search?q=<encoded>` runs the query on the chosen engine in a new tab (an address typed as the query opens as one); `magpie://search` with no query opens the launch search with its keyboard up.
+- http and https links open as they always did. Pages can never load a `magpie` address.
+
+### 22 · Share extension
+- "Open in Magpie" in the share sheet takes a URL, or text with a web address in it, opens `magpie://open?url=…` and finishes. It has no interface.
+
+### 23 · Quick actions
+- Holding the app icon offers **New tab**, **New private tab** and **Search**. Each opens the launch search with its keyboard up; New private tab opens it for a private tab. They work from a cold launch (held until the saved tabs are in) and while the app runs.
+
+### 24 · Search widget
+- **Families:** small and medium on the home screen; rectangular and circular on the lock screen.
+- **Content:** the Magpie mark and a "Search" pill on the paper; the lock-screen ones show the mark in one color. A tap opens `magpie://search`.
+- **Colors** are copied into the widget from `Theme/Colors.swift`, since a widget cannot import the app.
+
 ---
+
+## 18 · History
+- **Header:** "History" in `screenTitle`, with "Done" at top right; a swipe in from the leading edge goes back too. The header lives in one small view in the screen's file so the shared header can replace it.
+- **Record:** each committed top-level navigation in a normal tab: address, title, time. Private tabs leave nothing. The same address twice in a row is one entry; only web pages count. The list keeps the last 5,000 visits. The title is filled in once the page names itself.
+- **List:** rows on the mist, grouped by `DayHeader` as in the archive (09). Each row: site tile, title (the site while untitled), site, time.
+- **Actions:** tap a row to open it in a new tab; swipe left to remove it, with the undo capsule. "Clear history…" ends the list, in red, and asks "Clear all history?" before it clears. It hides while a search narrows the list.
+- **Search:** the `BottomSearchPill` with "Search history" filters titles and sites; the pill rides the keyboard.
+- **Empty:** "No history yet" / "Pages you visit show up here."; no pill. A search with no match: "No results" / "Nothing in your history matches that search."
+- **Entry:** Menu · History ›. The menu folds and History opens over the page; Done or a back swipe returns to it.
+
+## 19 · Clear browsing data
+- **Where:** pushed from Settings · Privacy, in the Settings page frame (`SettingsScaffold`, `SettingsGroup`), with a back button.
+- **Toggles:** History · Cookies and site data · Cache. All on to begin with.
+- **Clear:** a destructive button under the group, disabled when nothing is ticked. It asks "Clear browsing data?" / "This can't be undone. Open pages reload." before it runs.
+- **What it does:** History empties the history store. Cookies and site data removes every website data type the default store keeps except the caches; Cache removes the disk, memory, offline and fetch caches; both through `removeData(ofTypes:modifiedSince: .distantPast)`. Private tabs keep their own throwaway store and are untouched. When website data goes, the live pages reload so none keeps showing what was cleared.
+- **Done:** "Cleared." shows under the button until a toggle changes.
 
 ## Dark mode, all screens
 - **Mist:** turns ink, with teal glowing through (01 Mist dark column).

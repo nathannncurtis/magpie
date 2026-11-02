@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import UIKit
 import WebKit
 
 /// Which surface is up (04 · the navigation map).
@@ -15,10 +16,14 @@ enum Surface: Equatable {
     case archive
     /// The bookmarks, over whatever screen opened it.
     case bookmarks
+    /// The history, over whatever screen opened it.
+    case history
     /// The mods screen.
     case mods
     /// A Skim run: working, its finished page, or the failure that stopped it.
     case skim
+    /// The saved downloads.
+    case downloads
 }
 
 /// The app's own state: the tabs, the engine, the recents, and which surface is up.
@@ -41,6 +46,8 @@ final class AppModel {
     let blocker: ContentBlocker
     /// The saved bookmarks and their folders.
     let bookmarks: BookmarkStore
+    /// The pages visited in normal tabs.
+    let history: HistoryStore
     /// Where the search sheet's suggestion rows come from.
     let suggestions: any SuggestionProviding
     /// Recent searches.
@@ -61,6 +68,8 @@ final class AppModel {
     /// The sites' own icons: fetched off the main actor, shared by every row that points
     /// at the same address.
     let faviconFetcher: FaviconFetcher
+    /// The files pages have handed over to download.
+    let downloads: DownloadStore
 
     /// The Skim run on screen, when one is going.
     private(set) var skimRun: SkimRun?
@@ -89,16 +98,69 @@ final class AppModel {
         surface == .launchSearch ? launchIsPrivate : currentIsPrivate
     }
 
+    /// What the address field draws on: the hosts of the open and archived tabs and the
+    /// bookmarks, freshest tabs first, and the pasteboard. Private tabs stay out of it.
+    var addressAssist: AddressAssist {
+        let tabs = (store.tabs + store.archivedTabs.reversed())
+            .filter { !$0.isPrivate }
+            .sorted { $0.lastActive > $1.lastActive }
+            .compactMap(\.host)
+        let saved = bookmarks.bookmarks.compactMap(\.host)
+        var seen = Set<String>()
+        let hosts = (tabs + saved).filter { seen.insert($0).inserted }
+        let pasteboard: any PasteboardLinkSource =
+            UITestEnvironment.pasteboardLink.map { FixedPasteboardLink(value: $0) }
+            ?? SystemPasteboardLink()
+        return AddressAssist(userHosts: hosts, pasteboard: pasteboard)
+    }
+
     /// The recents the search reads and writes: a private search keeps nothing.
     var searchRecents: any RecentSearchStoring {
         searchIsPrivate ? PrivateRecents(base: recents) : recents
+    }
+
+    /// Whether the tabs screen shows the private stack instead of the ordinary one. The
+    /// mode follows the page being read, and the + opens the kind of tab it names.
+    private(set) var isPrivateMode = false
+
+    /// The tabs the tabs screen shows: those of the current mode.
+    var modeTabs: [Tab] {
+        store.tabs(inPrivate: isPrivateMode)
+    }
+
+    /// The tab the current mode centers on.
+    var modeCurrentTabID: Tab.ID? {
+        store.currentTabID(inPrivate: isPrivateMode)
+    }
+
+    /// The tabs screen's switch. Flipping swaps the stack and each mode keeps its own
+    /// current tab; private tabs stay open for the session while the other mode shows.
+    /// With no ordinary tab to flip to, the ordinary launch search opens instead.
+    func setPrivateMode(_ isPrivate: Bool) {
+        guard isPrivate != isPrivateMode else { return }
+        isPrivateMode = isPrivate
+        if let id = store.currentTabID(inPrivate: isPrivate) {
+            store.select(id)
+        }
+        if !isPrivate, store.tabs(inPrivate: false).isEmpty {
+            newNormalTab()
+        }
     }
 
     /// The menu's Private tile, or the +'s long press: the launch search, submitting into a
     /// private tab.
     func newPrivateTab() {
         searchPrefill = nil
+        isPrivateMode = true
         launchIsPrivate = true
+        surface = .launchSearch
+    }
+
+    /// The launch search for an ordinary tab, from any mode.
+    func newNormalTab() {
+        searchPrefill = nil
+        isPrivateMode = false
+        launchIsPrivate = false
         surface = .launchSearch
     }
 
@@ -128,6 +190,7 @@ final class AppModel {
         preferences: Preferences? = nil,
         blocker: ContentBlocker? = nil,
         bookmarks: BookmarkStore = BookmarkStore(),
+        history: HistoryStore = HistoryStore(),
         suggestions: any SuggestionProviding = SuggestionService(),
         recents: any RecentSearchStoring = RecentSearches(),
         modStore: ModStore? = nil,
@@ -135,7 +198,8 @@ final class AppModel {
         skimPageStore: SkimPageStore = SkimPageStore(),
         skimDependencies: SkimDependencies = .live,
         skimAvailable: Bool = SkimAvailability.resolve().isAvailable,
-        faviconFetcher: FaviconFetcher = FaviconFetcher()
+        faviconFetcher: FaviconFetcher = FaviconFetcher(),
+        downloads: DownloadStore = DownloadStore()
     ) {
         self.store = store
         self.preferences = preferences ?? Preferences(defaults: Self.freshDefaults())
@@ -145,6 +209,7 @@ final class AppModel {
                 store: NoRuleSets(), defaults: Self.freshDefaults())
         self.blocker = blocker
         self.bookmarks = bookmarks
+        self.history = history
         self.suggestions = suggestions
         self.recents = recents
         let mods = modStore ?? ModStore(listSink: blocker)
@@ -159,6 +224,7 @@ final class AppModel {
         self.skimDependencies = skimDependencies
         self.skimAvailable = skimAvailable
         self.faviconFetcher = faviconFetcher
+        self.downloads = downloads
     }
 
     /// The app as it runs on a device: the JSON indexes in Application Support.
@@ -168,6 +234,7 @@ final class AppModel {
             preferences: Preferences(),
             blocker: ContentBlocker(store: FilterListStore()),
             bookmarks: BookmarkStore(persistence: FileSystemBookmarkPersistence()),
+            history: HistoryStore(persistence: FileSystemHistoryPersistence()),
             modDirectory: ModDirectory())
     }
 
@@ -184,6 +251,7 @@ final class AppModel {
         await store.loadIndex()
         armLaunchIntro()
         await bookmarks.loadIndex()
+        await history.loadIndex()
         fillMissingFavicons()
         refreshArchive(now: now)
         await blocker.attach(modInjector.contentController)
@@ -268,6 +336,27 @@ final class AppModel {
     /// The last step of the first-launch flow: the choices are saved and the app appears.
     func completeOnboarding() {
         preferences.hasCompletedOnboarding = true
+        if let url = linkAwaitingOnboarding {
+            linkAwaitingOnboarding = nil
+            openExternalLink(url)
+        }
+    }
+
+    /// A link from another app that arrived while onboarding covered the app.
+    private var linkAwaitingOnboarding: URL?
+
+    /// A link handed over by another app: opened in a new tab, with nothing left covering
+    /// it. Settings closes and a Skim run is canceled first; onboarding is not skipped,
+    /// so its link waits and opens the moment onboarding is done.
+    func openExternalLink(_ url: URL, now: Date = .now) {
+        if needsOnboarding {
+            linkAwaitingOnboarding = url
+            return
+        }
+        closeSettings()
+        if surface == .skim { cancelSkim() }
+        launchIsPrivate = false
+        openFromLaunch(url, now: now)
     }
 
     /// The engine searches run on, from the user's choice.
@@ -333,7 +422,8 @@ final class AppModel {
     /// The tab's page session, made on demand and kept in step with the tab. Every page
     /// carries the mods' configuration, so the installed scripts run on each; a reused
     /// session whose page is already loaded settles again, so it still gets its picture.
-    func ensureSession(for tab: Tab) -> ReadingSession {
+    /// A tab that comes back, rather than one just opened, does not count as a new visit.
+    func ensureSession(for tab: Tab, isNewVisit: Bool = false) -> ReadingSession {
         if let session = sessions[tab.id] {
             refireSettleIfPictureless(tab, session: session)
             return session
@@ -346,16 +436,28 @@ final class AppModel {
         }
         let session = ReadingSession(
             url: tab.url ?? Self.blankPage,
-            pageConfiguration: configuration)
+            pageConfiguration: configuration,
+            prefersDesktop: { [preferences] url in preferences.usesDesktopSite(for: url) },
+            downloads: downloads)
         session.logTag = "tab=\(tab.id.uuidString.prefix(4))"
         session.isPrivate = tab.isPrivate
+        session.recordsInitialCommit = isNewVisit
         session.viewportSize = restingPageSize
+        if tab.url != nil { session.scrollToRestore = tab.scrollOffset }
         sessions[tab.id] = session
         sessionTasks[tab.id] = Task {
             await session.run()
         }
         session.onPageSettled = { [weak self] in self?.pageSettled(for: tab.id) }
         session.onPageTitled = { [weak self] in self?.syncTab(for: tab.id) }
+        let isPrivate = tab.isPrivate
+        session.onPageCommitted = { [weak self] url in
+            self?.history.record(url: url, isPrivate: isPrivate, now: .now)
+        }
+        // A window the page opens on a tap is a tab beside it, private if this one is.
+        session.onOpenInNewTab = { [weak self] url in
+            self?.openLinkInNewTab(url, isPrivate: isPrivate)
+        }
         pruneSessions()
         return session
     }
@@ -401,6 +503,9 @@ final class AppModel {
     /// Lets the tab's page go, and every piece of work kept for it. The tab keeps its
     /// picture and its address; its page loads again from there when it is opened.
     private func dropSession(_ id: Tab.ID) {
+        // Its place in the page goes onto the tab first; the page answers while the
+        // session is still held, and the rebuilt one scrolls back to it.
+        recordScrollOffset(of: sessions[id], for: id)
         sessionTasks[id]?.cancel()
         sessionTasks[id] = nil
         sessions[id]?.close()
@@ -413,6 +518,31 @@ final class AppModel {
         retryAttempts[id] = nil
     }
 
+    /// Reads the session's place in its page and keeps it on the tab.
+    private func recordScrollOffset(of session: ReadingSession?, for id: Tab.ID) {
+        guard let session else { return }
+        Task { [weak self] in
+            guard let offset = await session.scrollOffset() else { return }
+            self?.store.setScrollOffset(offset, for: id)
+        }
+    }
+
+    /// The app left the foreground: every live page's place is kept, and written before
+    /// the app is suspended.
+    func appEnteredBackground() {
+        let task = UIApplication.shared.beginBackgroundTask(withName: "scroll-offsets")
+        Task { [weak self] in
+            guard let self else { return }
+            for (id, session) in self.sessions {
+                if let offset = await session.scrollOffset() {
+                    self.store.setScrollOffset(offset, for: id)
+                }
+            }
+            await self.store.flushWrites()
+            UIApplication.shared.endBackgroundTask(task)
+        }
+    }
+
     /// The system is short of memory: only the current tab keeps its page live. The
     /// others keep their pictures and load again when opened.
     func memoryWarning() {
@@ -422,6 +552,9 @@ final class AppModel {
     /// Brings the tab in step with its page: where it is, what it's called, its site's icon.
     private func syncTab(for id: Tab.ID) {
         guard let session = sessions[id] else { return }
+        if let url = session.page.url, !session.isPrivate, !session.page.isLoading {
+            history.updateTitle(session.page.title, for: url)
+        }
         store.update(
             id: id,
             url: session.page.url,
@@ -508,7 +641,7 @@ final class AppModel {
         pageSettled(for: tab.id)
     }
 
-    /// How long capture triggers wait for their neighbours: geometry, session and URL
+    /// How long capture triggers wait for their neighbors: geometry, session and URL
     /// landing in the same frame are one moment, one capture.
     private static let captureDebounce: Duration = .milliseconds(150)
 
@@ -530,7 +663,7 @@ final class AppModel {
     /// one capture runs at a time, and a trigger that lands while one runs asks for
     /// exactly one rerun after it — the page and its view answer one caller at a time,
     /// and captures left to overlap have been seen to starve each other into nil.
-    /// Nothing is cancelled mid-flight. A real trigger resets the retry ladder.
+    /// Nothing is canceled mid-flight. A real trigger resets the retry ladder.
     private func captureSnapshot(for id: Tab.ID, trigger: String) {
         captureRetries[id]?.cancel()
         captureRetries[id] = nil
@@ -594,7 +727,7 @@ final class AppModel {
                 retryAttempts[id] = 0
                 store.setSnapshot(data, for: id)
                 SnapshotLog.event("\(trigger) stored \(data.count)B tab=\(id.uuidString.prefix(4))")
-                // The page's own colour is sampled only now that a picture exists: at
+                // The page's own color is sampled only now that a picture exists: at
                 // commit time the page has not painted yet, and script there has been
                 // seen to stall the load.
                 if session.pageBackground == nil {
@@ -625,8 +758,19 @@ final class AppModel {
     /// A submitted search or address from the launch sheet: a new tab, opened on the spot.
     func openFromLaunch(_ url: URL, now: Date = .now) {
         let tab = store.newTab(url: url, isPrivate: launchIsPrivate, now: now)
+        isPrivateMode = tab.isPrivate
         launchIsPrivate = false
-        _ = ensureSession(for: tab)
+        _ = ensureSession(for: tab, isNewVisit: true)
+        searchPrefill = nil
+        surface = .reading(searchOpen: false)
+    }
+
+    /// A link opened in a tab of its own: the new tab becomes current. A private
+    /// tab's links stay private; a link can also be sent to a private tab from an
+    /// ordinary one.
+    func openLinkInNewTab(_ url: URL, isPrivate: Bool, now: Date = .now) {
+        let tab = store.newTab(url: url, isPrivate: isPrivate, now: now)
+        _ = ensureSession(for: tab, isNewVisit: true)
         searchPrefill = nil
         surface = .reading(searchOpen: false)
     }
@@ -660,6 +804,93 @@ final class AppModel {
         surface = .tabs
     }
 
+    /// A swipe back off the tabs screen: the current tab's page, when there is one.
+    var canLeaveTabs: Bool { modeCurrentTabID != nil }
+
+    /// The swipe itself: the current card grows back into its page.
+    func leaveTabs() {
+        guard let id = modeCurrentTabID else { return }
+        openTab(id)
+    }
+
+    /// The tab this many places from the current one in stack order, if there is one.
+    func adjacentTab(_ delta: Int) -> Tab? {
+        guard let id = store.currentTabID,
+            let index = store.tabs.firstIndex(where: { $0.id == id })
+        else { return nil }
+        let target = index + delta
+        return store.tabs.indices.contains(target) ? store.tabs[target] : nil
+    }
+
+    /// A sideways swipe on the bar: the page moves to the neighboring tab.
+    func stepTab(_ delta: Int) {
+        guard let tab = adjacentTab(delta) else { return }
+        openTab(tab.id)
+    }
+
+    // MARK: Downloads
+
+    /// Where Done on the downloads screen returns to.
+    private var surfaceBeforeDownloads: Surface?
+
+    /// The menu's Downloads row.
+    func showDownloads() {
+        guard surface != .downloads else { return }
+        downloads.reload()
+        if case .reading(true) = surface {
+            surfaceBeforeDownloads = .reading(searchOpen: false)
+        } else {
+            surfaceBeforeDownloads = surface
+        }
+        surface = .downloads
+    }
+
+    /// Done or a swipe back: whatever was up before the downloads.
+    func closeDownloads() {
+        let back = surfaceBeforeDownloads
+        surfaceBeforeDownloads = nil
+        if let back, back != .downloads {
+            surface = back
+        } else {
+            surface = store.tabs.isEmpty ? .launchSearch : .tabs
+        }
+    }
+
+    // MARK: Links and quick actions
+
+    /// A link in Magpie's own scheme, from the share sheet or a widget.
+    func handle(_ link: MagpieLink, now: Date = .now) {
+        switch link {
+        case .open(let url):
+            launchIsPrivate = false
+            openFromLaunch(url, now: now)
+        case .search(let query?):
+            guard let resolution = QueryResolver.resolve(query, engine: engine) else { return }
+            switch resolution {
+            case .url(let url):
+                launchIsPrivate = false
+                openFromLaunch(url, now: now)
+            case .search(let text):
+                guard let url = engine.searchURL(for: text) else { return }
+                launchIsPrivate = false
+                openFromLaunch(url, now: now)
+            }
+        case .search(nil):
+            newNormalTab()
+        }
+    }
+
+    /// A home-screen quick action: the launch search, for a tab, a private one, or just
+    /// the search with its keyboard up.
+    func handle(_ action: ShortcutAction) {
+        switch action {
+        case .newTab, .search:
+            newNormalTab()
+        case .newPrivateTab:
+            newPrivateTab()
+        }
+    }
+
     // MARK: Mods
 
     /// Where Done on the mods screen returns to.
@@ -685,6 +916,7 @@ final class AppModel {
     /// A tapped card: its tab becomes current and opens.
     func openTab(_ id: Tab.ID, now: Date = .now) {
         guard let tab = store.tabs.first(where: { $0.id == id }) else { return }
+        isPrivateMode = tab.isPrivate
         store.activate(id, now: now)
         _ = ensureSession(for: tab)
         cardArrival = tab.snapshot == nil ? nil : id
@@ -702,32 +934,64 @@ final class AppModel {
         return store.tabs.first(where: { $0.id == id })?.snapshot
     }
 
-    /// The + on the tabs screen: the launch search, which submits into a new tab.
+    /// The + on the tabs screen: the launch search, which submits into a new tab of the
+    /// kind the current mode shows.
     func newTabFromTabs() {
-        searchPrefill = nil
-        launchIsPrivate = false
-        surface = .launchSearch
+        if isPrivateMode { newPrivateTab() } else { newNormalTab() }
     }
 
-    /// A swipe down on the launch sheet: back to the stack, when there are tabs to show.
+    /// A swipe down on the launch sheet: back to the stack of the kind it was opened for,
+    /// when there are tabs to show. With no ordinary tab, the private stack is what is left.
     func dismissLaunchSearch() {
         guard !store.tabs.isEmpty else { return }
         searchPrefill = nil
+        isPrivateMode = launchIsPrivate || store.tabs(inPrivate: false).isEmpty
         launchIsPrivate = false
         surface = .tabs
     }
 
     /// A flung card. Closing the last tab leaves the launch search.
     func closeTab(_ id: Tab.ID) {
+        let wasPrivate = store.tabs.first { $0.id == id }?.isPrivate ?? false
         dropSession(id)
-        store.close(id)
+        let closed = store.close(id)
         if !store.hasPrivateTabs {
             // The last private tab gone: its cookies and storage go with it.
             privateDataStore = nil
         }
-        if store.tabs.isEmpty {
-            surface = .launchSearch
+        // The last ordinary tab gone leaves the ordinary launch search; the last private
+        // one leaves the private stack's empty card.
+        if !wasPrivate, store.tabs(inPrivate: false).isEmpty {
+            closedTabNotice = nil
+            newNormalTab()
+        } else {
+            // Only a card flung on the stack offers an undo, and only the latest one.
+            closedTabNotice = surface == .tabs ? closed.map(ClosedTabNotice.init) : nil
         }
+    }
+
+    /// The tab just flung closed, on offer for an undo until the notice runs out. Held in
+    /// memory only, so a private tab is back only within the session.
+    struct ClosedTabNotice: Identifiable, Equatable {
+        let id = UUID()
+        let closed: TabStore.ClosedTab
+    }
+
+    /// The notice on the tabs screen, if a card was just closed.
+    private(set) var closedTabNotice: ClosedTabNotice?
+
+    /// The notice's Undo: the tab comes back where it was.
+    func undoCloseTab() {
+        guard let notice = closedTabNotice else { return }
+        closedTabNotice = nil
+        store.reinstate(notice.closed)
+    }
+
+    /// The notice ran out, or the stack was left: the close stands. A later notice is left
+    /// alone, so a slow timer cannot clear a newer one.
+    func expireClosedTabNotice(_ id: ClosedTabNotice.ID? = nil) {
+        guard id == nil || closedTabNotice?.id == id else { return }
+        closedTabNotice = nil
     }
 
     // MARK: Keyboard
@@ -755,9 +1019,13 @@ final class AppModel {
     func closeCurrentTab() {
         guard isReadingPage, let id = store.currentTabID else { return }
         isFindingInPage = false
+        let wasPrivate = currentIsPrivate
         closeTab(id)
-        if let next = store.currentTabID {
+        if let next = store.currentTabID(inPrivate: wasPrivate) {
             openTab(next)
+        } else if wasPrivate {
+            // The last private page closed: the private stack's empty card.
+            showTabs()
         }
     }
 
@@ -917,28 +1185,132 @@ final class AppModel {
 
     /// The archive's Done: back to the stack, or the launch search with no tabs to show.
     func doneWithArchive() {
-        surface = store.tabs.isEmpty ? .launchSearch : .tabs
+        returnToStack()
+    }
+
+    /// The stack, or the launch search with no tabs to show. With only private tabs open,
+    /// the private stack is the one to land on.
+    private func returnToStack() {
+        guard !store.tabs.isEmpty else {
+            surface = .launchSearch
+            return
+        }
+        if store.tabs(inPrivate: false).isEmpty { isPrivateMode = true }
+        surface = .tabs
     }
 
     /// A tapped archive row: the tab comes back and opens.
     func restoreArchivedTab(_ id: Tab.ID, now: Date = .now) {
         guard store.restore(id, now: now), let tab = store.currentTab else { return }
+        isPrivateMode = false
         _ = ensureSession(for: tab)
         surface = .reading(searchOpen: false)
     }
 
+    /// Where a swipe back off the bookmarks returns to.
+    private var surfaceBeforeBookmarks: Surface?
+
     /// The Bookmark tile's long press, and the UI tests' way in.
     func showBookmarks() {
+        guard surface != .bookmarks else { return }
+        if case .reading(true) = surface {
+            surfaceBeforeBookmarks = .reading(searchOpen: false)
+        } else {
+            surfaceBeforeBookmarks = surface
+        }
         surface = .bookmarks
     }
 
-    /// A tapped bookmark: a new tab, opened on the spot — or, for a Skim page,
-    /// the saved page back on the Skim surface.
+    /// A swipe back off the bookmarks: whatever was up before them.
+    func closeBookmarks() {
+        let back = surfaceBeforeBookmarks
+        surfaceBeforeBookmarks = nil
+        if let back, back != .bookmarks {
+            surface = back
+        } else {
+            returnToStack()
+        }
+    }
+
+    // MARK: History and site data
+
+    /// Where a swipe back off the history returns to.
+    private var surfaceBeforeHistory: Surface?
+
+    /// The menu's History row, and the UI tests' way in.
+    func showHistory() {
+        guard surface != .history else { return }
+        if case .reading(true) = surface {
+            surfaceBeforeHistory = .reading(searchOpen: false)
+        } else {
+            surfaceBeforeHistory = surface
+        }
+        surface = .history
+    }
+
+    /// Done, or a swipe back off the history: whatever was up before it.
+    func closeHistory() {
+        let back = surfaceBeforeHistory
+        surfaceBeforeHistory = nil
+        if let back, back != .history {
+            surface = back
+        } else {
+            surface = store.tabs.isEmpty ? .launchSearch : .tabs
+        }
+    }
+
+    /// A tapped history row: a new tab, opened on the spot.
+    func openHistoryEntry(_ url: URL, now: Date = .now) {
+        surfaceBeforeHistory = nil
+        openFromLaunch(url, now: now)
+    }
+
+    /// Clear browsing data: what was ticked goes, and the live pages load again so none
+    /// keeps showing what was cleared.
+    func clearBrowsingData(_ kinds: BrowsingDataKinds) async {
+        if kinds.history { history.clear() }
+        let types = kinds.websiteDataTypes
+        if !types.isEmpty {
+            await WKWebsiteDataStore.default().removeData(ofTypes: types, modifiedSince: .distantPast)
+            for session in sessions.values where !session.isPrivate {
+                session.retry()
+            }
+        }
+    }
+
+    /// Whether the current page's site loads its desktop version.
+    var currentSiteIsDesktop: Bool {
+        preferences.usesDesktopSite(for: store.currentTab?.url)
+    }
+
+    /// Whether the current tab shows a page whose site the Desktop site row can speak for.
+    var canChooseDesktopSite: Bool {
+        Preferences.siteKey(for: store.currentTab?.url) != nil
+    }
+
+    /// The Desktop site row: remembers the choice for the page's site, then loads the
+    /// page again so it takes effect.
+    func setDesktopSite(_ on: Bool) {
+        guard let tab = store.currentTab else { return }
+        preferences.setDesktopSite(on, for: tab.url)
+        currentSession?.retry()
+    }
+
+    /// A tapped bookmark: a tab already showing the page, if there is one; otherwise a new
+    /// tab, opened on the spot — or, for a Skim page, the saved page back on the Skim
+    /// surface.
     func openBookmark(_ url: URL, now: Date = .now) {
         if let id = SkimPageStore.pageID(forBookmarkURL: url),
             let page = skimPageStore.load(id: id)
         {
             openSkimPage(page)
+            return
+        }
+        if let id = TabMatch.existingTab(
+            for: url, in: store.tabs, isPrivate: launchIsPrivate, current: store.currentTabID)
+        {
+            surfaceBeforeBookmarks = nil
+            openTab(id, now: now)
             return
         }
         openFromLaunch(url, now: now)

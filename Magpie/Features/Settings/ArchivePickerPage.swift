@@ -8,7 +8,7 @@ struct ArchivePickerPage: View {
 
     var body: some View {
         SettingsScaffold(title: String(localized: "Archive tabs after"), showsBack: true) {
-            SettingsGroup {
+            GroupedBox {
                 ForEach(
                     Array(Preferences.archiveIntervalSteps.enumerated()),
                     id: \.offset

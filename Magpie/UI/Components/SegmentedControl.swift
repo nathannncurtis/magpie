@@ -16,6 +16,10 @@ struct SegmentedControl: View {
 
     /// The segments' labels, in order.
     let options: [String]
+    /// An SF Symbol ahead of a segment's label, by position; none where missing or nil.
+    var symbols: [String?] = []
+    /// Accessibility identifiers by position; `segment.<n>` where missing.
+    var identifiers: [String] = []
     @Binding var selection: Int
 
     /// The track's height, growing with Dynamic Type the way its labels do.
@@ -42,11 +46,11 @@ struct SegmentedControl: View {
         let selected = index == selection
         return Button {
             // Reduce Motion: the thumb jumps rather than slides.
-            withAnimation(reduceMotion ? nil : Springs.settle.animation) {
+            withAnimation(Springs.settle.unlessReduced(reduceMotion: reduceMotion)) {
                 selection = index
             }
         } label: {
-            Text(options[index])
+            label(index)
                 .font(Typography.meta.weight(.semibold))
                 .foregroundStyle(selected ? Palette.textPrimary : Palette.textSecondary)
                 .frame(maxWidth: .infinity)
@@ -60,14 +64,24 @@ struct SegmentedControl: View {
                     }
                 }
                 // The hit area, standing taller than the track it sits on: the frame is
-                // centred in the track, so the visuals stay the board's and a finger
+                // centered in the track, so the visuals stay the board's and a finger
                 // still gets its 44 pt.
                 .frame(minHeight: Layout.hitHeight)
                 .contentShape(Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(selected ? .isSelected : [])
-        .accessibilityIdentifier("segment.\(index)")
+        .accessibilityIdentifier(identifiers.indices.contains(index) ? identifiers[index] : "segment.\(index)")
+    }
+
+    @ViewBuilder
+    private func label(_ index: Int) -> some View {
+        if symbols.indices.contains(index), let symbol = symbols[index] {
+            Label(options[index], systemImage: symbol)
+                .labelStyle(.titleAndIcon)
+        } else {
+            Text(options[index])
+        }
     }
 
     /// The thumb's small shadow; dark's thumb carries none.

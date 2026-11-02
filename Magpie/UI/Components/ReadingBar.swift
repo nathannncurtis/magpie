@@ -19,7 +19,7 @@ enum ReadableForeground {
 
     /// The tint's relative luminance, WCAG-style, as resolved under the appearance. The
     /// tint's own opacity is left out: the glass sits over the page the tint was taken
-    /// from, so what shows through it is that same colour, not a fixed material base.
+    /// from, so what shows through it is that same color, not a fixed material base.
     static func luminance(_ tint: Color, scheme: ColorScheme) -> Double {
         let style: UIUserInterfaceStyle = scheme == .dark ? .dark : .light
         let traits = UITraitCollection(userInterfaceStyle: style)
@@ -34,7 +34,7 @@ enum ReadableForeground {
             + 0.0722 * linear(channels.blue)
     }
 
-    /// One colour's straight sRGB channels, or nil where they can't be read.
+    /// One color's straight sRGB channels, or nil where they can't be read.
     private static func channels(
         of color: UIColor
     ) -> (red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat)? {
@@ -78,6 +78,9 @@ struct ReadingBar: View {
     /// and the menu.
     var glassNamespace: Namespace.ID? = nil
 
+    /// Drags on the bar: sideways steps through the tabs, up opens the stack.
+    var swipe: BarSwipeHandlers? = nil
+
     let onBack: () -> Void
     let onAddressTap: () -> Void
     let onTabsTap: () -> Void
@@ -116,25 +119,18 @@ struct ReadingBar: View {
     }
 
     var body: some View {
-        namedGlass
-            .padding(.horizontal, sideInset)
-            .frame(maxWidth: .infinity)
-            // The bar grows with the type size to a deliberate stop: past the first
-            // accessibility size it would stop being a bar.
-            .dynamicTypeSize(...DynamicTypeSize.accessibility1)
-    }
-
-    /// The capsule, named for morphing when a namespace is given.
-    @ViewBuilder
-    private var namedGlass: some View {
-        if let glassNamespace {
-            capsule.glassEffectID(ChromeGlassID.chrome, in: glassNamespace)
-        } else {
-            capsule
+        FloatingBar(
+            surface: .glass(tint: tint), height: height, sideInset: sideInset,
+            glassNamespace: glassNamespace
+        ) {
+            content
         }
+        // The bar grows with the type size to a deliberate stop: past the first
+        // accessibility size it would stop being a bar.
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
     }
 
-    private var capsule: some View {
+    private var content: some View {
         HStack(spacing: 0) {
             side {
                 CircleButton(systemName: "chevron.backward", action: onBack)
@@ -160,10 +156,10 @@ struct ReadingBar: View {
         }
         .padding(.leading, 4)
         .padding(.trailing, 5)
-        .frame(height: height)
         .frame(maxWidth: .infinity)
         .foregroundStyle(ReadableForeground.foreground(for: tint, scheme: colorScheme))
-        .glassEffect(.regular.tint(tint), in: .capsule)
+        .contentShape(.capsule)
+        .modifier(BarSwipeGesture(handlers: swipe))
     }
 
     /// Wraps a side button: it fades as the bar slims, and its slot folds away only

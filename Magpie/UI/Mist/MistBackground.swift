@@ -2,11 +2,11 @@ import SwiftUI
 
 /// One soft radial blob of mist.
 private struct MistBlob: Sendable {
-    /// The blob's centre, as fractions of the drawing size.
+    /// The blob's center, as fractions of the drawing size.
     let center: CGPoint
     /// The blob's radii, as fractions of the drawing size.
     let radii: CGSize
-    /// Where the colour reaches fully clear, as a fraction of the radii.
+    /// Where the color reaches fully clear, as a fraction of the radii.
     let fade: CGFloat
     let lightHex: UInt32
     let lightOpacity: Double
@@ -22,13 +22,18 @@ private struct MistBlob: Sendable {
 
 /// The mist layers: a base gradient with four blobs, plus the two drifting layers.
 private enum MistSpec {
-    static func baseTop(for scheme: ColorScheme) -> Color {
-        scheme == .dark ? Color(hex: 0x0E1614) : Color(hex: 0xF2F5F2)
+    static func baseTop(for scheme: ColorScheme, night: Bool) -> Color {
+        if night { return Palette.nightInk }
+        return scheme == .dark ? Color(hex: 0x0E1614) : Color(hex: 0xF2F5F2)
     }
 
-    static func baseBottom(for scheme: ColorScheme) -> Color {
-        scheme == .dark ? Color(hex: 0x090D0C) : Color(hex: 0xE3ECE8)
+    static func baseBottom(for scheme: ColorScheme, night: Bool) -> Color {
+        if night { return Palette.nightInkDeep }
+        return scheme == .dark ? Color(hex: 0x090D0C) : Color(hex: 0xE3ECE8)
     }
+
+    /// How much of the teal shows through the night mist: a faint glow on ink.
+    static let nightGlow = 0.45
 
     static let still: [MistBlob] = [
         MistBlob(
@@ -102,12 +107,13 @@ private struct DriftLayer: View {
     }
 }
 
-/// Fills the context with each blob's colour, clear at the blob's fade point.
+/// Fills the context with each blob's color, clear at the blob's fade point.
 private func drawMistBlobs(
-    _ blobs: [MistBlob], of scheme: ColorScheme, in context: inout GraphicsContext, size: CGSize
+    _ blobs: [MistBlob], of scheme: ColorScheme, in context: inout GraphicsContext, size: CGSize,
+    glow: Double = 1
 ) {
     for blob in blobs {
-        let color = blob.color(for: scheme)
+        let color = blob.color(for: scheme).opacity(glow)
         // A copy carries its own transform, so each blob draws in its own unit space.
         var blobContext = context
         blobContext.transform = CGAffineTransform(
@@ -131,11 +137,16 @@ struct MistBackground: View {
     var drifting = false
     /// Skim no-photo tier: the mist is masked over its height so it melts into the page.
     var fadesIntoPage = false
+    /// The private look: ink with a faint teal glow, the same in light and dark.
+    var night = false
 
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var fastDriftActive = false
     @State private var slowDriftActive = false
+
+    /// The scheme the blobs are drawn in: night is always the dark one.
+    private var scheme: ColorScheme { night ? .dark : colorScheme }
 
     var body: some View {
         GeometryReader { geo in
@@ -146,20 +157,23 @@ struct MistBackground: View {
                         Path(CGRect(origin: .zero, size: size)),
                         with: .linearGradient(
                             Gradient(colors: [
-                                MistSpec.baseTop(for: colorScheme), MistSpec.baseBottom(for: colorScheme),
+                                MistSpec.baseTop(for: scheme, night: night),
+                                MistSpec.baseBottom(for: scheme, night: night),
                             ]),
                             startPoint: CGPoint(x: 0, y: 0),
                             endPoint: CGPoint(x: 0, y: size.height)
                         ))
-                    drawMistBlobs(MistSpec.still, of: colorScheme, in: &context, size: size)
+                    drawMistBlobs(
+                        MistSpec.still, of: scheme, in: &context, size: size,
+                        glow: night ? MistSpec.nightGlow : 1)
                 }
                 .frame(width: size.width, height: size.height)
                 if drifting && !reduceMotion {
                     DriftLayer(
-                        blobs: MistSpec.driftFast, scheme: colorScheme, size: size,
+                        blobs: MistSpec.driftFast, scheme: scheme, size: size,
                         from: .fastFrom, to: .fastTo, active: fastDriftActive)
                     DriftLayer(
-                        blobs: MistSpec.driftSlow, scheme: colorScheme, size: size,
+                        blobs: MistSpec.driftSlow, scheme: scheme, size: size,
                         from: .slowFrom, to: .slowTo, active: slowDriftActive)
                 }
             }
@@ -187,10 +201,10 @@ struct MistBackground: View {
     /// Eases both drift layers between their end transforms, each on its own period.
     private func startDrift() {
         guard drifting, !reduceMotion else { return }
-        withAnimation(.easeInOut(duration: 14).repeatForever(autoreverses: true)) {
+        withAnimation(Springs.ease(14).repeatForever(autoreverses: true)) {
             fastDriftActive = true
         }
-        withAnimation(.easeInOut(duration: 18).repeatForever(autoreverses: true)) {
+        withAnimation(Springs.ease(18).repeatForever(autoreverses: true)) {
             slowDriftActive = true
         }
     }
@@ -198,6 +212,11 @@ struct MistBackground: View {
 
 #Preview("Mist") {
     MistBackground()
+        .ignoresSafeArea()
+}
+
+#Preview("Night") {
+    MistBackground(night: true)
         .ignoresSafeArea()
 }
 

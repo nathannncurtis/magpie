@@ -5,7 +5,6 @@ struct InstallFooter: View {
 
     private enum Layout {
         static let height = Metrics.Bar.installFooterHeight
-        static let icon: CGFloat = 18
         static let gap: CGFloat = 8
     }
 
@@ -15,7 +14,7 @@ struct InstallFooter: View {
         Button(action: action) {
             HStack(spacing: Layout.gap) {
                 Image(systemName: "link")
-                    .font(.system(size: Layout.icon, weight: .medium))
+                    .font(Typography.icon(.regular))
                 Text(String(localized: "Install from URL"))
                     .font(Typography.buttonPill)
             }

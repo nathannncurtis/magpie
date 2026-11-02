@@ -46,8 +46,8 @@ struct AppModelKeyboardTests {
         #expect(!model.canShowTabsFromKeyboard)
     }
 
-    @Test("closing the current tab opens its neighbour in its place")
-    func closeCurrentTabOpensNeighbour() {
+    @Test("closing the current tab opens its neighbor in its place")
+    func closeCurrentTabOpensNeighbor() {
         let model = makeModel()
         model.openFromLaunch(url("a.example"), now: date(0))
         let first = model.store.currentTab!.id

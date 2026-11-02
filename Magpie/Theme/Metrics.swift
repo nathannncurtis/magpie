@@ -24,7 +24,7 @@ enum Metrics {
             max(barBottomEdgeMin, safeAreaBottom - bottomSafeAreaAllowance)
         }
         /// The least a bar's bottom edge sits above the screen bottom.
-        private static let barBottomEdgeMin: CGFloat = 26
+        static let barBottomEdgeMin: CGFloat = 26
         /// How much of the bottom safe area the bar is allowed to eat into.
         private static let bottomSafeAreaAllowance: CGFloat = 8
         /// A suggestion row.
@@ -45,16 +45,28 @@ enum Metrics {
         static let gapSectionBottom: CGFloat = 7
     }
 
+    /// How faint a disabled control sits: still there, not calling, still legible.
+    static let disabledOpacity = 0.45
+
+    /// The least a control measures, so a tap never lands on less.
+    static let tapTarget: CGFloat = 44
+
     /// Corner radii, all in the continuous (squircle) style.
     enum Radius {
         /// Sheet top corners, matching the device corners.
         static let sheetTop: CGFloat = 38
-        /// Content cards: mods, featured, folder tiles. The band runs 22-24.
-        static let card: CGFloat = 24
-        /// Grouped boxes: menu groups, settings groups.
+        /// Grouped boxes: menu groups, settings groups, mod cards.
         static let boxGrouped: CGFloat = 20
+        /// Text fields set on a screen's surface.
+        static let field: CGFloat = 14
+        /// Chips and answer tiles.
+        static let chip: CGFloat = 12
+        /// Small tiles: an engine's favicon tile, a skeleton bar.
+        static let tile: CGFloat = 8
+        /// Tags and badges.
+        static let badge: CGFloat = 6
         /// Engine tiles, at the upper end of the 18-20 tile band.
-        static let tile: CGFloat = 20
+        static let engineTile: CGFloat = 20
         /// Menu tiles, source cards and preview boxes, at the lower end of the 18-20 band.
         static let tileSmall: CGFloat = 18
         /// The search field's outer ring.
@@ -77,16 +89,22 @@ enum Metrics {
 
     /// Bar heights.
     enum Bar {
+        /// The one height every floating bar and bottom row shares at the default type
+        /// size; each grows with Dynamic Type from here.
+        static let height: CGFloat = 54
+        /// The widest a floating bar grows. Past it (a foldable's open inner screen, an
+        /// iPad) the bar stays this wide and sits centered, never edge to edge.
+        static let maxWidth: CGFloat = 560
         /// The reading bar in its full state.
-        static let readingHeight: CGFloat = 60
+        static let readingHeight: CGFloat = height
         /// The reading bar collapsed to its slim pill.
         static let readingSlimHeight: CGFloat = 38
         /// The Skim query bar.
         static let skimQueryHeight: CGFloat = 42
         /// The Skim control bar.
-        static let skimControlHeight: CGFloat = 56
+        static let skimControlHeight: CGFloat = height
         /// The bottom search pill on Archive and Bookmarks.
-        static let bottomSearchPillHeight: CGFloat = 54
+        static let bottomSearchPillHeight: CGFloat = height
         /// The "Install from URL" footer pill.
         static let installFooterHeight: CGFloat = 52
         /// The primary onboarding CTA.

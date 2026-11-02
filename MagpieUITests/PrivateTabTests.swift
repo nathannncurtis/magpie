@@ -40,12 +40,12 @@ final class PrivateTabTests: XCTestCase {
         land("bar-private") { mark.waitForExistence(timeout: 20) }
         shots.snap(app, "reading-private")
 
-        // Two tabs open, the private one among them.
+        // The private stack holds the private tab alone.
         app.buttons["bar.tabs"].firstMatch.tap()
         let count = app.descendants(matching: .any)["tabs.openCount"].firstMatch
-        land("tabs-two") {
+        land("tabs-private-one") {
             count.waitForExistence(timeout: 10)
-                && count.label.contains("2")
+                && count.label.contains("1")
         }
         shots.snap(app, "tabs-private")
 

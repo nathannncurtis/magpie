@@ -46,7 +46,7 @@ struct MenuSheet: View {
     var skimOffered: Bool = true
     /// Where the pinned row's bottom edge sits above the screen bottom: the floating
     /// bar's own, so the row never moves as the glass grows around it.
-    var barBottomEdge: CGFloat = 26
+    var barBottomEdge: CGFloat = Metrics.Spacing.barBottomEdgeMin
     /// Names the sheet's glass shape so it and the bar's are one piece of glass.
     var morphNamespace: Namespace.ID? = nil
 
@@ -200,7 +200,8 @@ struct MenuSheet: View {
         }
     }
 
-    /// The long press on the Bookmark tile: Bookmarks over the page, the menu folded.
+    /// The Bookmarks row, and the long press on the Bookmark tile: Bookmarks over the page,
+    /// the menu folded.
     private func openBookmarks() {
         model.showBookmarks()
         onDismiss()
@@ -247,14 +248,14 @@ struct MenuSheet: View {
     private var blockingGroup: some View {
         MenuGroup {
             toggleRow(
-                icon: .symbol("shield.lefthalf.filled"), title: String(localized: "Block ads & trackers"),
+                icon: .symbol("shield.lefthalf.filled"), title: String(localized: "Ads & trackers"),
                 id: "menu.toggle.ads", isDivided: false,
                 isOn: Binding(
                     get: { model.blocker.blocksAdsAndTrackers },
                     set: { model.blocker.blocksAdsAndTrackers = $0 }))
 
             toggleRow(
-                icon: .cookie, title: String(localized: "Block cookie banners"),
+                icon: .cookie, title: String(localized: "Cookie banners"),
                 id: "menu.toggle.cookies", isDivided: true,
                 isOn: Binding(
                     get: { model.blocker.blocksCookieBanners },
@@ -269,7 +270,8 @@ struct MenuSheet: View {
         }
     }
 
-    /// The second group: where searches go, whether Skim offers, and Settings.
+    /// The second group: where searches go, whether Skim offers, the page's desktop version,
+    /// Bookmarks, the history, Downloads, and Settings.
     private var switchGroup: some View {
         MenuGroup {
             MenuRow(icon: .symbol("globe"), title: String(localized: "Search engine")) {
@@ -287,6 +289,44 @@ struct MenuSheet: View {
                 isOn: Binding(
                     get: { model.preferences.skimEnabled },
                     set: { model.preferences.skimEnabled = $0 }))
+
+            if model.canChooseDesktopSite {
+                toggleRow(
+                    icon: .symbol("desktopcomputer"), title: String(localized: "Desktop site"),
+                    id: "menu.toggle.desktop", isDivided: true,
+                    isOn: Binding(
+                        get: { model.currentSiteIsDesktop },
+                        set: { model.setDesktopSite($0) }))
+            }
+
+            MenuRow(icon: .symbol("bookmark"), title: String(localized: "Bookmarks")) {
+                SettingsChevron()
+            }
+            .action {
+                openBookmarks()
+            }
+            .divided()
+            .accessibilityIdentifier("menu.bookmarks")
+
+            MenuRow(icon: .symbol("clock"), title: String(localized: "History")) {
+                SettingsChevron()
+            }
+            .action {
+                model.showHistory()
+                onDismiss()
+            }
+            .divided()
+            .accessibilityIdentifier("menu.history")
+
+            MenuRow(icon: .symbol("arrow.down.circle"), title: String(localized: "Downloads")) {
+                SettingsChevron()
+            }
+            .action {
+                model.showDownloads()
+                onDismiss()
+            }
+            .divided()
+            .accessibilityIdentifier("menu.downloads")
 
             MenuRow(icon: .symbol("gearshape"), title: String(localized: "Settings")) {
                 SettingsChevron()
@@ -332,6 +372,9 @@ struct MenuSheet: View {
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .padding(.leading, 4)
         .padding(.trailing, 5)
+        // The same width cap as the bar, so the row never moves as the glass grows.
+        .frame(maxWidth: Metrics.Bar.maxWidth)
+        .frame(maxWidth: .infinity)
         .padding(.horizontal, Metrics.Menu.barRowSideInset - 4)
         .padding(.top, Metrics.Menu.barRowTopPadding)
         .padding(.bottom, barBottomEdge)
@@ -344,7 +387,7 @@ struct MenuSheet: View {
         .foregroundStyle(Palette.textPrimary)
     }
 
-    // MARK: Behaviour
+    // MARK: Behavior
 
     /// Follows a swipe down; a long enough or hard enough drag dismisses.
     private var dismissDrag: some Gesture {
@@ -384,7 +427,7 @@ struct MenuSheet: View {
     /// first. Under Reduce Motion, one crossfade brings the whole menu.
     private func arrive() {
         if reduceMotion {
-            withAnimation(.easeInOut(duration: 0.2)) {
+            withAnimation(Springs.crossfade) {
                 fillSettled = true
                 arrived = Set(Layout.Block.allCases)
             }

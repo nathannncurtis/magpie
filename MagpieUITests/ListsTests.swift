@@ -165,11 +165,16 @@ final class ListsTests: XCTestCase {
             app: app, shots: shots, shot: "bookmarks-fail-edit"
         )
         shots.snap(app, "bookmarks-edit")
-        wait(
-            any(app, "bookmarks.edit"), timeout: 10, "the Done button",
+        let save = wait(
+            any(app, "bookmarks.edit"), timeout: 10, "the Save button",
             app: app, shots: shots, shot: "bookmarks-fail-edit-done"
         )
-        .tap()
+        XCTAssertEqual(save.label, "Save", "editing reads Save, never Done")
+        wait(
+            any(app, "bookmarks.done"), timeout: 10, "the Done button, still there in edit mode",
+            app: app, shots: shots, shot: "bookmarks-fail-done-button"
+        )
+        save.tap()
         XCTAssertFalse(any(app, "bookmarks.newFolder").exists, "out of edit mode")
 
         // 03 · a folder's own list.

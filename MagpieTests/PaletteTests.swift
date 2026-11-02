@@ -4,7 +4,7 @@ import UIKit
 
 @testable import Magpie
 
-/// One colour token with its expected values, straight from the foundations table.
+/// One color token with its expected values, straight from the foundations table.
 fileprivate struct TokenSpec: Sendable {
     let name: String
     let color: Color
@@ -66,7 +66,7 @@ private func rgba(_ color: Color, _ style: UIUserInterfaceStyle) -> (CGFloat, CG
     return (red, green, blue, alpha)
 }
 
-/// The expected components of a hex colour at an opacity.
+/// The expected components of a hex color at an opacity.
 private func rgba(_ hex: UInt32, _ opacity: Double) -> (CGFloat, CGFloat, CGFloat, CGFloat) {
     (
         CGFloat((hex >> 16) & 0xFF) / 255,
@@ -91,7 +91,7 @@ private func expectClose(
 @Suite("Palette")
 struct PaletteTests {
 
-    @Test("every token resolves to the spec colour in light and in dark", arguments: tokens)
+    @Test("every token resolves to the spec color in light and in dark", arguments: tokens)
     fileprivate func tokenResolves(spec: TokenSpec) {
         expectClose(rgba(spec.color, .light), rgba(spec.light, spec.lightOpacity))
         expectClose(rgba(spec.color, .dark), rgba(spec.dark, spec.darkOpacity))
